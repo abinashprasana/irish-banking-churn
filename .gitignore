@@ -1,0 +1,16 @@
+
+# Configuration and secrets
+.env
+
+# Python caching and environment
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# OS-specific files
+.DS_Store
+
+# Exclude markdown files
+*.md
+

@@ -1,0 +1,14 @@
+pandas<3.0.0
+numpy
+scikit-learn
+xgboost
+imbalanced-learn
+shap
+dice-ml
+streamlit
+plotly
+matplotlib
+seaborn
+faker
+joblib
+anthropic
