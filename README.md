@@ -6,7 +6,7 @@
 
 [![Python](https://img.shields.io/badge/Python-3.8+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![XGBoost](https://img.shields.io/badge/XGBoost-Gradient%20Boosted-FF6600?style=for-the-badge&logo=xgboost&logoColor=white)](https://xgboost.readthedocs.io)
-[![Streamlit](https://img.shields.io/badge/Dashboard-Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io)
+[![Streamlit](https://img.shields.io/badge/Live%20Demo-Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://abinashprasana-irish-banking-churn-app-aidovf.streamlit.app/)
 [![ROC--AUC](https://img.shields.io/badge/ROC--AUC-0.959-2ea44f?style=for-the-badge)](.)
 [![Status](https://img.shields.io/badge/Status-Completed-2ea44f?style=for-the-badge)](.)
 
@@ -28,9 +28,11 @@ The system predicts which customers are most likely to leave next, explains exac
 
 ---
 
-## 🎬 Demo
+## 🎬 Live Demo
 
-> Five-tab interactive dashboard — Overview, Data Explorer, Model Performance, SHAP Explainability, and Risk Predictor.
+**[→ Open the live app on Streamlit Community Cloud](https://abinashprasana-irish-banking-churn-app-aidovf.streamlit.app/)**
+
+Five-tab interactive dashboard — Overview, Data Explorer, Model Performance, SHAP Explainability, and Risk Predictor. No setup required; runs entirely in the browser.
 
 ---
 
