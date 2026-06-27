@@ -20,11 +20,11 @@
 
 ## 📖 What This Project Is
 
-When KBC Bank Ireland and Ulster Bank (NatWest Group) exited the Irish retail banking market between 2022 and 2023, over 1.2 million customers were forced to close their accounts and move to one of the three remaining lenders — Allied Irish Banks (AIB), Bank of Ireland, and Permanent TSB — within a compressed two-year window. It was the most disruptive mass migration in the history of Irish retail banking.
+Between 2022 and 2023, KBC Bank Ireland and Ulster Bank (NatWest Group) both pulled out of the Irish retail banking market. That forced over 1.2 million customers to close their accounts and find a new bank, all within a short window. It caused real chaos: around 60% of people who switched reported serious problems, things like direct debits failing, money not transferring correctly, and poor customer support throughout.
 
-This project models the churn risk that persists from that disruption. Approximately 60% of those switchers experienced serious friction during the move — direct debit failures, transfer delays, poor service — and behavioural research consistently shows that institutional trust takes 3 to 5 years to rebuild after a forced migration. Now in 2025–2026, those customers are in their third or fourth year with a new provider, and the Irish market is still in an elevated switching risk window that will not normalise before 2027.
+I built this project because those customers haven't just settled in and moved on. Research shows institutional trust takes 3 to 5 years to rebuild after a forced switch, and we're only in year 3 or 4 now. That means Irish banks are still sitting on an unusually high churn risk that won't calm down before 2027. I wanted to build something that actually reflects that. Not a generic churn model, but one calibrated to what's happening in this specific market right now.
 
-The system predicts which customers are most likely to leave next, explains exactly why using SHAP Shapley values, and generates actionable retention suggestions using DiCE counterfactual explanations. Everything is surfaced through a five-tab Streamlit dashboard.
+The result is an XGBoost classifier that predicts which customers are most likely to leave, SHAP values that explain why, and DiCE counterfactuals that suggest what a relationship manager could actually do about it. The whole thing runs in a five-tab Streamlit dashboard.
 
 ---
 
@@ -32,7 +32,7 @@ The system predicts which customers are most likely to leave next, explains exac
 
 **[→ Open the live app on Streamlit Community Cloud](https://abinashprasana-irish-banking-churn-app-aidovf.streamlit.app/)**
 
-Five-tab interactive dashboard — Overview, Data Explorer, Model Performance, SHAP Explainability, and Risk Predictor. No setup required; runs entirely in the browser.
+No setup needed, runs directly in the browser.
 
 ---
 
@@ -53,9 +53,9 @@ Five-tab interactive dashboard — Overview, Data Explorer, Model Performance, S
 
 </div>
 
-All records are synthetic. Statistical parameters were modelled on real published figures from the Central Bank of Ireland and Competition and Consumer Protection Commission (CCPC). No real customer data was used at any point.
+All records are synthetic. No real customer data was used. I built the statistical parameters around actual published figures from the Central Bank of Ireland and the CCPC's 2022 account migration survey, so the distributions reflect what the real market looks like rather than being made up.
 
-The dataset includes Irish-specific features not found in standard churn datasets: `was_kbc_ulster_customer`, `months_since_switching`, `experienced_switching_difficulty`, and `uses_digital_bank_secondary` (Revolut / N26 usage) — which together capture the structural switching risk that the 2022–2023 exits created.
+What makes this dataset different from a standard churn dataset is the Irish-specific columns: `was_kbc_ulster_customer`, `months_since_switching`, `experienced_switching_difficulty`, and `uses_digital_bank_secondary` (Revolut / N26 usage). Those four features are what lets the model capture the migration-driven risk that standard banking churn models would miss entirely.
 
 ---
 
@@ -96,7 +96,7 @@ flowchart TD
 
 ## 📊 Model Performance
 
-Three classifiers were trained and evaluated on the original imbalanced test set. XGBoost was selected as the deployed model.
+I trained three classifiers and compared them on the original imbalanced test set. XGBoost came out clearly ahead on every metric.
 
 <div align="center">
 
@@ -108,7 +108,7 @@ Three classifiers were trained and evaluated on the original imbalanced test set
 
 </div>
 
-PR-AUC is the primary metric here because the test set is imbalanced. A model that flags every customer as retained would score 79% accuracy — PR-AUC removes that distortion by measuring precision and recall simultaneously across all decision thresholds. XGBoost's PR-AUC of **0.842** represents a **+0.102 improvement** over the Logistic Regression baseline.
+I used PR-AUC as the primary metric rather than accuracy because the test set is imbalanced. A model that labels every customer as "retained" would still hit 79% accuracy, which is useless. PR-AUC measures how well the model performs across all possible decision thresholds without that distortion. XGBoost's **0.842** PR-AUC is a **+0.102 gain** over Logistic Regression, which is a meaningful jump on an imbalanced problem.
 
 <div align="center">
 
@@ -124,30 +124,30 @@ PR-AUC is the primary metric here because the test set is imbalanced. A model th
 
 ## 🔍 Feature Importance (SHAP)
 
-SHAP Shapley values were computed using `TreeExplainer` on the full 2,000-record test set. These are the top 5 drivers of churn probability globally across the portfolio.
+SHAP Shapley values were computed using `TreeExplainer` on the full 2,000-record test set. The top 5 features driving churn predictions across the portfolio are:
 
 <div align="center">
 
-| Rank | Feature | Mean Absolute SHAP | What It Captures |
+| Rank | Feature | Mean Absolute SHAP | What It Means |
 |:---:|:---|:---:|:---|
-| 1 | `num_products` | **2.841** | Product depth is the single strongest retention anchor. One product means no switching friction. |
-| 2 | `months_since_switching` | **1.028** | Recency of the 2022–2023 migration. The wound is still fresh for recent switchers. |
-| 3 | `has_direct_debits` | **0.883** | Direct debits tie customers to their bank. Absence is a strong churn signal. |
-| 4 | `tenure_months` | **0.838** | Longer relationships reduce switching intent. |
-| 5 | `has_savings_goal` | **0.529** | Goal-based accounts increase emotional engagement with the bank. |
+| 1 | `num_products` | **2.841** | The single strongest retention anchor. Customers with only one product have nothing tying them to the bank. |
+| 2 | `months_since_switching` | **1.028** | How recently the customer was forced to switch. More recent = higher risk. |
+| 3 | `has_direct_debits` | **0.883** | Direct debits create real friction to leave. No direct debits is a clear warning sign. |
+| 4 | `tenure_months` | **0.838** | Longer relationships reduce switching intent, regardless of how they started. |
+| 5 | `has_savings_goal` | **0.529** | Customers with a savings goal are more engaged and less likely to leave. |
 
 </div>
 
-The two highest-ranked features are structural: product depth and recency of the forced migration. This confirms what the dataset was built to capture — the 2022–2023 exits are still the dominant driver of switching risk in the Irish market in 2025–2026.
+The fact that `num_products` and `months_since_switching` are the top two features is exactly what I expected. Product depth is the main thing keeping customers in place, and the recency of the forced migration is still the dominant risk factor, which is why this model makes sense specifically for the current Irish market moment.
 
 ---
 
 ## ⚡ Sample Counterfactual Explanations (DiCE)
 
-DiCE generates diverse counterfactual scenarios — the minimum changes needed to move a high-risk customer below the churn threshold. These are displayed in the Risk Predictor tab for any customer predicted above 50% churn probability.
+For any customer the model flags above 50% churn probability, the Risk Predictor tab generates three counterfactual scenarios: the smallest set of changes that would bring them below the churn threshold. These are meant to give relationship managers something concrete to work with, not just a risk score.
 
 <details>
-<summary>🔴 Sample: high-risk customer (87% churn probability)</summary>
+<summary>🔴 Sample output — high-risk customer at 87% churn probability</summary>
 
 ```
 Input profile:
@@ -155,13 +155,13 @@ Input profile:
   was_kbc_ulster_customer=True · months_since_switching=9
   has_savings_goal=False · credit_score_band=Low
 
-Scenario 1 — Increase product depth and set up direct debits:
+Scenario 1 — Add products and set up direct debits:
   num_products:       1  →  3
   has_direct_debits:  0  →  1
   direct_debit_count: 0  →  4
   → Predicted outcome: Retained (12% risk)
 
-Scenario 2 — Introduce savings goal and increase engagement:
+Scenario 2 — Open a savings goal and increase transaction activity:
   has_savings_goal:          0  →  1
   monthly_transaction_count: 11  →  34
   → Predicted outcome: Retained (31% risk)
@@ -172,7 +172,7 @@ Scenario 3 — Increase balance and transaction volume:
   → Predicted outcome: Retained (44% risk)
 ```
 
-> These are model-generated suggestions only. A relationship manager should review and validate before any customer contact.
+> These are model-generated suggestions. A relationship manager should review them before any customer contact.
 </details>
 
 ---
@@ -226,41 +226,41 @@ pip install -r requirements.txt
 ```bash
 python data/generate_data.py
 ```
-Outputs `data/irish_banking_churn.csv` with 10,000 records and a ~21% churn rate.
+This creates `data/irish_banking_churn.csv` with 10,000 records at a ~21% churn rate.
 
 **4. Train the model**
 ```bash
 python models/train_model.py
 ```
-Trains all three classifiers, prints the full comparison table, saves `models/xgboost_churn_model.pkl`, and exports both SHAP plots to `assets/`.
+Trains all three classifiers, prints the comparison table, saves the XGBoost model to `models/xgboost_churn_model.pkl`, and exports both SHAP plots to `assets/`.
 
-**5. Launch the Streamlit dashboard**
+**5. Launch the dashboard**
 ```bash
 streamlit run app.py
 ```
-Opens at `http://localhost:8501`. The Risk Predictor tab requires the trained model to be present.
+Opens at `http://localhost:8501`. The Risk Predictor tab needs the trained model file to be present before it will run predictions.
 
 ---
 
 ## ⚠️ Limitations
 
-This is a portfolio project demonstrating a complete ML pipeline with explainability and regulatory compliance scaffolding. A few honest caveats.
+This is a student portfolio project, so I want to be upfront about what it is and isn't.
 
-The dataset is synthetic. Even with carefully calibrated parameters, synthetic data cannot fully replicate real customer behaviour — particularly the long-tail patterns that drive edge-case predictions. A model trained here would need retraining on real bank data before any deployment consideration.
+The data is synthetic. I calibrated it carefully against real published statistics, but synthetic data still can't replicate the full complexity of real customer behaviour. Before this model could be used in production, it would need to be retrained on actual bank data.
 
-The model does not incorporate macroeconomic variables. Interest rate movements, housing market conditions, and inflationary pressures all drive financial migration decisions in ways this model cannot currently detect.
+The model also doesn't know anything about the broader economy. Interest rates, the housing market, inflation: all of these push people to switch banks, and none of that is in here. That's a gap.
 
-The Irish-specific switching features (`was_kbc_ulster_customer`, `months_since_switching`) are time-sensitive. As the post-2022 migration period normalises toward 2027, their signal strength will decay and model weights will need recalibration to avoid over-weighting stale patterns.
+The two Irish-specific features (`was_kbc_ulster_customer`, `months_since_switching`) will become less useful over time as the post-2022 migration period settles. Once the market normalises post-2027, those signals will decay and the model weights will need recalibrating.
 
 <div align="center">
 
-| 🔧 Extension | 📈 What It Would Add |
+| 🔧 If I were to extend this | 📈 What it would add |
 |:---|:---|
-| Real bank transaction data | Actual behavioural signal, not simulated |
-| Macroeconomic features | Interest rate and housing market sensitivity |
-| Quarterly retraining pipeline | Adapts as the market normalises post-migration |
-| Larger feature set (50+ variables) | Richer engagement and product-use signals |
-| Online learning component | Detects drift without full retrains |
+| Real bank transaction data | Actual behavioural signal instead of simulated |
+| Macroeconomic features | Sensitivity to interest rates and housing market |
+| Quarterly retraining | Keeps up as the market normalises post-migration |
+| Larger feature set | More granular engagement and product-use signals |
+| Online learning | Catches drift without needing full retrains |
 
 </div>
 
@@ -268,11 +268,11 @@ The Irish-specific switching features (`was_kbc_ulster_customer`, `months_since_
 
 ## 🏛️ Regulatory Context
 
-Under **Article 86 of the EU AI Act**, consumers have a right to explanation when subjected to significant automated decisions affecting their access to financial services. Marking a customer as high-risk for churn can influence product recommendations, retention treatments, or credit availability decisions. This project satisfies that requirement with SHAP local waterfall charts (mathematical explanation of the individual prediction) and DiCE counterfactuals (actionable alternatives showing what would change the outcome).
+Under **Article 86 of the EU AI Act**, customers have a right to an explanation when an automated system makes a significant decision about their financial situation. Flagging someone as high-risk for churn can lead to changes in what products they're offered or how they're treated, so that needs to be explainable. The SHAP waterfall chart in the Risk Predictor tab gives a mathematical breakdown of exactly what pushed any individual prediction in either direction, and the DiCE counterfactuals show what would have to change to get a different outcome.
 
-Under the **EBA Guidelines on Internal Governance**, automated AI decisions in financial services must retain human-in-the-loop oversight. The Risk Predictor tab is explicitly designed as a decision-support tool for relationship managers, not an autonomous action-taker. All counterfactual suggestions carry a note that they require advisor review before any customer contact.
+The **EBA Guidelines on Internal Governance** also require human oversight for automated decisions in financial services. The dashboard is built as a decision-support tool for relationship managers, not a system that takes automatic action. Every counterfactual output carries a note making that clear.
 
-For full model details, validation configurations, and ethical considerations, see [model_card.md](model_card.md).
+Full details on the model, its validation, and ethical considerations are in [model_card.md](model_card.md).
 
 ---
 
@@ -282,13 +282,13 @@ For full model details, validation configurations, and ethical considerations, s
 
 | Library | Purpose |
 |:---|:---|
-| **pandas** | Structured data manipulation and CSV management |
+| **pandas** | Data manipulation and CSV management |
 | **numpy** | Vectorized operations and statistical calculations |
 | **scikit-learn** | Train/test splits, LabelEncoding, baseline classifiers |
 | **xgboost** | Gradient boosted trees classifier |
-| **imbalanced-learn** | SMOTEENN for class imbalance handling |
+| **imbalanced-learn** | SMOTEENN for handling class imbalance |
 | **shap** | Shapley values for global and local explainability |
-| **dice-ml** | Diverse counterfactual explanations for retention guidance |
+| **dice-ml** | Diverse counterfactual explanations |
 | **streamlit** | Five-tab interactive dashboard |
 | **plotly** | Interactive charts in the Data Explorer and Performance tabs |
 | **matplotlib / seaborn** | SHAP plot rendering |
