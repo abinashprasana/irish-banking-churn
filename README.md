@@ -30,7 +30,7 @@ The result is an XGBoost classifier that predicts which customers are most likel
 
 ## 🎬 Live Demo
 
-**[→ Open the live app on Streamlit Community Cloud](https://abinashprasana-irish-banking-churn-app-aidovf.streamlit.app/)**
+[![Open in Streamlit](https://img.shields.io/badge/Open%20in%20Streamlit-Live%20App-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://abinashprasana-irish-banking-churn-app-aidovf.streamlit.app/)
 
 No setup needed, runs directly in the browser.
 

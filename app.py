@@ -22,24 +22,99 @@ st.set_page_config(
 
 st.markdown("""
 <style>
+/* ── Base text — dark slate palette ── */
+h1, h2, h3, h4, h5, h6 { color: #f1f5f9 !important; letter-spacing: -0.3px; }
+p, li, .stMarkdown p { color: #cbd5e1 !important; }
+
+/* ── Layout ── */
+.block-container { padding: 2rem 2.5rem; }
+
+/* ── Tab bar ── */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 4px;
+    background: #1e293b;
+    border-radius: 12px;
+    padding: 5px;
+}
+.stTabs [data-baseweb="tab"] {
+    border-radius: 9px;
+    padding: 0.45rem 1rem;
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: #94a3b8 !important;
+    background: transparent;
+    border: none;
+}
+.stTabs [aria-selected="true"] {
+    background: #334155 !important;
+    color: #f1f5f9 !important;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.35) !important;
+}
+
+/* ── Primary button ── */
+.stButton > button[kind="primary"] {
+    background: linear-gradient(135deg, #1d4ed8, #3b82f6) !important;
+    border: none !important;
+    border-radius: 10px !important;
+    font-weight: 700 !important;
+    color: white !important;
+    letter-spacing: 0.3px !important;
+    box-shadow: 0 3px 12px rgba(59,130,246,0.3) !important;
+    transition: transform 0.1s, box-shadow 0.1s !important;
+}
+.stButton > button[kind="primary"]:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 5px 18px rgba(59,130,246,0.45) !important;
+}
+
+/* ── st.metric cards (used in Tab 5 fallback) ── */
 [data-testid="metric-container"] {
-    padding: 1rem 1.25rem;
-    border-radius: 8px;
-    background: #f8f9fa;
-    border: 1px solid #e9ecef;
+    padding: 1.2rem 1.25rem;
+    border-radius: 12px;
+    background: #1e293b !important;
+    border: 1px solid #334155;
+    border-top: 3px solid #60a5fa;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.25);
 }
-[data-testid="stMetricValue"] {
-    font-size: 1.6rem;
-}
-.block-container {
-    padding-top: 2rem;
-    padding-bottom: 2rem;
-    padding-left: 2rem;
-    padding-right: 2rem;
-}
+[data-testid="stMetricValue"] { font-size: 1.8rem !important; font-weight: 800 !important; color: #f1f5f9 !important; }
+[data-testid="stMetricDelta"] { font-size: 0.82rem !important; }
+[data-testid="stMetricLabel"] { color: #94a3b8 !important; }
+
+/* ── Alert boxes — tinted dark ── */
 div[data-testid="stInfo"] {
-    border-left: 4px solid #1f77b4;
+    border-left: 4px solid #3b82f6;
+    border-radius: 0 10px 10px 0;
+    background: rgba(59,130,246,0.1) !important;
 }
+div[data-testid="stInfo"] p { color: #93c5fd !important; }
+div[data-testid="stSuccess"] {
+    border-left: 4px solid #22c55e;
+    border-radius: 0 10px 10px 0;
+    background: rgba(34,197,94,0.1) !important;
+}
+div[data-testid="stSuccess"] p { color: #86efac !important; }
+div[data-testid="stWarning"] {
+    border-left: 4px solid #f59e0b;
+    border-radius: 0 10px 10px 0;
+    background: rgba(245,158,11,0.1) !important;
+}
+div[data-testid="stWarning"] p { color: #fcd34d !important; }
+div[data-testid="stError"] {
+    border-left: 4px solid #ef4444;
+    border-radius: 0 10px 10px 0;
+    background: rgba(239,68,68,0.1) !important;
+}
+div[data-testid="stError"] p { color: #fca5a5 !important; }
+
+/* ── Captions ── */
+.stCaption, [data-testid="stCaptionContainer"] { color: #64748b !important; }
+
+/* ── Expanders ── */
+.streamlit-expanderHeader { font-weight: 600; border-radius: 8px; color: #e2e8f0 !important; }
+
+/* ── Misc ── */
+[data-testid="stProgress"] > div { border-radius: 6px; overflow: hidden; }
+[data-testid="stDataFrame"] { border-radius: 10px; overflow: hidden; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -148,70 +223,82 @@ with tab1:
 
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric(label="Accounts Migrated", value="1.2M+")
-        st.caption("Forced out of KBC Bank Ireland and Ulster Bank between 2022 and 2023.")
+        st.markdown("""
+<div style="background:linear-gradient(135deg,#1e3a5f 0%,#2c5282 100%);border-radius:14px;padding:1.5rem 1.25rem;color:white;min-height:140px;">
+  <div style="font-size:2.6rem;font-weight:900;color:#93c5fd;line-height:1.1;">1.2M+</div>
+  <div style="font-size:0.68rem;font-weight:700;letter-spacing:1.3px;opacity:0.6;text-transform:uppercase;margin-top:0.3rem;">Accounts Migrated</div>
+  <div style="font-size:0.82rem;opacity:0.82;line-height:1.5;margin-top:0.55rem;">Forced out of KBC Bank Ireland and Ulster Bank between 2022 and 2023.</div>
+</div>""", unsafe_allow_html=True)
     with col2:
-        st.metric(label="Switchers Faced Difficulty", value="60%")
-        st.caption("Source: CCPC 2022 survey — direct debit failures, delays, and poor support.")
+        st.markdown("""
+<div style="background:linear-gradient(135deg,#7c2d12 0%,#b91c1c 100%);border-radius:14px;padding:1.5rem 1.25rem;color:white;min-height:140px;">
+  <div style="font-size:2.6rem;font-weight:900;color:#fca5a5;line-height:1.1;">60%</div>
+  <div style="font-size:0.68rem;font-weight:700;letter-spacing:1.3px;opacity:0.6;text-transform:uppercase;margin-top:0.3rem;">Faced Switching Difficulty</div>
+  <div style="font-size:0.82rem;opacity:0.82;line-height:1.5;margin-top:0.55rem;">Source: CCPC 2022 survey. Direct debit failures, delays, and poor support throughout.</div>
+</div>""", unsafe_allow_html=True)
     with col3:
-        st.metric(label="Top Reason for Bank Choice", value="Branch Location")
-        st.caption("Digital-only alternatives failed to gain trust during the migration crisis.")
+        st.markdown("""
+<div style="background:linear-gradient(135deg,#14532d 0%,#166534 100%);border-radius:14px;padding:1.5rem 1.25rem;color:white;min-height:140px;">
+  <div style="font-size:2.6rem;font-weight:900;color:#86efac;line-height:1.1;">Branch</div>
+  <div style="font-size:0.68rem;font-weight:700;letter-spacing:1.3px;opacity:0.6;text-transform:uppercase;margin-top:0.3rem;">Top Reason for Bank Choice</div>
+  <div style="font-size:0.82rem;opacity:0.82;line-height:1.5;margin-top:0.55rem;">Digital-only alternatives failed to gain trust during the migration crisis.</div>
+</div>""", unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    st.markdown(
-        "The 2022-2023 exits of KBC Bank Ireland and Ulster Bank (NatWest Group) remain the defining disruption "
+    st.info(
+        "The 2022–2023 exits of KBC Bank Ireland and Ulster Bank (NatWest Group) remain the defining disruption "
         "in modern Irish retail banking. Over 1.2 million customers were forced to migrate to AIB, Bank of Ireland, "
-        "or Permanent TSB within a compressed two-year window. Now in 2025-2026, those customers are entering their "
-        "third or fourth year with a new provider. Behavioural research suggests institutional trust takes 3-5 years "
-        "to rebuild after a forced migration — the Irish market is still in an elevated churn risk window that will "
+        "or Permanent TSB within a compressed two-year window. Now in 2025–2026, those customers are entering their "
+        "third or fourth year with a new provider. Behavioural research suggests institutional trust takes 3–5 years "
+        "to rebuild after a forced migration. The Irish market is still in an elevated churn risk window that will "
         "not normalise before 2027. This project models those persisting switching behaviours to help retail banks "
         "identify at-risk customers before they leave."
     )
 
     st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("**What this project builds**")
+    st.markdown("#### 🧩 What this project builds")
     st.markdown("<br>", unsafe_allow_html=True)
 
     lc1, lc2, lc3 = st.columns(3)
     with lc1:
-        st.markdown("**XGBoost + SMOTEENN**")
+        st.markdown("##### 🤖 XGBoost + SMOTEENN")
         st.write(
             "An XGBoost gradient boosted classifier predicts churn probability for each customer. "
-            "Class imbalance (21% positive rate) is handled with SMOTEENN on the training set only. "
-            "Evaluated on a clean 20% stratified holdout."
+            "Class imbalance (21% positive rate) is handled with SMOTEENN on the training set only, "
+            "evaluated on a clean 20% stratified holdout."
         )
     with lc2:
-        st.markdown("**SHAP Explainability**")
+        st.markdown("##### 🔍 SHAP Explainability")
         st.write(
-            "Shapley values explain what drives each prediction — globally across the portfolio with "
+            "Shapley values explain what drives each prediction. Globally across the portfolio with "
             "beeswarm and bar plots, and locally for individual customers with a waterfall chart."
         )
     with lc3:
-        st.markdown("**DICE Counterfactuals**")
+        st.markdown("##### ⚡ DiCE Counterfactuals")
         st.write(
             "Diverse counterfactual explanations show what would need to change for a high-risk customer "
-            "to drop below the churn threshold — giving relationship managers specific, actionable targets."
+            "to drop below the churn threshold, giving relationship managers specific, actionable targets."
         )
 
     st.markdown("<br>", unsafe_allow_html=True)
 
     exp_col1, exp_col2 = st.columns(2)
     with exp_col1:
-        with st.expander("EU AI Act — Article 86"):
+        with st.expander("⚖️ EU AI Act — Article 86"):
             st.markdown(
                 "Under Article 86 of the EU AI Act, customers have a right to explanation when automated systems "
                 "make significant decisions about their access to financial services. Flagging a customer as high-risk "
                 "for churn could affect product offers, credit availability, or how they are treated by relationship "
-                "managers. Both SHAP and DICE provide the auditable, customer-level justifications that satisfy this requirement."
+                "managers. Both SHAP and DiCE provide the auditable, customer-level justifications that satisfy this requirement."
             )
     with exp_col2:
-        with st.expander("EBA Guidelines on Internal Governance"):
+        with st.expander("🏛️ EBA Guidelines on Internal Governance"):
             st.markdown(
                 "Under European Banking Authority guidelines on internal governance, automated AI systems in banking "
                 "must maintain clear human-in-the-loop oversight. This model is intentionally a decision-support tool, "
                 "not an autonomous action-taker. All counterfactual recommendations and risk flags are designed to alert "
-                "and assist advisors — final customer treatments require human validation before execution."
+                "and assist advisors. Final customer treatments require human validation before execution."
             )
 
 
@@ -228,16 +315,31 @@ with tab2:
 
     m1, m2, m3 = st.columns(3)
     with m1:
-        st.metric(label="Overall Churn Rate", value=f"{overall_churn:.1f}%")
+        st.markdown(f"""
+<div style="background:#1e293b;border-radius:12px;padding:1.2rem 1.25rem;border:1px solid #334155;border-top:4px solid #60a5fa;box-shadow:0 2px 10px rgba(0,0,0,0.25);">
+  <div style="font-size:0.68rem;font-weight:700;color:#64748b;letter-spacing:1.1px;text-transform:uppercase;">📊 Overall Churn Rate</div>
+  <div style="font-size:2.4rem;font-weight:900;color:#93c5fd;line-height:1.15;margin-top:0.25rem;">{overall_churn:.1f}%</div>
+  <div style="font-size:0.79rem;color:#64748b;margin-top:0.25rem;">Across all 10,000 customers</div>
+</div>""", unsafe_allow_html=True)
     with m2:
-        st.metric(label="Former KBC / Ulster Customers", value=f"{kbc_churn:.1f}%")
+        st.markdown(f"""
+<div style="background:#1e293b;border-radius:12px;padding:1.2rem 1.25rem;border:1px solid #334155;border-top:4px solid #f87171;box-shadow:0 2px 10px rgba(0,0,0,0.25);">
+  <div style="font-size:0.68rem;font-weight:700;color:#64748b;letter-spacing:1.1px;text-transform:uppercase;">⚠️ Former KBC / Ulster</div>
+  <div style="font-size:2.4rem;font-weight:900;color:#fca5a5;line-height:1.15;margin-top:0.25rem;">{kbc_churn:.1f}%</div>
+  <div style="font-size:0.79rem;color:#64748b;margin-top:0.25rem;">{churn_ratio:.1f}x higher than other customers</div>
+</div>""", unsafe_allow_html=True)
     with m3:
-        st.metric(label="All Other Customers", value=f"{other_churn:.1f}%")
+        st.markdown(f"""
+<div style="background:#1e293b;border-radius:12px;padding:1.2rem 1.25rem;border:1px solid #334155;border-top:4px solid #4ade80;box-shadow:0 2px 10px rgba(0,0,0,0.25);">
+  <div style="font-size:0.68rem;font-weight:700;color:#64748b;letter-spacing:1.1px;text-transform:uppercase;">✅ All Other Customers</div>
+  <div style="font-size:2.4rem;font-weight:900;color:#86efac;line-height:1.15;margin-top:0.25rem;">{other_churn:.1f}%</div>
+  <div style="font-size:0.79rem;color:#64748b;margin-top:0.25rem;">Baseline churn rate pre-migration</div>
+</div>""", unsafe_allow_html=True)
 
     st.info(
         f"Former KBC and Ulster Bank customers churn at {kbc_churn:.1f}% versus {other_churn:.1f}% for other customers "
-        f"— {churn_ratio:.1f}x higher. This gap narrows as months since switching increases, "
-        f"but remains elevated across the dataset, reflecting the ongoing post-migration loyalty deficit in 2025-2026."
+        f"({churn_ratio:.1f}x higher). This gap narrows as months since switching increases, "
+        f"but remains elevated across the dataset, reflecting the ongoing post-migration loyalty deficit in 2025–2026."
     )
 
     st.markdown("---")
@@ -322,19 +424,35 @@ with tab2:
 
 with tab3:
     st.header("📈 XGBoost Performance")
-    st.markdown("All metrics are evaluated on the held-out 20% test set. The model never saw these records during training.")
+    st.markdown("All metrics evaluated on the held-out 20% test set. The model never saw these records during training.")
+    st.success("🏆 XGBoost outperformed both the Logistic Regression and Random Forest baselines on every metric and was selected as the deployed model.")
     st.markdown("<br>", unsafe_allow_html=True)
 
     c1, c2, c3 = st.columns(3)
     with c1:
-        st.metric(label="F1 Score", value="0.786", delta="+0.119 vs Logistic Regression")
-        st.caption("Balances precision and recall. The model catches most churners without generating too many false alarms.")
+        st.markdown("""
+<div style="background:linear-gradient(135deg,#1e3a5f 0%,#2c5282 100%);border-radius:14px;padding:1.5rem 1.25rem;color:white;text-align:center;">
+  <div style="font-size:0.68rem;font-weight:700;letter-spacing:1.3px;opacity:0.65;text-transform:uppercase;">🎯 F1 Score</div>
+  <div style="font-size:3.2rem;font-weight:900;color:#93c5fd;line-height:1.1;margin:0.3rem 0;">0.786</div>
+  <div style="font-size:0.78rem;opacity:0.85;background:rgba(255,255,255,0.12);border-radius:6px;padding:0.3rem 0.6rem;display:inline-block;">+0.119 vs Logistic Regression</div>
+  <div style="font-size:0.78rem;opacity:0.7;margin-top:0.6rem;line-height:1.4;">Balances precision and recall. Catches most churners without too many false alarms.</div>
+</div>""", unsafe_allow_html=True)
     with c2:
-        st.metric(label="ROC-AUC", value="0.959", delta="+0.058 vs Logistic Regression")
-        st.caption("Measures how well the model separates churners from retained customers. Random guessing would score 0.50.")
+        st.markdown("""
+<div style="background:linear-gradient(135deg,#14532d 0%,#166534 100%);border-radius:14px;padding:1.5rem 1.25rem;color:white;text-align:center;">
+  <div style="font-size:0.68rem;font-weight:700;letter-spacing:1.3px;opacity:0.65;text-transform:uppercase;">📈 ROC-AUC</div>
+  <div style="font-size:3.2rem;font-weight:900;color:#86efac;line-height:1.1;margin:0.3rem 0;">0.959</div>
+  <div style="font-size:0.78rem;opacity:0.85;background:rgba(255,255,255,0.12);border-radius:6px;padding:0.3rem 0.6rem;display:inline-block;">+0.058 vs Logistic Regression</div>
+  <div style="font-size:0.78rem;opacity:0.7;margin-top:0.6rem;line-height:1.4;">Separation between churners and retained customers. Random guessing scores 0.50.</div>
+</div>""", unsafe_allow_html=True)
     with c3:
-        st.metric(label="PR-AUC", value="0.842", delta="+0.102 vs Logistic Regression")
-        st.caption("PR-AUC matters more than accuracy here because only 21% of customers churn — accuracy alone would be misleading.")
+        st.markdown("""
+<div style="background:linear-gradient(135deg,#78350f 0%,#b45309 100%);border-radius:14px;padding:1.5rem 1.25rem;color:white;text-align:center;">
+  <div style="font-size:0.68rem;font-weight:700;letter-spacing:1.3px;opacity:0.65;text-transform:uppercase;">⭐ PR-AUC</div>
+  <div style="font-size:3.2rem;font-weight:900;color:#fcd34d;line-height:1.1;margin:0.3rem 0;">0.842</div>
+  <div style="font-size:0.78rem;opacity:0.85;background:rgba(255,255,255,0.12);border-radius:6px;padding:0.3rem 0.6rem;display:inline-block;">+0.102 vs Logistic Regression</div>
+  <div style="font-size:0.78rem;opacity:0.7;margin-top:0.6rem;line-height:1.4;">Primary metric for imbalanced data. Accuracy alone would be deeply misleading here.</div>
+</div>""", unsafe_allow_html=True)
 
     st.markdown("---")
 
@@ -355,7 +473,7 @@ with tab3:
         st.plotly_chart(fig_cm, use_container_width=True)
         st.caption(
             "371 of 420 actual churners correctly identified. "
-            "The 49 false negatives (bottom-left) are missed churners — the main cost in a retention context."
+            "The 49 false negatives (bottom-left) are missed churners, which is the main cost in a retention context."
         )
 
     with ch2:
@@ -403,6 +521,27 @@ with tab4:
     )
 
     st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("##### 📋 Top 5 Features by Mean Absolute SHAP Value")
+    rank_col1, rank_col2 = st.columns(2)
+    with rank_col1:
+        st.markdown("""
+| Rank | Feature | SHAP |
+|:---:|:---|:---:|
+| 🥇 1 | `num_products` | 2.841 |
+| 🥈 2 | `months_since_switching` | 1.028 |
+| 🥉 3 | `has_direct_debits` | 0.883 |
+| 4 | `tenure_months` | 0.838 |
+| 5 | `has_savings_goal` | 0.529 |
+        """)
+    with rank_col2:
+        st.markdown("""
+**What the rankings tell us:**
+
+The top two features are both structural outcomes of the 2022–2023 migration event. Product depth determines how much friction a customer faces if they try to leave, and months since switching captures how recently they were forced to move.
+
+Features 3 through 5 are engagement anchors. Direct debits, long tenure, and savings goals all reflect a customer who is genuinely embedded with the bank rather than simply present.
+        """)
+    st.markdown("<br>", unsafe_allow_html=True)
 
     shap_col1, shap_col2 = st.columns(2)
 
@@ -413,7 +552,7 @@ with tab4:
             st.image(beeswarm_path, use_container_width=True)
             st.caption(
                 "Each dot is one customer. Red = high feature value, blue = low. "
-                "Dots pushed right increase churn probability — low product count (blue) is the strongest single signal."
+                "Dots pushed right increase churn probability. Low product count (blue) is the strongest single signal."
             )
         else:
             st.warning("Beeswarm plot not found. Run models/train_model.py to generate it.")
@@ -433,7 +572,7 @@ with tab4:
     st.markdown("<br>", unsafe_allow_html=True)
     st.info(
         "Under Article 86 of the EU AI Act, banks must be able to explain automated decisions that affect a "
-        "customer's access to financial services. SHAP provides a mathematically grounded way to do that — "
+        "customer's access to financial services. SHAP provides a mathematically grounded way to do that: "
         "each explanation is derived from cooperative game theory, making it auditable and defensible to regulators. "
         "Global monitoring also helps confirm that the model is not relying on proxy variables that could introduce bias."
     )
@@ -552,23 +691,41 @@ with tab5:
             if churn_prob < 0.30:
                 risk_label = "Low Risk"
                 risk_msg = "This customer shows low switching risk. No immediate action needed."
-                risk_fn = st.success
+                risk_color = "#4ade80"
+                risk_bg = "rgba(74,222,128,0.08)"
+                risk_border = "rgba(74,222,128,0.25)"
+                prob_color = "#86efac"
             elif churn_prob < 0.60:
                 risk_label = "Medium Risk"
                 risk_msg = "This customer shows moderate switching risk. Consider a proactive check-in."
-                risk_fn = st.warning
+                risk_color = "#fbbf24"
+                risk_bg = "rgba(251,191,36,0.08)"
+                risk_border = "rgba(251,191,36,0.25)"
+                prob_color = "#fcd34d"
             else:
                 risk_label = "High Risk"
                 risk_msg = "This customer is at high risk of leaving. Retention action is recommended."
-                risk_fn = st.error
+                risk_color = "#f87171"
+                risk_bg = "rgba(248,113,113,0.08)"
+                risk_border = "rgba(248,113,113,0.25)"
+                prob_color = "#fca5a5"
 
-            st.metric(label="Churn Probability", value=f"{churn_prob * 100:.1f}%", delta=risk_label)
+            st.markdown(f"""
+<div style="background:{risk_bg};border:1px solid {risk_border};border-left:5px solid {risk_color};border-radius:12px;padding:1.4rem 1.5rem;margin-bottom:0.75rem;">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:0.5rem;">
+    <div>
+      <div style="font-size:0.66rem;font-weight:700;color:#64748b;letter-spacing:1.1px;text-transform:uppercase;">Churn Probability</div>
+      <div style="font-size:3.2rem;font-weight:900;color:{prob_color};line-height:1.1;">{churn_prob*100:.1f}%</div>
+    </div>
+    <div style="background:{risk_color};color:#0f172a;border-radius:8px;padding:0.35rem 0.9rem;font-weight:700;font-size:0.85rem;align-self:flex-start;margin-top:0.25rem;">{risk_label}</div>
+  </div>
+  <div style="font-size:0.88rem;color:#cbd5e1;margin-top:0.6rem;">{risk_msg}</div>
+</div>""", unsafe_allow_html=True)
             st.progress(float(churn_prob))
-            risk_fn(risk_msg)
 
             st.divider()
 
-            st.markdown("**Local explanation (SHAP waterfall)**")
+            st.markdown("##### 🔍 Local SHAP Explanation")
             explainer = shap.TreeExplainer(xgb_model)
             shap_val = explainer(input_df)
             fig, ax = plt.subplots(figsize=(5, 3.5))
@@ -584,8 +741,8 @@ with tab5:
             if churn_prob > 0.50:
                 st.divider()
 
-                st.markdown("**What could change this customer's outcome?**")
-                st.caption("These are model-generated suggestions only. A relationship manager should review before any customer contact.")
+                st.markdown("##### 💡 What could change this customer's outcome?")
+                st.caption("Model-generated suggestions only. A relationship manager should review before any customer contact.")
 
                 with st.spinner("Generating counterfactual scenarios..."):
                     try:
@@ -657,4 +814,9 @@ with tab5:
                 st.success("This customer is below the churn threshold. No counterfactual suggestions needed.")
 
         else:
-            st.info("Fill in the customer profile on the left and click 'Predict churn risk'.")
+            st.markdown("""
+<div style="background:#1e293b;border:2px dashed #334155;border-radius:14px;padding:2.5rem 2rem;text-align:center;margin-top:1rem;">
+  <div style="font-size:2.5rem;margin-bottom:0.75rem;">📋</div>
+  <div style="font-size:1rem;font-weight:700;color:#e2e8f0;margin-bottom:0.4rem;">No prediction yet</div>
+  <div style="font-size:0.88rem;color:#64748b;line-height:1.6;">Fill in the customer profile on the left and click <strong>Predict churn risk</strong> to see the churn probability, SHAP explanation, and counterfactual suggestions here.</div>
+</div>""", unsafe_allow_html=True)
