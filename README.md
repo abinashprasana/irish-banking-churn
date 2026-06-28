@@ -45,7 +45,7 @@ No setup needed, runs directly in the browser.
 | 📦 Type | Fully synthetic, statistically calibrated |
 | 📋 Total records | 10,000 customer profiles |
 | 🎯 Churn rate | ~21% (2,100 churners, 7,900 retained) |
-| 🏗️ Features | 20 input variables |
+| 🏗️ Features | 19 input variables |
 | 📐 Train / test split | 80% training (8,000) / 20% test (2,000), stratified |
 | 🏦 Migration flag | ~15% former KBC Bank Ireland or Ulster Bank customers |
 | 😤 Switching difficulty | 60% of migrated customers experienced friction |
@@ -63,7 +63,7 @@ What makes this dataset different from a standard churn dataset is the Irish-spe
 
 ```mermaid
 flowchart TD
-    A["📁 Data Generation\ngenerate_data.py\n10,000 synthetic records · 20 features\nCalibrated to CBI & CCPC statistics"]
+    A["📁 Data Generation\ngenerate_data.py\n10,000 synthetic records · 19 features\nCalibrated to CBI & CCPC statistics"]
     B["🔧 Preprocessing\nLabelEncoder · Boolean cast to int\nStratified 80/20 train / test split"]
     C["⚖️ SMOTEENN\nTraining set only\n6,320 neg + 1,680 pos  →  2,724 neg + 3,662 pos\nTest set left at original 79% / 21%"]
     D1["Logistic Regression\nBaseline"]
@@ -273,29 +273,6 @@ Under **Article 86 of the EU AI Act**, customers have a right to an explanation 
 The **EBA Guidelines on Internal Governance** also require human oversight for automated decisions in financial services. The dashboard is built as a decision-support tool for relationship managers, not a system that takes automatic action. Every counterfactual output carries a note making that clear.
 
 Full details on the model, its validation, and ethical considerations are in [model_card.md](model_card.md).
-
----
-
-## 🧰 Technical Stack
-
-<div align="center">
-
-| Library | Purpose |
-|:---|:---|
-| **pandas** | Data manipulation and CSV management |
-| **numpy** | Vectorized operations and statistical calculations |
-| **scikit-learn** | Train/test splits, LabelEncoding, baseline classifiers |
-| **xgboost** | Gradient boosted trees classifier |
-| **imbalanced-learn** | SMOTEENN for handling class imbalance |
-| **shap** | Shapley values for global and local explainability |
-| **dice-ml** | Diverse counterfactual explanations |
-| **streamlit** | Five-tab interactive dashboard |
-| **plotly** | Interactive charts in the Data Explorer and Performance tabs |
-| **matplotlib / seaborn** | SHAP plot rendering |
-| **faker** | Synthetic customer demographic generation |
-| **joblib** | Model serialization |
-
-</div>
 
 ---
 
