@@ -1,0 +1,410 @@
+{
+  "schema_version": "1.0",
+  "demo_id": "02_allowed_service_review",
+  "title": "Allowed: dedicated human-led service review",
+  "recording": {
+    "mode": "recorded_phase1_runtime_with_scripted_agent_trace",
+    "real_api_calls": 0,
+    "model": "llama-3.3-70b-versatile",
+    "synthetic_data": true,
+    "synthetic_governance": true,
+    "phase1_runtime_capture": true,
+    "phase1_model_artifact": "xgboost_churn_model.pkl",
+    "phase1_prediction_method": "model.predict_proba(feature_vector)[0, 1]",
+    "note": "The Phase 1 probability and encoded feature evidence were captured from a real local model call; the Groq reasoning trace remains a zero-request scripted replay."
+  },
+  "customer": {
+    "customer_id": "IRLBANK_03890",
+    "profile": {
+      "age": 39,
+      "tenure_months": 13,
+      "account_type": "Current + Savings",
+      "monthly_balance_eur": 5728.99,
+      "num_products": 2,
+      "monthly_transaction_count": 135,
+      "monthly_transaction_amount_eur": 4849.23,
+      "has_direct_debits": true,
+      "direct_debit_count": 6,
+      "uses_digital_bank_secondary": false,
+      "was_kbc_ulster_customer": true,
+      "months_since_switching": 6,
+      "experienced_switching_difficulty": true,
+      "branch_visits_monthly": 0,
+      "customer_service_calls_6months": 3,
+      "has_complaint_history": true,
+      "credit_score_band": "Medium",
+      "has_mortgage": false,
+      "has_savings_goal": false
+    },
+    "churn_probability": 0.9980600476264954,
+    "churn_drivers": [
+      {
+        "feature": "months_since_switching",
+        "value": 6,
+        "shap_value": 2.786297082901001,
+        "direction": "increases_churn"
+      },
+      {
+        "feature": "has_complaint_history",
+        "value": true,
+        "shap_value": 1.6752890348434448,
+        "direction": "increases_churn"
+      },
+      {
+        "feature": "tenure_months",
+        "value": 13,
+        "shap_value": 1.0539250373840332,
+        "direction": "increases_churn"
+      },
+      {
+        "feature": "num_products",
+        "value": 2,
+        "shap_value": -1.0531370639801025,
+        "direction": "decreases_churn"
+      },
+      {
+        "feature": "experienced_switching_difficulty",
+        "value": true,
+        "shap_value": 0.6646860241889954,
+        "direction": "increases_churn"
+      }
+    ],
+    "held_products": [
+      "current_account",
+      "savings_account"
+    ],
+    "governance": {
+      "in_arrears": false,
+      "vulnerable_customer": false
+    },
+    "governance_note": "The governance overlay is synthetic scenario metadata. These fields do not exist in Phase 1 and were not inferred from the profile, churn probability, or SHAP values."
+  },
+  "trace": [
+    {
+      "step": 1,
+      "type": "model_thought",
+      "content": {
+        "text": "Churn probability: 99.81%. Complaint history and recent switching difficulty present. Checking non-sales service options."
+      },
+      "timestamp": "2026-07-13T14:10:00Z"
+    },
+    {
+      "step": 2,
+      "type": "tool_call",
+      "content": {
+        "tool_use_id": "toolu_demo02_products",
+        "name": "product_lookup",
+        "input": {
+          "category": "service"
+        }
+      },
+      "timestamp": "2026-07-13T14:10:01Z"
+    },
+    {
+      "step": 3,
+      "type": "tool_result",
+      "content": {
+        "tool_use_id": "toolu_demo02_products",
+        "name": "product_lookup",
+        "is_error": false,
+        "result": {
+          "catalogue_name": "Synthetic Irish Retail Banking Retention Offers",
+          "synthetic": true,
+          "currency": "EUR",
+          "offers": [
+            {
+              "action_id": "dedicated_service_review",
+              "name": "Dedicated service and switching-friction review",
+              "description": "Arrange a no-sales service review covering complaints, direct debits, and unresolved switching issues.",
+              "category": "service",
+              "is_credit": false,
+              "is_upsell": false,
+              "target_product": null,
+              "eligibility_note": "Synthetic service action with no product sale."
+            },
+            {
+              "action_id": "direct_debit_switch_support",
+              "name": "Direct-debit switching support",
+              "description": "Provide a dedicated service appointment to resolve direct-debit migration or setup issues without a product sale.",
+              "category": "service",
+              "is_credit": false,
+              "is_upsell": false,
+              "target_product": null,
+              "eligibility_note": "Synthetic service action with no product sale."
+            }
+          ]
+        }
+      },
+      "timestamp": "2026-07-13T14:10:02Z"
+    },
+    {
+      "step": 4,
+      "type": "tool_call",
+      "content": {
+        "tool_use_id": "toolu_demo02_segment",
+        "name": "segment_comparison",
+        "input": {}
+      },
+      "timestamp": "2026-07-13T14:10:03Z"
+    },
+    {
+      "step": 5,
+      "type": "tool_result",
+      "content": {
+        "tool_use_id": "toolu_demo02_segment",
+        "name": "segment_comparison",
+        "is_error": false,
+        "result": {
+          "cohort_definition": {
+            "migration_segment": "former_kbc_ulster",
+            "age_band": "30-44",
+            "account_type": "Current + Savings",
+            "num_products": 2
+          },
+          "cohort_size": 167,
+          "retained_count": 106,
+          "churned_count": 61,
+          "churn_rate": 0.3653,
+          "most_common_products_among_retained": [
+            {
+              "product": "current_account",
+              "retained_customers": 106
+            },
+            {
+              "product": "savings_account",
+              "retained_customers": 106
+            }
+          ],
+          "target_phase1_prediction": {
+            "customer_id": "IRLBANK_03890",
+            "churn_probability": 0.9980600476264954,
+            "feature_columns": [
+              "age",
+              "tenure_months",
+              "account_type",
+              "monthly_balance_eur",
+              "num_products",
+              "monthly_transaction_count",
+              "monthly_transaction_amount_eur",
+              "has_direct_debits",
+              "direct_debit_count",
+              "uses_digital_bank_secondary",
+              "was_kbc_ulster_customer",
+              "months_since_switching",
+              "experienced_switching_difficulty",
+              "branch_visits_monthly",
+              "customer_service_calls_6months",
+              "has_complaint_history",
+              "credit_score_band",
+              "has_mortgage",
+              "has_savings_goal"
+            ],
+            "encoded_feature_vector": {
+              "age": 39.0,
+              "tenure_months": 13.0,
+              "account_type": 1.0,
+              "monthly_balance_eur": 5728.99,
+              "num_products": 2.0,
+              "monthly_transaction_count": 135.0,
+              "monthly_transaction_amount_eur": 4849.23,
+              "has_direct_debits": 1.0,
+              "direct_debit_count": 6.0,
+              "uses_digital_bank_secondary": 0.0,
+              "was_kbc_ulster_customer": 1.0,
+              "months_since_switching": 6.0,
+              "experienced_switching_difficulty": 1.0,
+              "branch_visits_monthly": 0.0,
+              "customer_service_calls_6months": 3.0,
+              "has_complaint_history": 1.0,
+              "credit_score_band": 2.0,
+              "has_mortgage": 0.0,
+              "has_savings_goal": 0.0
+            },
+            "model_artifact": "xgboost_churn_model.pkl",
+            "prediction_method": "model.predict_proba(feature_vector)[0, 1]"
+          },
+          "data_note": "Aggregates use the local synthetic Phase 1 dataset only; target risk is a captured local Phase 1 model prediction."
+        }
+      },
+      "timestamp": "2026-07-13T14:10:04Z"
+    },
+    {
+      "step": 6,
+      "type": "model_thought",
+      "content": {
+        "text": "Cohort churn rate: 36.53%. This customer is substantially higher. Dedicated service review addresses complaint and switching friction without credit or upsell. Submitting to policy gate."
+      },
+      "timestamp": "2026-07-13T14:10:05Z"
+    },
+    {
+      "step": 7,
+      "type": "tool_call",
+      "content": {
+        "tool_use_id": "toolu_demo02_gate",
+        "name": "regulatory_constraint_checker",
+        "input": {
+          "action_id": "dedicated_service_review",
+          "requires_human_review": true
+        }
+      },
+      "timestamp": "2026-07-13T14:10:06Z"
+    },
+    {
+      "step": 8,
+      "type": "gate_check",
+      "content": {
+        "action_id": "dedicated_service_review",
+        "checker_verdict": "approved",
+        "passed": true,
+        "failed_rule_ids": [],
+        "customer_fingerprint": "4ae0b2967a3274cb88230a959bae0aaa8f3064d113d7122c6529242d737e5391",
+        "action_fingerprint": "7ded6f2028b3f07c77ca81ee661f3ca2b89cad738c1dd21a0a480fcbd5adfcfd",
+        "rule_results": [
+          {
+            "rule_id": "ARR-001",
+            "description": "Customers in arrears cannot receive credit or credit-limit offers.",
+            "passed": true,
+            "reason": "Passed: no prohibited arrears-related credit offer is proposed."
+          },
+          {
+            "rule_id": "HOLD-002",
+            "description": "Do not offer a product the customer already holds.",
+            "passed": true,
+            "reason": "Passed: the action does not duplicate an existing product holding."
+          },
+          {
+            "rule_id": "HUM-003",
+            "description": "Recommendations above the churn-risk threshold require human review.",
+            "passed": true,
+            "reason": "Passed: the human-review requirement is satisfied or not triggered."
+          },
+          {
+            "rule_id": "VUL-004",
+            "description": "Vulnerable customers may receive only non-upsell service or fee-relief actions.",
+            "passed": true,
+            "reason": "Passed: vulnerable-customer restrictions are satisfied or not triggered."
+          }
+        ]
+      },
+      "timestamp": "2026-07-13T14:10:07Z"
+    },
+    {
+      "step": 9,
+      "type": "tool_result",
+      "content": {
+        "tool_use_id": "toolu_demo02_gate",
+        "name": "regulatory_constraint_checker",
+        "is_error": false,
+        "result": {
+          "action_id": "dedicated_service_review",
+          "checker_verdict": "approved",
+          "passed": true,
+          "failed_rule_ids": [],
+          "customer_fingerprint": "4ae0b2967a3274cb88230a959bae0aaa8f3064d113d7122c6529242d737e5391",
+          "action_fingerprint": "7ded6f2028b3f07c77ca81ee661f3ca2b89cad738c1dd21a0a480fcbd5adfcfd",
+          "rule_results": [
+            {
+              "rule_id": "ARR-001",
+              "description": "Customers in arrears cannot receive credit or credit-limit offers.",
+              "passed": true,
+              "reason": "Passed: no prohibited arrears-related credit offer is proposed."
+            },
+            {
+              "rule_id": "HOLD-002",
+              "description": "Do not offer a product the customer already holds.",
+              "passed": true,
+              "reason": "Passed: the action does not duplicate an existing product holding."
+            },
+            {
+              "rule_id": "HUM-003",
+              "description": "Recommendations above the churn-risk threshold require human review.",
+              "passed": true,
+              "reason": "Passed: the human-review requirement is satisfied or not triggered."
+            },
+            {
+              "rule_id": "VUL-004",
+              "description": "Vulnerable customers may receive only non-upsell service or fee-relief actions.",
+              "passed": true,
+              "reason": "Passed: vulnerable-customer restrictions are satisfied or not triggered."
+            }
+          ]
+        }
+      },
+      "timestamp": "2026-07-13T14:10:08Z"
+    },
+    {
+      "step": 10,
+      "type": "model_thought",
+      "content": {
+        "text": "Policy gate: all four rules passed for dedicated_service_review. Churn probability above 75%; HUM-003 human-review flag applies."
+      },
+      "timestamp": "2026-07-13T14:10:09Z"
+    },
+    {
+      "step": 11,
+      "type": "tool_call",
+      "content": {
+        "tool_use_id": "toolu_demo02_format",
+        "name": "recommendation_formatter",
+        "input": {
+          "action": "dedicated_service_review",
+          "justification": "The customer's extremely high Phase 1 churn probability, recent switching difficulty, and complaint history support a prompt human-led service intervention. A dedicated review addresses service friction without selling credit or duplicating either held product.",
+          "confidence": 0.94,
+          "regulatory_flags": [],
+          "checker_verdict": "approved"
+        }
+      },
+      "timestamp": "2026-07-13T14:10:10Z"
+    },
+    {
+      "step": 12,
+      "type": "final_output",
+      "content": {
+        "action": "dedicated_service_review",
+        "justification": "The customer's extremely high Phase 1 churn probability, recent switching difficulty, and complaint history support a prompt human-led service intervention. A dedicated review addresses service friction without selling credit or duplicating either held product.",
+        "confidence": 0.94,
+        "regulatory_flags": [
+          "HUM-003:human_review_required"
+        ],
+        "checker_verdict": "approved"
+      },
+      "timestamp": "2026-07-13T14:10:11Z"
+    },
+    {
+      "step": 13,
+      "type": "tool_result",
+      "content": {
+        "tool_use_id": "toolu_demo02_format",
+        "name": "recommendation_formatter",
+        "is_error": false,
+        "result": {
+          "action": "dedicated_service_review",
+          "justification": "The customer's extremely high Phase 1 churn probability, recent switching difficulty, and complaint history support a prompt human-led service intervention. A dedicated review addresses service friction without selling credit or duplicating either held product.",
+          "confidence": 0.94,
+          "regulatory_flags": [
+            "HUM-003:human_review_required"
+          ],
+          "checker_verdict": "approved"
+        }
+      },
+      "timestamp": "2026-07-13T14:10:12Z"
+    },
+    {
+      "step": 14,
+      "type": "model_thought",
+      "content": {
+        "text": "Recommendation complete. Output is advisory pending required human review."
+      },
+      "timestamp": "2026-07-13T14:10:13Z"
+    }
+  ],
+  "recommendation": {
+    "action": "dedicated_service_review",
+    "justification": "The customer's extremely high Phase 1 churn probability, recent switching difficulty, and complaint history support a prompt human-led service intervention. A dedicated review addresses service friction without selling credit or duplicating either held product.",
+    "confidence": 0.94,
+    "regulatory_flags": [
+      "HUM-003:human_review_required"
+    ],
+    "checker_verdict": "approved"
+  }
+}

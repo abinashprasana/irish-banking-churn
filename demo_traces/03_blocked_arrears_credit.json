@@ -1,0 +1,389 @@
+{
+  "schema_version": "1.0",
+  "demo_id": "03_blocked_arrears_credit",
+  "title": "Blocked: arrears safeguard stops a credit-related mortgage action",
+  "recording": {
+    "mode": "recorded_phase1_runtime_with_scripted_agent_trace",
+    "real_api_calls": 0,
+    "model": "llama-3.3-70b-versatile",
+    "phase1_runtime_capture": true,
+    "phase1_model_artifact": "xgboost_churn_model.pkl",
+    "phase1_prediction_method": "model.predict_proba(feature_vector)[0, 1]",
+    "note": "The Phase 1 probability and encoded feature evidence were captured from a real local model call; the Groq reasoning trace remains a zero-request scripted replay."
+  },
+  "customer": {
+    "customer_id": "IRLBANK_01255",
+    "profile": {
+      "age": 37,
+      "tenure_months": 60,
+      "account_type": "Savings Account",
+      "monthly_balance_eur": 303.65,
+      "num_products": 1,
+      "monthly_transaction_count": 12,
+      "monthly_transaction_amount_eur": 530.66,
+      "has_direct_debits": false,
+      "direct_debit_count": 0,
+      "uses_digital_bank_secondary": true,
+      "was_kbc_ulster_customer": false,
+      "months_since_switching": 0,
+      "experienced_switching_difficulty": false,
+      "branch_visits_monthly": 1,
+      "customer_service_calls_6months": 2,
+      "has_complaint_history": false,
+      "credit_score_band": "Low",
+      "has_mortgage": false,
+      "has_savings_goal": false
+    },
+    "churn_probability": 0.9997139573097229,
+    "churn_drivers": [
+      {
+        "feature": "monthly_transaction_count",
+        "value": 12,
+        "shap_value": 2.614771604537964,
+        "direction": "increases_churn"
+      },
+      {
+        "feature": "num_products",
+        "value": 1,
+        "shap_value": 1.8990488052368164,
+        "direction": "increases_churn"
+      },
+      {
+        "feature": "has_direct_debits",
+        "value": false,
+        "shap_value": 1.3193674087524414,
+        "direction": "increases_churn"
+      },
+      {
+        "feature": "uses_digital_bank_secondary",
+        "value": true,
+        "shap_value": 0.8460268974304199,
+        "direction": "increases_churn"
+      },
+      {
+        "feature": "monthly_balance_eur",
+        "value": 303.65,
+        "shap_value": 0.7517135143280029,
+        "direction": "increases_churn"
+      }
+    ],
+    "held_products": [
+      "savings_account"
+    ],
+    "governance": {
+      "in_arrears": true,
+      "vulnerable_customer": false
+    },
+    "governance_note": "Explicit synthetic scenario metadata for this demonstration; arrears and vulnerability are not Phase 1 model features and are not inferred from customer data."
+  },
+  "trace": [
+    {
+      "step": 1,
+      "type": "model_thought",
+      "content": {
+        "text": "Churn probability: 99.97%. Checking available offers and cohort risk."
+      },
+      "timestamp": "2026-07-13T12:03:00Z"
+    },
+    {
+      "step": 2,
+      "type": "tool_call",
+      "content": {
+        "tool_use_id": "toolu_03_products",
+        "name": "product_lookup",
+        "input": {
+          "category": "mortgage"
+        }
+      },
+      "timestamp": "2026-07-13T12:03:01Z"
+    },
+    {
+      "step": 3,
+      "type": "tool_result",
+      "content": {
+        "tool_use_id": "toolu_03_products",
+        "name": "product_lookup",
+        "is_error": false,
+        "result": {
+          "catalogue_name": "Synthetic Irish Retail Banking Retention Offers",
+          "synthetic": true,
+          "currency": "EUR",
+          "offers": [
+            {
+              "action_id": "mortgage_fixed_rate_review",
+              "name": "Fixed-rate mortgage suitability review",
+              "description": "Offer a human-led review of synthetic fixed-rate mortgage options; no rate, approval, or saving is guaranteed.",
+              "category": "mortgage",
+              "is_credit": true,
+              "is_upsell": true,
+              "target_product": "mortgage",
+              "eligibility_note": "Synthetic credit-related offer; normal affordability, suitability, and approval processes would apply."
+            }
+          ]
+        }
+      },
+      "timestamp": "2026-07-13T12:03:02Z"
+    },
+    {
+      "step": 4,
+      "type": "tool_call",
+      "content": {
+        "tool_use_id": "toolu_03_segment",
+        "name": "segment_comparison",
+        "input": {}
+      },
+      "timestamp": "2026-07-13T12:03:03Z"
+    },
+    {
+      "step": 5,
+      "type": "tool_result",
+      "content": {
+        "tool_use_id": "toolu_03_segment",
+        "name": "segment_comparison",
+        "is_error": false,
+        "result": {
+          "cohort_definition": {
+            "migration_segment": "other",
+            "age_band": "30-44",
+            "account_type": "Savings Account",
+            "num_products": 1
+          },
+          "cohort_size": 329,
+          "retained_count": 100,
+          "churned_count": 229,
+          "churn_rate": 0.696,
+          "most_common_products_among_retained": [
+            {
+              "product": "savings_account",
+              "retained_customers": 100
+            }
+          ],
+          "target_phase1_prediction": {
+            "customer_id": "IRLBANK_01255",
+            "churn_probability": 0.9997139573097229,
+            "feature_columns": [
+              "age",
+              "tenure_months",
+              "account_type",
+              "monthly_balance_eur",
+              "num_products",
+              "monthly_transaction_count",
+              "monthly_transaction_amount_eur",
+              "has_direct_debits",
+              "direct_debit_count",
+              "uses_digital_bank_secondary",
+              "was_kbc_ulster_customer",
+              "months_since_switching",
+              "experienced_switching_difficulty",
+              "branch_visits_monthly",
+              "customer_service_calls_6months",
+              "has_complaint_history",
+              "credit_score_band",
+              "has_mortgage",
+              "has_savings_goal"
+            ],
+            "encoded_feature_vector": {
+              "age": 37.0,
+              "tenure_months": 60.0,
+              "account_type": 3.0,
+              "monthly_balance_eur": 303.65,
+              "num_products": 1.0,
+              "monthly_transaction_count": 12.0,
+              "monthly_transaction_amount_eur": 530.66,
+              "has_direct_debits": 0.0,
+              "direct_debit_count": 0.0,
+              "uses_digital_bank_secondary": 1.0,
+              "was_kbc_ulster_customer": 0.0,
+              "months_since_switching": 0.0,
+              "experienced_switching_difficulty": 0.0,
+              "branch_visits_monthly": 1.0,
+              "customer_service_calls_6months": 2.0,
+              "has_complaint_history": 0.0,
+              "credit_score_band": 1.0,
+              "has_mortgage": 0.0,
+              "has_savings_goal": 0.0
+            },
+            "model_artifact": "xgboost_churn_model.pkl",
+            "prediction_method": "model.predict_proba(feature_vector)[0, 1]"
+          },
+          "data_note": "Aggregates use the local synthetic Phase 1 dataset only; target risk is a captured local Phase 1 model prediction."
+        }
+      },
+      "timestamp": "2026-07-13T12:03:04Z"
+    },
+    {
+      "step": 6,
+      "type": "model_thought",
+      "content": {
+        "text": "Mortgage review is credit-related and an upsell. Submitting to policy gate."
+      },
+      "timestamp": "2026-07-13T12:03:05Z"
+    },
+    {
+      "step": 7,
+      "type": "tool_call",
+      "content": {
+        "tool_use_id": "toolu_03_gate",
+        "name": "regulatory_constraint_checker",
+        "input": {
+          "action_id": "mortgage_fixed_rate_review",
+          "requires_human_review": true
+        }
+      },
+      "timestamp": "2026-07-13T12:03:06Z"
+    },
+    {
+      "step": 8,
+      "type": "gate_check",
+      "content": {
+        "action_id": "mortgage_fixed_rate_review",
+        "checker_verdict": "blocked",
+        "passed": false,
+        "failed_rule_ids": [
+          "ARR-001"
+        ],
+        "customer_fingerprint": "1a5ec48d57dcf6124ae04592fc8c7c12e5988a34727bae61d3156f373a6eeaa3",
+        "action_fingerprint": "6064a3fa7e159f4f4d5e0995121575ec891925b3eb1ef3398df696a53ebe5522",
+        "rule_results": [
+          {
+            "rule_id": "ARR-001",
+            "description": "Customers in arrears cannot receive credit or credit-limit offers.",
+            "passed": false,
+            "reason": "Blocked: the customer is in arrears and the proposed action is credit-related."
+          },
+          {
+            "rule_id": "HOLD-002",
+            "description": "Do not offer a product the customer already holds.",
+            "passed": true,
+            "reason": "Passed: the action does not duplicate an existing product holding."
+          },
+          {
+            "rule_id": "HUM-003",
+            "description": "Recommendations above the churn-risk threshold require human review.",
+            "passed": true,
+            "reason": "Passed: the human-review requirement is satisfied or not triggered."
+          },
+          {
+            "rule_id": "VUL-004",
+            "description": "Vulnerable customers may receive only non-upsell service or fee-relief actions.",
+            "passed": true,
+            "reason": "Passed: vulnerable-customer restrictions are satisfied or not triggered."
+          }
+        ]
+      },
+      "timestamp": "2026-07-13T12:03:07Z"
+    },
+    {
+      "step": 9,
+      "type": "tool_result",
+      "content": {
+        "tool_use_id": "toolu_03_gate",
+        "name": "regulatory_constraint_checker",
+        "is_error": false,
+        "result": {
+          "action_id": "mortgage_fixed_rate_review",
+          "checker_verdict": "blocked",
+          "passed": false,
+          "failed_rule_ids": [
+            "ARR-001"
+          ],
+          "customer_fingerprint": "1a5ec48d57dcf6124ae04592fc8c7c12e5988a34727bae61d3156f373a6eeaa3",
+          "action_fingerprint": "6064a3fa7e159f4f4d5e0995121575ec891925b3eb1ef3398df696a53ebe5522",
+          "rule_results": [
+            {
+              "rule_id": "ARR-001",
+              "description": "Customers in arrears cannot receive credit or credit-limit offers.",
+              "passed": false,
+              "reason": "Blocked: the customer is in arrears and the proposed action is credit-related."
+            },
+            {
+              "rule_id": "HOLD-002",
+              "description": "Do not offer a product the customer already holds.",
+              "passed": true,
+              "reason": "Passed: the action does not duplicate an existing product holding."
+            },
+            {
+              "rule_id": "HUM-003",
+              "description": "Recommendations above the churn-risk threshold require human review.",
+              "passed": true,
+              "reason": "Passed: the human-review requirement is satisfied or not triggered."
+            },
+            {
+              "rule_id": "VUL-004",
+              "description": "Vulnerable customers may receive only non-upsell service or fee-relief actions.",
+              "passed": true,
+              "reason": "Passed: vulnerable-customer restrictions are satisfied or not triggered."
+            }
+          ]
+        }
+      },
+      "timestamp": "2026-07-13T12:03:08Z"
+    },
+    {
+      "step": 10,
+      "type": "model_thought",
+      "content": {
+        "text": "ARR-001 blocked: customer is in arrears, credit action not permitted. Issuing structured refusal."
+      },
+      "timestamp": "2026-07-13T12:03:09Z"
+    },
+    {
+      "step": 11,
+      "type": "tool_call",
+      "content": {
+        "tool_use_id": "toolu_03_format",
+        "name": "recommendation_formatter",
+        "input": {
+          "action": "no_recommendation",
+          "justification": "The proposed mortgage action is credit-related and is blocked because this synthetic customer is flagged as in arrears.",
+          "confidence": 1.0,
+          "regulatory_flags": [],
+          "checker_verdict": "blocked"
+        }
+      },
+      "timestamp": "2026-07-13T12:03:10Z"
+    },
+    {
+      "step": 12,
+      "type": "final_output",
+      "content": {
+        "action": "no_recommendation",
+        "justification": "The proposed mortgage action is credit-related and is blocked because this synthetic customer is flagged as in arrears.",
+        "confidence": 1.0,
+        "regulatory_flags": [
+          "ARR-001"
+        ],
+        "checker_verdict": "blocked"
+      },
+      "timestamp": "2026-07-13T12:03:11Z"
+    },
+    {
+      "step": 13,
+      "type": "tool_result",
+      "content": {
+        "tool_use_id": "toolu_03_format",
+        "name": "recommendation_formatter",
+        "is_error": false,
+        "result": {
+          "action": "no_recommendation",
+          "justification": "The proposed mortgage action is credit-related and is blocked because this synthetic customer is flagged as in arrears.",
+          "confidence": 1.0,
+          "regulatory_flags": [
+            "ARR-001"
+          ],
+          "checker_verdict": "blocked"
+        }
+      },
+      "timestamp": "2026-07-13T12:03:12Z"
+    }
+  ],
+  "recommendation": {
+    "action": "no_recommendation",
+    "justification": "The proposed mortgage action is credit-related and is blocked because this synthetic customer is flagged as in arrears.",
+    "confidence": 1.0,
+    "regulatory_flags": [
+      "ARR-001"
+    ],
+    "checker_verdict": "blocked"
+  }
+}
