@@ -316,4 +316,3 @@ def issue_policy_decision(
         all(result.passed for result in results),
         results,
     )
-

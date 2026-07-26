@@ -606,4 +606,3 @@ def recommendation_formatter(
     )
     output["checker_verdict"] = policy_decision.checker_verdict
     return output
-

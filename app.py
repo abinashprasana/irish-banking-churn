@@ -148,18 +148,18 @@ df_data = pd.read_csv(DATA_PATH)
 def _trace_call_summary(name: str, inp: dict) -> str:
     """One-line human-readable label for a tool_call step."""
     if name == "product_lookup":
-        return f"product_lookup — category: {inp.get('category', 'all')}"
+        return f"product_lookup · category: {inp.get('category', 'all')}"
     if name == "segment_comparison":
-        return "segment_comparison — cohort risk comparison for this customer"
+        return "segment_comparison · cohort risk comparison for this customer"
     if name == "regulatory_constraint_checker":
         action = inp.get("action_id", "?")
         review = "human review required" if inp.get("requires_human_review") else "no human review flag"
-        return f"regulatory_constraint_checker — action: {action} · {review}"
+        return f"regulatory_constraint_checker · action: {action} · {review}"
     if name == "recommendation_formatter":
         action = inp.get("action", "?")
         confidence = inp.get("confidence")
         conf_str = f" · confidence: {confidence:.0%}" if confidence is not None else ""
-        return f"recommendation_formatter — action: {action}{conf_str}"
+        return f"recommendation_formatter · action: {action}{conf_str}"
     return name
 
 
@@ -168,10 +168,10 @@ def _trace_result_summary(name: str, result: dict) -> str:
     if name == "product_lookup":
         offers = result.get("offers", [])
         if not offers:
-            return "product_lookup — no matching offers"
+            return "product_lookup · no matching offers"
         label = ", ".join(o.get("name", o.get("action_id", "?")) for o in offers[:2])
         suffix = f" +{len(offers) - 2} more" if len(offers) > 2 else ""
-        return f"product_lookup — {len(offers)} offer(s): {label}{suffix}"
+        return f"product_lookup · {len(offers)} offer(s): {label}{suffix}"
     if name == "segment_comparison":
         size = result.get("cohort_size", "?")
         rate = result.get("churn_rate")
@@ -180,7 +180,7 @@ def _trace_result_summary(name: str, result: dict) -> str:
         rate_str = f"{rate:.1%}" if rate is not None else "?"
         risk_str = f"{risk:.1%}" if risk is not None else "?"
         return (
-            f"segment_comparison — cohort: {size} customers · "
+            f"segment_comparison · cohort: {size} customers · "
             f"cohort churn rate: {rate_str} · live risk: {risk_str}"
         )
     if name == "regulatory_constraint_checker":
@@ -189,16 +189,16 @@ def _trace_result_summary(name: str, result: dict) -> str:
         rules = result.get("rule_results", [])
         passed_n = sum(1 for r in rules if r.get("passed"))
         if verdict == "approved":
-            return f"regulatory_constraint_checker — all {len(rules)} rules passed"
+            return f"regulatory_constraint_checker · all {len(rules)} rules passed"
         fail_str = ", ".join(failed)
         return (
-            f"regulatory_constraint_checker — blocked · "
+            f"regulatory_constraint_checker · blocked · "
             f"{passed_n}/{len(rules)} rules passed · failed: {fail_str}"
         )
     if name == "recommendation_formatter":
         action = result.get("action", "?")
         verdict = result.get("checker_verdict", "?")
-        return f"recommendation_formatter — action: {action} · verdict: {verdict}"
+        return f"recommendation_formatter · action: {action} · verdict: {verdict}"
     return name
 
 
