@@ -1,4 +1,5 @@
 import os
+import json
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -208,12 +209,13 @@ RETAIN_COLOR = '#636EFA'
 st.title("Irish Banking Customer Churn Predictor")
 st.markdown("---")
 
-tab1, tab2, tab3, tab4, tab5 = st.tabs([
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
     "🏦 Overview",
     "📊 Data Explorer",
     "📈 Model Performance",
     "🔍 SHAP Explainability",
-    "⚡ Risk Predictor"
+    "⚡ Risk Predictor",
+    "🛡️ Retention Agent"
 ])
 
 
@@ -820,3 +822,245 @@ with tab5:
   <div style="font-size:1rem;font-weight:700;color:#e2e8f0;margin-bottom:0.4rem;">No prediction yet</div>
   <div style="font-size:0.88rem;color:#64748b;line-height:1.6;">Fill in the customer profile on the left and click <strong>Predict churn risk</strong> to see the churn probability, SHAP explanation, and counterfactual suggestions here.</div>
 </div>""", unsafe_allow_html=True)
+
+
+with tab6:
+    st.header("🛡️ Retention Agent")
+    st.markdown(
+        "Inspect how a proposed retention action moves through four tools and a "
+        "deterministic policy gate. Blocked outcomes are governed results, not errors."
+    )
+    st.caption(
+        "Synthetic demonstration only — customer records, governance flags, offers, "
+        "and recommendations are not real banking decisions."
+    )
+
+    demo_dir = os.path.join(os.path.dirname(__file__), "demo_traces")
+    demo_records = []
+    if os.path.isdir(demo_dir):
+        for demo_filename in sorted(os.listdir(demo_dir)):
+            if demo_filename.endswith(".json"):
+                try:
+                    with open(
+                        os.path.join(demo_dir, demo_filename),
+                        "r",
+                        encoding="utf-8",
+                    ) as demo_file:
+                        demo_records.append(json.load(demo_file))
+                except (OSError, json.JSONDecodeError) as exc:
+                    st.error(f"Could not load {demo_filename}: {exc}")
+
+    if not demo_records:
+        st.error("No recorded demo traces are available.")
+    else:
+        api_key_available = bool(os.environ.get("ANTHROPIC_API_KEY"))
+        live_mode = st.toggle(
+            "Live mode",
+            value=False,
+            disabled=not api_key_available,
+            help=(
+                "Requires ANTHROPIC_API_KEY in the process environment and an exact "
+                "runtime confirmation before any request can be sent."
+            ),
+        )
+        if not live_mode:
+            st.caption("Demo mode — replaying recorded runs")
+        if not api_key_available:
+            st.caption("Live mode is unavailable because no API key is present.")
+
+        selected_title = st.selectbox(
+            "Select a governed scenario",
+            options=[record["title"] for record in demo_records],
+        )
+        selected_demo = next(
+            record for record in demo_records if record["title"] == selected_title
+        )
+        customer = selected_demo["customer"]
+        recommendation = selected_demo["recommendation"]
+        trace = selected_demo["trace"]
+
+        if live_mode:
+            st.warning(
+                "Optional paid path: the owner controls the key and must explicitly "
+                "confirm each run. The hard caps are shown before execution."
+            )
+            from agent.loop import (
+                ESTIMATED_FOUR_RUN_COST_USD,
+                LIVE_CONFIRMATION_PHRASE,
+                MAX_LIVE_API_CALLS,
+                MAX_LOOP_TURNS,
+                MAX_TOKENS,
+                MODEL_NAME,
+                create_live_client,
+                run_retention_agent,
+            )
+
+            st.code(
+                f"Model: {MODEL_NAME}\n"
+                f"Per-run API-call cap: {MAX_LIVE_API_CALLS}\n"
+                f"Loop-turn cap: {MAX_LOOP_TURNS}\n"
+                f"max_tokens per call: {MAX_TOKENS}\n"
+                "Estimated four-run ceiling: "
+                f"${ESTIMATED_FOUR_RUN_COST_USD:.3f} USD (under $0.05)"
+            )
+            live_confirmation = st.text_input(
+                f'Type "{LIVE_CONFIRMATION_PHRASE}" to authorize one live run',
+                type="password",
+            )
+            live_confirmed = live_confirmation == LIVE_CONFIRMATION_PHRASE
+            if st.button(
+                "Run one live governed recommendation",
+                disabled=not live_confirmed,
+                type="primary",
+            ):
+                try:
+                    live_client = create_live_client(confirmation=live_confirmation)
+                    with st.spinner("Running the bounded agent loop..."):
+                        live_result = run_retention_agent(
+                            customer,
+                            client=live_client,
+                        )
+                    st.session_state["retention_live_result"] = {
+                        "demo_id": selected_demo["demo_id"],
+                        "payload": live_result,
+                    }
+                except Exception as exc:
+                    st.error(f"Live run stopped safely: {exc}")
+
+            stored_live_result = st.session_state.get("retention_live_result")
+            if (
+                stored_live_result
+                and stored_live_result.get("demo_id") == selected_demo["demo_id"]
+            ):
+                recommendation = stored_live_result["payload"]["recommendation"]
+                trace = stored_live_result["payload"]["trace"]
+                st.caption("Showing the explicitly authorized live result.")
+
+        st.divider()
+        profile_col, driver_col = st.columns([1, 1.15])
+        with profile_col:
+            st.subheader("Synthetic customer profile")
+            metric_left, metric_right = st.columns(2)
+            metric_left.metric("Customer", customer["customer_id"])
+            metric_right.metric(
+                "Churn probability",
+                f'{customer["churn_probability"]:.1%}',
+            )
+            profile_rows = [
+                {
+                    "Field": key.replace("_", " ").title(),
+                    "Value": str(value),
+                }
+                for key, value in customer["profile"].items()
+            ]
+            st.dataframe(
+                pd.DataFrame(profile_rows),
+                width="stretch",
+                hide_index=True,
+            )
+            st.caption(
+                "Held products: "
+                + ", ".join(customer.get("held_products", []))
+            )
+            governance = customer.get("governance", {})
+            st.caption(
+                "Synthetic governance overlay — "
+                f'in arrears: {governance.get("in_arrears", False)}; '
+                "vulnerable customer: "
+                f'{governance.get("vulnerable_customer", False)}'
+            )
+
+        with driver_col:
+            st.subheader("Phase 1 churn drivers")
+            driver_rows = []
+            for driver in customer.get("churn_drivers", []):
+                driver_rows.append(
+                    {
+                        "Feature": driver["feature"].replace("_", " ").title(),
+                        "Customer value": str(driver["value"]),
+                        "SHAP value": round(driver["shap_value"], 4),
+                        "Direction": driver["direction"].replace("_", " "),
+                    }
+                )
+            st.dataframe(
+                pd.DataFrame(driver_rows),
+                width="stretch",
+                hide_index=True,
+            )
+            st.info(customer["governance_note"])
+
+        st.divider()
+        st.subheader("Reasoning and governance trace")
+        visible_steps = st.slider(
+            "Replay through step",
+            min_value=1,
+            max_value=len(trace),
+            value=len(trace),
+        )
+        for event in trace[:visible_steps]:
+            event_type = event["type"]
+            content = event["content"]
+            step_label = f'Step {event["step"]}'
+            if event_type == "model_thought":
+                with st.expander(f"💭 {step_label} · Model reasoning", expanded=True):
+                    st.write(content.get("text", content))
+            elif event_type == "tool_call":
+                with st.expander(
+                    f'🔧 {step_label} · Tool call: {content.get("name", "unknown")}',
+                    expanded=True,
+                ):
+                    st.json(content)
+            elif event_type == "tool_result":
+                is_error = content.get("is_error", False)
+                result_label = "Tool error" if is_error else "Tool result"
+                with st.expander(
+                    f'📦 {step_label} · {result_label}: '
+                    f'{content.get("name", "unknown")}',
+                    expanded=is_error,
+                ):
+                    if is_error:
+                        st.error(content.get("result", content))
+                    else:
+                        st.json(content)
+            elif event_type == "gate_check":
+                if content.get("passed"):
+                    st.success(
+                        f'✅ {step_label} · Policy gate approved '
+                        f'{content.get("action_id", "action")}'
+                    )
+                else:
+                    st.error(
+                        f'⛔ {step_label} · Policy gate blocked '
+                        f'{content.get("action_id", "action")}'
+                    )
+                for rule_result in content.get("rule_results", []):
+                    if not rule_result.get("passed"):
+                        st.error(
+                            f'{rule_result["rule_id"]}: {rule_result["reason"]}'
+                        )
+                with st.expander("Full deterministic rule results"):
+                    st.json(content)
+            elif event_type == "final_output":
+                st.info(f"📋 {step_label} · Governed structured output")
+                st.json(content)
+
+        st.divider()
+        st.subheader("Governed outcome")
+        checker_verdict = recommendation.get("checker_verdict", "blocked")
+        if checker_verdict == "approved":
+            st.success("APPROVED BY THE DETERMINISTIC POLICY GATE")
+        else:
+            st.error("NO RECOMMENDATION — THE PROPOSED ACTION WAS BLOCKED")
+
+        outcome_left, outcome_right = st.columns([1.7, 1])
+        with outcome_left:
+            st.markdown(f'**Action:** `{recommendation["action"]}`')
+            st.markdown(f'**Justification:** {recommendation["justification"]}')
+            flags = recommendation.get("regulatory_flags", [])
+            st.markdown(
+                "**Regulatory flags:** "
+                + (", ".join(flags) if flags else "None")
+            )
+        with outcome_right:
+            st.metric("Confidence", f'{recommendation["confidence"]:.0%}')
+            st.metric("Checker verdict", checker_verdict.upper())

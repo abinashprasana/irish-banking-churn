@@ -12,3 +12,5 @@ seaborn
 faker
 joblib
 anthropic
+pydantic
+pytest

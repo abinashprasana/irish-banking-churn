@@ -1,0 +1,67 @@
+{
+  "catalogue_name": "Synthetic Irish Retail Banking Retention Offers",
+  "synthetic": true,
+  "currency": "EUR",
+  "offers": [
+    {
+      "action_id": "fee_waiver_6m",
+      "name": "Six-month maintenance fee waiver",
+      "description": "Waive eligible current-account maintenance fees for six months while a relationship manager reviews the customer's service experience.",
+      "category": "fee_relief",
+      "is_credit": false,
+      "is_upsell": false,
+      "target_product": null,
+      "eligibility_note": "Synthetic demonstration offer; subject to human review and account terms."
+    },
+    {
+      "action_id": "dedicated_service_review",
+      "name": "Dedicated service and switching-friction review",
+      "description": "Arrange a no-sales service review covering complaints, direct debits, and unresolved switching issues.",
+      "category": "service",
+      "is_credit": false,
+      "is_upsell": false,
+      "target_product": null,
+      "eligibility_note": "Synthetic service action with no product sale."
+    },
+    {
+      "action_id": "mortgage_fixed_rate_review",
+      "name": "Fixed-rate mortgage suitability review",
+      "description": "Offer a human-led review of synthetic fixed-rate mortgage options; no rate, approval, or saving is guaranteed.",
+      "category": "mortgage",
+      "is_credit": true,
+      "is_upsell": true,
+      "target_product": "mortgage",
+      "eligibility_note": "Synthetic credit-related offer; normal affordability, suitability, and approval processes would apply."
+    },
+    {
+      "action_id": "savings_rate_bonus_6m",
+      "name": "Six-month savings rate bonus",
+      "description": "Add a synthetic six-month bonus to an eligible new savings account after human review.",
+      "category": "savings",
+      "is_credit": false,
+      "is_upsell": true,
+      "target_product": "savings_account",
+      "eligibility_note": "Synthetic demonstration offer; no real rate or return is represented."
+    },
+    {
+      "action_id": "no_fee_current_account_tier",
+      "name": "No-fee current-account tier review",
+      "description": "Review eligibility for a synthetic current-account tier with no maintenance fee for twelve months.",
+      "category": "current_account",
+      "is_credit": false,
+      "is_upsell": true,
+      "target_product": "current_account",
+      "eligibility_note": "Synthetic demonstration offer; subject to product eligibility and human review."
+    },
+    {
+      "action_id": "direct_debit_switch_support",
+      "name": "Direct-debit switching support",
+      "description": "Provide a dedicated service appointment to resolve direct-debit migration or setup issues without a product sale.",
+      "category": "service",
+      "is_credit": false,
+      "is_upsell": false,
+      "target_product": null,
+      "eligibility_note": "Synthetic service action with no product sale."
+    }
+  ]
+}
