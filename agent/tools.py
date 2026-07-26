@@ -5,10 +5,15 @@ from __future__ import annotations
 from collections import Counter
 from collections.abc import Mapping
 import csv
+from functools import lru_cache
 import json
+import math
+from numbers import Integral, Real
 from pathlib import Path
 from typing import Any, Literal
 
+import joblib
+import pandas as pd
 from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictStr
 
 from agent.policy_rules import (
@@ -23,6 +28,220 @@ from agent.policy_rules import (
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 CATALOGUE_PATH = PROJECT_ROOT / "data" / "retention_products.json"
 DATA_PATH = PROJECT_ROOT / "data" / "irish_banking_churn.csv"
+MODEL_PATH = PROJECT_ROOT / "models" / "xgboost_churn_model.pkl"
+
+PHASE1_FEATURE_SCHEMA = (
+    "age",
+    "tenure_months",
+    "account_type",
+    "monthly_balance_eur",
+    "num_products",
+    "monthly_transaction_count",
+    "monthly_transaction_amount_eur",
+    "has_direct_debits",
+    "direct_debit_count",
+    "uses_digital_bank_secondary",
+    "was_kbc_ulster_customer",
+    "months_since_switching",
+    "experienced_switching_difficulty",
+    "branch_visits_monthly",
+    "customer_service_calls_6months",
+    "has_complaint_history",
+    "credit_score_band",
+    "has_mortgage",
+    "has_savings_goal",
+)
+PHASE1_ENCODED_FEATURES = frozenset({"account_type", "credit_score_band"})
+PHASE1_BOOLEAN_FEATURES = frozenset(
+    {
+        "has_direct_debits",
+        "uses_digital_bank_secondary",
+        "was_kbc_ulster_customer",
+        "experienced_switching_difficulty",
+        "has_complaint_history",
+        "has_mortgage",
+        "has_savings_goal",
+    }
+)
+
+
+class Phase1SchemaError(RuntimeError):
+    """Raised when runtime inputs do not match the trained Phase 1 contract."""
+
+
+class Phase1ModelRuntime:
+    """Loaded Phase 1 artifact plus strict, ordered runtime preprocessing."""
+
+    def __init__(self, payload: Mapping[str, Any], artifact_path: Path) -> None:
+        required_payload_keys = {
+            "model",
+            "encoders",
+            "feature_names",
+            "categorical_features",
+            "continuous_features",
+        }
+        missing_payload = required_payload_keys - set(payload)
+        if missing_payload:
+            raise Phase1SchemaError(
+                f"Phase 1 artifact is missing keys: {sorted(missing_payload)}"
+            )
+
+        self.artifact_path = artifact_path
+        self.model = payload["model"]
+        self.encoders = payload["encoders"]
+        self.feature_names = tuple(payload["feature_names"])
+        self.categorical_features = tuple(payload["categorical_features"])
+        self.continuous_features = tuple(payload["continuous_features"])
+
+        if self.feature_names != PHASE1_FEATURE_SCHEMA:
+            raise Phase1SchemaError(
+                "Phase 1 artifact feature order mismatch: "
+                f"expected {list(PHASE1_FEATURE_SCHEMA)}, "
+                f"got {list(self.feature_names)}"
+            )
+        model_feature_names = tuple(
+            getattr(self.model, "feature_names_in_", self.feature_names)
+        )
+        if model_feature_names != PHASE1_FEATURE_SCHEMA:
+            raise Phase1SchemaError(
+                "Phase 1 model feature order mismatch: "
+                f"expected {list(PHASE1_FEATURE_SCHEMA)}, "
+                f"got {list(model_feature_names)}"
+            )
+        if set(self.encoders) != PHASE1_ENCODED_FEATURES:
+            raise Phase1SchemaError(
+                "Phase 1 encoder mismatch: expected encoders for "
+                f"{sorted(PHASE1_ENCODED_FEATURES)}, got {sorted(self.encoders)}"
+            )
+        classes = tuple(getattr(self.model, "classes_", ()))
+        if classes != (0, 1):
+            raise Phase1SchemaError(
+                f"Phase 1 class order must be [0, 1], got {list(classes)}"
+            )
+
+    def prepare_feature_vector(self, customer: Mapping[str, Any]) -> pd.DataFrame:
+        """Return one encoded row in the exact trained feature order."""
+
+        profile = customer.get("profile", customer)
+        if not isinstance(profile, Mapping):
+            raise Phase1SchemaError("customer profile must be an object")
+
+        supplied = set(profile)
+        expected = set(PHASE1_FEATURE_SCHEMA)
+        missing = expected - supplied
+        unexpected = supplied - expected
+        if missing or unexpected:
+            details = []
+            if missing:
+                details.append(f"missing={sorted(missing)}")
+            if unexpected:
+                details.append(f"unexpected={sorted(unexpected)}")
+            raise Phase1SchemaError(
+                "Phase 1 customer feature schema mismatch: " + "; ".join(details)
+            )
+
+        encoded: dict[str, int | float] = {}
+        for feature in PHASE1_FEATURE_SCHEMA:
+            value = profile[feature]
+            if feature in PHASE1_ENCODED_FEATURES:
+                if not isinstance(value, str) or not value:
+                    raise Phase1SchemaError(
+                        f"{feature} must be a non-empty training label"
+                    )
+                try:
+                    encoded[feature] = int(
+                        self.encoders[feature].transform([value])[0]
+                    )
+                except ValueError as exc:
+                    allowed = list(self.encoders[feature].classes_)
+                    raise Phase1SchemaError(
+                        f"{feature} has unknown label {value!r}; expected one of {allowed}"
+                    ) from exc
+            elif feature in PHASE1_BOOLEAN_FEATURES:
+                if type(value) is bool:
+                    encoded[feature] = int(value)
+                elif isinstance(value, Integral) and not isinstance(value, bool):
+                    integer_value = int(value)
+                    if integer_value not in (0, 1):
+                        raise Phase1SchemaError(f"{feature} must be Boolean or 0/1")
+                    encoded[feature] = integer_value
+                else:
+                    raise Phase1SchemaError(f"{feature} must be Boolean or 0/1")
+            else:
+                if isinstance(value, bool) or not isinstance(value, Real):
+                    raise Phase1SchemaError(f"{feature} must be numeric")
+                numeric_value = float(value)
+                if not math.isfinite(numeric_value):
+                    raise Phase1SchemaError(f"{feature} must be finite")
+                encoded[feature] = (
+                    int(value) if isinstance(value, Integral) else numeric_value
+                )
+
+        feature_vector = pd.DataFrame([encoded], columns=PHASE1_FEATURE_SCHEMA)
+        if tuple(feature_vector.columns) != PHASE1_FEATURE_SCHEMA:
+            raise Phase1SchemaError(
+                "internal Phase 1 feature ordering failed before prediction"
+            )
+        return feature_vector
+
+    def predict_churn_risk(self, customer: Mapping[str, Any]) -> dict[str, Any]:
+        """Call the trained classifier with the customer's real feature vector."""
+
+        feature_vector = self.prepare_feature_vector(customer)
+        probabilities = self.model.predict_proba(feature_vector)
+        if getattr(probabilities, "shape", None) != (1, 2):
+            raise Phase1SchemaError(
+                "Phase 1 predict_proba must return shape (1, 2), "
+                f"got {getattr(probabilities, 'shape', None)}"
+            )
+        churn_probability = float(probabilities[0, 1])
+        if not 0.0 <= churn_probability <= 1.0:
+            raise Phase1SchemaError(
+                f"Phase 1 churn probability is out of range: {churn_probability}"
+            )
+        return {
+            "customer_id": str(customer.get("customer_id", "")),
+            "churn_probability": churn_probability,
+            "feature_columns": list(feature_vector.columns),
+            "encoded_feature_vector": {
+                name: (
+                    value.item() if hasattr(value, "item") else value
+                )
+                for name, value in feature_vector.iloc[0].items()
+            },
+            "model_artifact": self.artifact_path.name,
+            "prediction_method": "model.predict_proba(feature_vector)[0, 1]",
+        }
+
+
+@lru_cache(maxsize=1)
+def _load_phase1_runtime_cached(artifact_path: str) -> Phase1ModelRuntime:
+    path = Path(artifact_path)
+    if not path.is_file():
+        raise Phase1SchemaError(f"Phase 1 model artifact not found: {path}")
+    payload = joblib.load(path)
+    if not isinstance(payload, Mapping):
+        raise Phase1SchemaError("Phase 1 model artifact must contain a mapping")
+    return Phase1ModelRuntime(payload, path)
+
+
+def load_phase1_runtime(
+    model_path: str | Path = MODEL_PATH,
+) -> Phase1ModelRuntime:
+    """Load and validate the trained artifact once per application process."""
+
+    return _load_phase1_runtime_cached(str(Path(model_path).resolve()))
+
+
+def predict_customer_churn_risk(
+    customer: Mapping[str, Any],
+    *,
+    phase1_runtime: Phase1ModelRuntime | None = None,
+) -> dict[str, Any]:
+    """Runtime Phase 1 risk tool used by the agent and segment comparison."""
+
+    runtime = phase1_runtime or load_phase1_runtime()
+    return runtime.predict_churn_risk(customer)
 
 
 class PolicyGateError(RuntimeError):
@@ -70,8 +289,8 @@ PRODUCT_LOOKUP_SCHEMA = {
 SEGMENT_COMPARISON_SCHEMA = {
     "name": "segment_comparison",
     "description": (
-        "Compare the target with synthetic Phase 1 customers in the same "
-        "migration segment, age band, account type, and product-count band."
+        "Call the trained Phase 1 model for the target customer's current churn "
+        "risk, then compare that customer with the matching local synthetic cohort."
     ),
     "input_schema": {
         "type": "object",
@@ -250,10 +469,16 @@ def _row_product_signals(row: Mapping[str, object]) -> tuple[str, ...]:
 
 
 def segment_comparison(
-    customer: Mapping[str, Any], *, data_path: Path = DATA_PATH
+    customer: Mapping[str, Any],
+    *,
+    data_path: Path = DATA_PATH,
+    phase1_runtime: Phase1ModelRuntime | None = None,
 ) -> dict[str, Any]:
-    """Return deterministic retention aggregates for a strict similar cohort."""
+    """Return live Phase 1 risk plus deterministic strict-cohort aggregates."""
 
+    phase1_prediction = predict_customer_churn_risk(
+        customer, phase1_runtime=phase1_runtime
+    )
     customer_id, profile = _customer_profile(customer)
     try:
         target_age_band = _age_band(int(profile["age"]))
@@ -293,6 +518,7 @@ def segment_comparison(
         )
     ]
     return {
+        "target_phase1_prediction": phase1_prediction,
         "cohort_definition": {
             "migration_segment": "former_kbc_ulster" if migrated else "other",
             "age_band": target_age_band,
