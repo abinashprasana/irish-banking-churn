@@ -8,12 +8,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 import plotly.express as px
 import plotly.graph_objects as go
-import joblib
 import streamlit as st
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import roc_curve, precision_recall_curve
 import shap
 import dice_ml
+
+from agent.tools import (
+    Phase1SchemaError,
+    load_phase1_runtime,
+    predict_customer_churn_risk,
+)
 
 st.set_page_config(
     page_title="Irish Banking Churn Predictor",
@@ -126,13 +131,75 @@ if not os.path.exists(MODEL_PATH) or not os.path.exists(DATA_PATH):
     st.error("Model file or dataset not found. Run models/train_model.py first.")
     st.stop()
 
-payload = joblib.load(MODEL_PATH)
-xgb_model = payload['model']
-encoders = payload['encoders']
-feature_names = payload['feature_names']
-continuous_features = payload['continuous_features']
+@st.cache_resource
+def get_phase1_runtime(model_path):
+    return load_phase1_runtime(model_path)
+
+
+phase1_runtime = get_phase1_runtime(MODEL_PATH)
+xgb_model = phase1_runtime.model
+encoders = phase1_runtime.encoders
+feature_names = list(phase1_runtime.feature_names)
+continuous_features = list(phase1_runtime.continuous_features)
 
 df_data = pd.read_csv(DATA_PATH)
+
+
+def _trace_call_summary(name: str, inp: dict) -> str:
+    """One-line human-readable label for a tool_call step."""
+    if name == "product_lookup":
+        return f"product_lookup — category: {inp.get('category', 'all')}"
+    if name == "segment_comparison":
+        return "segment_comparison — cohort risk comparison for this customer"
+    if name == "regulatory_constraint_checker":
+        action = inp.get("action_id", "?")
+        review = "human review required" if inp.get("requires_human_review") else "no human review flag"
+        return f"regulatory_constraint_checker — action: {action} · {review}"
+    if name == "recommendation_formatter":
+        action = inp.get("action", "?")
+        confidence = inp.get("confidence")
+        conf_str = f" · confidence: {confidence:.0%}" if confidence is not None else ""
+        return f"recommendation_formatter — action: {action}{conf_str}"
+    return name
+
+
+def _trace_result_summary(name: str, result: dict) -> str:
+    """One-line human-readable label for a tool_result step."""
+    if name == "product_lookup":
+        offers = result.get("offers", [])
+        if not offers:
+            return "product_lookup — no matching offers"
+        label = ", ".join(o.get("name", o.get("action_id", "?")) for o in offers[:2])
+        suffix = f" +{len(offers) - 2} more" if len(offers) > 2 else ""
+        return f"product_lookup — {len(offers)} offer(s): {label}{suffix}"
+    if name == "segment_comparison":
+        size = result.get("cohort_size", "?")
+        rate = result.get("churn_rate")
+        pred = result.get("target_phase1_prediction", {})
+        risk = pred.get("churn_probability")
+        rate_str = f"{rate:.1%}" if rate is not None else "?"
+        risk_str = f"{risk:.1%}" if risk is not None else "?"
+        return (
+            f"segment_comparison — cohort: {size} customers · "
+            f"cohort churn rate: {rate_str} · live risk: {risk_str}"
+        )
+    if name == "regulatory_constraint_checker":
+        verdict = result.get("checker_verdict", "?")
+        failed = result.get("failed_rule_ids", [])
+        rules = result.get("rule_results", [])
+        passed_n = sum(1 for r in rules if r.get("passed"))
+        if verdict == "approved":
+            return f"regulatory_constraint_checker — all {len(rules)} rules passed"
+        fail_str = ", ".join(failed)
+        return (
+            f"regulatory_constraint_checker — blocked · "
+            f"{passed_n}/{len(rules)} rules passed · failed: {fail_str}"
+        )
+    if name == "recommendation_formatter":
+        action = result.get("action", "?")
+        verdict = result.get("checker_verdict", "?")
+        return f"recommendation_formatter — action: {action} · verdict: {verdict}"
+    return name
 
 
 class XGBoostClassifierWrapper:
@@ -590,6 +657,11 @@ with tab5:
     with col_input:
 
         st.markdown("**Customer Profile**")
+        customer_reference = st.text_input(
+            "Customer reference",
+            value="TAB5_CUSTOMER",
+            help="Synthetic identifier carried unchanged into the Retention Agent.",
+        )
         r1a, r1b = st.columns(2)
         with r1a:
             age = st.slider("Age", 18, 75, 42)
@@ -662,33 +734,63 @@ with tab5:
     with col_output:
 
         if predict_btn:
-            acct_encoded = encoders['account_type'].transform([account_type])[0]
-            credit_encoded = encoders['credit_score_band'].transform([credit_score_band])[0]
-
-            input_dict = {
+            raw_profile = {
                 'age': age,
                 'tenure_months': tenure_months,
-                'account_type': acct_encoded,
+                'account_type': account_type,
                 'monthly_balance_eur': float(monthly_balance_eur),
                 'num_products': num_products,
                 'monthly_transaction_count': monthly_transaction_count,
                 'monthly_transaction_amount_eur': float(monthly_transaction_amount_eur),
-                'has_direct_debits': int(has_direct_debits),
+                'has_direct_debits': has_direct_debits,
                 'direct_debit_count': int(direct_debit_count) if has_direct_debits else 0,
-                'uses_digital_bank_secondary': int(uses_digital_bank_secondary),
-                'was_kbc_ulster_customer': int(was_kbc_ulster_customer),
+                'uses_digital_bank_secondary': uses_digital_bank_secondary,
+                'was_kbc_ulster_customer': was_kbc_ulster_customer,
                 'months_since_switching': months_since_switching,
-                'experienced_switching_difficulty': int(experienced_switching_difficulty),
+                'experienced_switching_difficulty': experienced_switching_difficulty,
                 'branch_visits_monthly': branch_visits_monthly,
                 'customer_service_calls_6months': customer_service_calls_6months,
-                'has_complaint_history': int(has_complaint_history),
-                'credit_score_band': credit_encoded,
-                'has_mortgage': int(has_mortgage),
-                'has_savings_goal': int(has_savings_goal)
+                'has_complaint_history': has_complaint_history,
+                'credit_score_band': credit_score_band,
+                'has_mortgage': has_mortgage,
+                'has_savings_goal': has_savings_goal,
             }
-
-            input_df = pd.DataFrame([input_dict])
-            churn_prob = xgb_model.predict_proba(input_df)[0, 1]
+            held_products = []
+            if "Current" in account_type:
+                held_products.append("current_account")
+            if "Savings" in account_type:
+                held_products.append("savings_account")
+            if has_mortgage:
+                held_products.append("mortgage")
+            phase1_customer = {
+                "customer_id": customer_reference.strip() or "TAB5_CUSTOMER",
+                "profile": raw_profile,
+                "held_products": sorted(set(held_products)),
+                "governance": {
+                    "in_arrears": False,
+                    "vulnerable_customer": False,
+                },
+                "governance_note": (
+                    "Tab 5 supplies model features only. The synthetic governance "
+                    "overlay defaults to no arrears and not vulnerable."
+                ),
+                "counterfactuals": [],
+                "churn_drivers": [],
+            }
+            try:
+                phase1_prediction = predict_customer_churn_risk(
+                    phase1_customer,
+                    phase1_runtime=phase1_runtime,
+                )
+            except Phase1SchemaError as exc:
+                st.error(f"Phase 1 feature schema validation failed: {exc}")
+                st.stop()
+            phase1_customer["churn_probability"] = phase1_prediction[
+                "churn_probability"
+            ]
+            phase1_customer["phase1_prediction"] = phase1_prediction
+            input_df = phase1_runtime.prepare_feature_vector(phase1_customer)
+            churn_prob = phase1_prediction["churn_probability"]
 
             if churn_prob < 0.30:
                 risk_label = "Low Risk"
@@ -730,6 +832,23 @@ with tab5:
             st.markdown("##### 🔍 Local SHAP Explanation")
             explainer = shap.TreeExplainer(xgb_model)
             shap_val = explainer(input_df)
+            shap_values = np.asarray(shap_val.values[0], dtype=float)
+            top_driver_indices = np.argsort(np.abs(shap_values))[::-1][:5]
+            phase1_customer["churn_drivers"] = [
+                {
+                    "feature": feature_names[index],
+                    "value": raw_profile[feature_names[index]],
+                    "shap_value": float(shap_values[index]),
+                    "direction": (
+                        "increases_churn"
+                        if shap_values[index] >= 0
+                        else "decreases_churn"
+                    ),
+                }
+                for index in top_driver_indices
+            ]
+            st.session_state["phase1_selected_customer"] = phase1_customer
+            st.session_state.pop("retention_live_result", None)
             fig, ax = plt.subplots(figsize=(5, 3.5))
             shap.plots.waterfall(shap_val[0], max_display=10, show=False)
             plt.tight_layout()
@@ -853,88 +972,137 @@ with tab6:
     if not demo_records:
         st.error("No recorded demo traces are available.")
     else:
-        api_key_available = bool(os.environ.get("ANTHROPIC_API_KEY"))
-        live_mode = st.toggle(
-            "Live mode",
-            value=False,
-            disabled=not api_key_available,
-            help=(
-                "Requires ANTHROPIC_API_KEY in the process environment and an exact "
-                "runtime confirmation before any request can be sent."
-            ),
+        # Phase 2 server-side Groq key and per-session request safety.
+        from agent.loop import (
+            MAX_LIVE_API_CALLS,
+            MAX_LOOP_TURNS,
+            MAX_TOKENS,
+            MODEL_NAME,
+            create_live_client,
+            resolve_groq_api_key,
+            run_retention_agent,
         )
-        if not live_mode:
-            st.caption("Demo mode — replaying recorded runs")
-        if not api_key_available:
-            st.caption("Live mode is unavailable because no API key is present.")
+        from agent.rate_limits import (
+            GLOBAL_REQUEST_QUOTA,
+            RateLimitSafetyError,
+            SESSION_RUN_CAP,
+            reserve_session_run,
+        )
 
-        selected_title = st.selectbox(
-            "Select a governed scenario",
-            options=[record["title"] for record in demo_records],
-        )
-        selected_demo = next(
-            record for record in demo_records if record["title"] == selected_title
-        )
-        customer = selected_demo["customer"]
-        recommendation = selected_demo["recommendation"]
-        trace = selected_demo["trace"]
+        if "retention_live_run_count" not in st.session_state:
+            st.session_state["retention_live_run_count"] = 0
 
-        if live_mode:
+        groq_api_key = resolve_groq_api_key(st.secrets)
+        live_run_count = st.session_state["retention_live_run_count"]
+        live_runs_remaining = max(0, SESSION_RUN_CAP - live_run_count)
+        api_key_available = bool(groq_api_key)
+        quota_snapshot = GLOBAL_REQUEST_QUOTA.snapshot()
+
+        tab5_customer = st.session_state.get("phase1_selected_customer")
+        using_tab5_customer = isinstance(tab5_customer, dict)
+        if using_tab5_customer:
+            customer = tab5_customer
+            recommendation = None
+            trace = []
+            st.success(
+                "Using the exact customer object produced in Tab 5: "
+                f"`{customer['customer_id']}`"
+            )
+            st.caption(
+                "Tab 5 stored this object after a validated Phase 1 "
+                "model.predict_proba call. The same object is passed to the agent below."
+            )
+        else:
+            selected_title = st.selectbox(
+                "Select a recorded governed scenario",
+                options=[record["title"] for record in demo_records],
+            )
+            selected_demo = next(
+                record for record in demo_records if record["title"] == selected_title
+            )
+            customer = selected_demo["customer"]
+            recommendation = selected_demo["recommendation"]
+            trace = selected_demo["trace"]
+            st.info(
+                "No Tab 5 prediction is in this session. Showing a recorded scenario "
+                "whose probability is verified against the trained Phase 1 model."
+            )
+
+        if api_key_available:
+            st.success(
+                f"Live Groq agent available by default · {live_runs_remaining} of "
+                f"{SESSION_RUN_CAP} session runs remaining"
+            )
+            st.caption(
+                "The server loads GROQ_API_KEY from Streamlit secrets in production "
+                "or the local environment. Visitors never enter or see the key."
+            )
+        elif live_runs_remaining <= 0:
+            st.caption(
+                f"Session cap reached ({SESSION_RUN_CAP}/{SESSION_RUN_CAP} live runs used)."
+            )
+        elif using_tab5_customer:
             st.warning(
-                "Optional paid path: the owner controls the key and must explicitly "
-                "confirm each run. The hard caps are shown before execution."
+                "The live Phase 1 customer is ready, but GROQ_API_KEY is not configured. "
+                "No retention-agent output has been generated for this customer."
             )
-            from agent.loop import (
-                ESTIMATED_FOUR_RUN_COST_USD,
-                LIVE_CONFIRMATION_PHRASE,
-                MAX_LIVE_API_CALLS,
-                MAX_LOOP_TURNS,
-                MAX_TOKENS,
-                MODEL_NAME,
-                create_live_client,
-                run_retention_agent,
+        else:
+            st.warning(
+                "GROQ_API_KEY is not configured on this deployment, so the recorded "
+                "zero-request fallback is shown."
             )
 
-            st.code(
-                f"Model: {MODEL_NAME}\n"
-                f"Per-run API-call cap: {MAX_LIVE_API_CALLS}\n"
-                f"Loop-turn cap: {MAX_LOOP_TURNS}\n"
-                f"max_tokens per call: {MAX_TOKENS}\n"
-                "Estimated four-run ceiling: "
-                f"${ESTIMATED_FOUR_RUN_COST_USD:.3f} USD (under $0.05)"
+        if api_key_available:
+            st.info(
+                f"**Groq free-tier runtime.** Model: `{MODEL_NAME}` · "
+                f"API-call cap per run: {MAX_LIVE_API_CALLS} · "
+                f"Token cap per call: {MAX_TOKENS} · "
+                f"Loop-turn cap: {MAX_LOOP_TURNS} · "
+                f"Process-local daily requests remaining: "
+                f"{quota_snapshot['daily_requests_remaining']}"
             )
-            live_confirmation = st.text_input(
-                f'Type "{LIVE_CONFIRMATION_PHRASE}" to authorize one live run',
-                type="password",
-            )
-            live_confirmed = live_confirmation == LIVE_CONFIRMATION_PHRASE
             if st.button(
-                "Run one live governed recommendation",
-                disabled=not live_confirmed,
+                "Run live governed recommendation",
+                disabled=(
+                    live_runs_remaining <= 0
+                    or quota_snapshot["daily_requests_remaining"] <= 0
+                ),
                 type="primary",
             ):
-                try:
-                    live_client = create_live_client(confirmation=live_confirmation)
-                    with st.spinner("Running the bounded agent loop..."):
-                        live_result = run_retention_agent(
-                            customer,
-                            client=live_client,
-                        )
-                    st.session_state["retention_live_result"] = {
-                        "demo_id": selected_demo["demo_id"],
-                        "payload": live_result,
-                    }
-                except Exception as exc:
-                    st.error(f"Live run stopped safely: {exc}")
+                if live_runs_remaining <= 0:
+                    st.error("Session demo limit reached (5 runs), please try again later.")
+                else:
+                    try:
+                        GLOBAL_REQUEST_QUOTA.ensure_run_available()
+                        reserve_session_run(st.session_state)
+                        live_client = create_live_client(api_key=groq_api_key)
+                        with st.spinner("Running the bounded agent loop..."):
+                            live_result = run_retention_agent(
+                                customer,
+                                client=live_client,
+                                phase1_runtime=phase1_runtime,
+                            )
+                        st.session_state["retention_live_result"] = {
+                            "customer_id": customer["customer_id"],
+                            "payload": live_result,
+                        }
+                    except RateLimitSafetyError as exc:
+                        st.error(str(exc))
+                    except Exception as exc:
+                        st.error(f"Live run stopped safely: {exc}")
 
             stored_live_result = st.session_state.get("retention_live_result")
             if (
                 stored_live_result
-                and stored_live_result.get("demo_id") == selected_demo["demo_id"]
+                and stored_live_result.get("customer_id") == customer["customer_id"]
             ):
+                customer = stored_live_result["payload"]["customer"]
                 recommendation = stored_live_result["payload"]["recommendation"]
                 trace = stored_live_result["payload"]["trace"]
-                st.caption("Showing the explicitly authorized live result.")
+                st.caption(
+                    "Showing the live Groq result for the same Tab 5 customer object. "
+                    "Phase 1 risk was recomputed inside the agent run."
+                )
 
         st.divider()
         profile_col, driver_col = st.columns([1, 1.15])
@@ -946,6 +1114,13 @@ with tab6:
                 "Churn probability",
                 f'{customer["churn_probability"]:.1%}',
             )
+            phase1_evidence = customer.get("phase1_prediction", {})
+            if phase1_evidence:
+                st.caption(
+                    "Runtime source: "
+                    f'`{phase1_evidence.get("prediction_method")}` · '
+                    f'{len(phase1_evidence.get("feature_columns", []))} ordered features'
+                )
             profile_rows = [
                 {
                     "Field": key.replace("_", " ").title(),
@@ -989,6 +1164,15 @@ with tab6:
             )
             st.info(customer["governance_note"])
 
+        if not trace or recommendation is None:
+            st.divider()
+            st.info(
+                "The Phase 1 customer is ready for the retention agent. "
+                "Configure Groq and choose **Run live agent** to create a governed "
+                "recommendation and trace for this exact customer."
+            )
+            st.stop()
+
         st.divider()
         st.subheader("Reasoning and governance trace")
         visible_steps = st.slider(
@@ -1001,48 +1185,78 @@ with tab6:
             event_type = event["type"]
             content = event["content"]
             step_label = f'Step {event["step"]}'
+
             if event_type == "model_thought":
-                with st.expander(f"💭 {step_label} · Model reasoning", expanded=True):
+                with st.expander(f"💭 {step_label} · Analysis", expanded=True):
                     st.write(content.get("text", content))
+
             elif event_type == "tool_call":
+                name = content.get("name", "unknown")
+                inp = content.get("input", {})
+                summary = f"Tool call: {name}"
                 with st.expander(
-                    f'🔧 {step_label} · Tool call: {content.get("name", "unknown")}',
+                    f"🔧 {step_label} · {summary}",
                     expanded=True,
                 ):
                     st.json(content)
+
             elif event_type == "tool_result":
                 is_error = content.get("is_error", False)
-                result_label = "Tool error" if is_error else "Tool result"
-                with st.expander(
-                    f'📦 {step_label} · {result_label}: '
-                    f'{content.get("name", "unknown")}',
-                    expanded=is_error,
-                ):
-                    if is_error:
+                name = content.get("name", "unknown")
+                if is_error:
+                    with st.expander(
+                        f"❌ {step_label} · Tool error: {name}",
+                        expanded=True,
+                    ):
                         st.error(content.get("result", content))
-                    else:
+                else:
+                    result = content.get("result", {})
+                    summary = f"Tool result: {name}"
+                    with st.expander(
+                        f"📦 {step_label} · {summary}",
+                        expanded=True,
+                    ):
                         st.json(content)
+
             elif event_type == "gate_check":
-                if content.get("passed"):
+                passed = content.get("passed")
+                action_id = content.get("action_id", "action")
+                failed_ids = content.get("failed_rule_ids", [])
+                if passed:
                     st.success(
-                        f'✅ {step_label} · Policy gate approved '
-                        f'{content.get("action_id", "action")}'
+                        f"✅ {step_label} · Policy gate approved {action_id}"
                     )
                 else:
                     st.error(
-                        f'⛔ {step_label} · Policy gate blocked '
-                        f'{content.get("action_id", "action")}'
+                        f"⛔ {step_label} · Policy gate blocked {action_id}"
+                        + (f" (failed: {', '.join(failed_ids)})" if failed_ids else "")
                     )
                 for rule_result in content.get("rule_results", []):
-                    if not rule_result.get("passed"):
-                        st.error(
-                            f'{rule_result["rule_id"]}: {rule_result["reason"]}'
-                        )
-                with st.expander("Full deterministic rule results"):
+                    icon = "✅" if rule_result.get("passed") else "❌"
+                    st.caption(
+                        f"{icon} {rule_result['rule_id']}: {rule_result['reason']}"
+                    )
+                with st.expander("View full gate decision"):
                     st.json(content)
+
             elif event_type == "final_output":
-                st.info(f"📋 {step_label} · Governed structured output")
-                st.json(content)
+                verdict = content.get("checker_verdict", "blocked")
+                action = content.get("action", "?")
+                confidence = content.get("confidence", 0)
+                flags = content.get("regulatory_flags", [])
+                if verdict == "approved":
+                    st.success(
+                        f"📋 {step_label} · Governed output · "
+                        f"action: {action} · confidence: {confidence:.0%}"
+                    )
+                else:
+                    st.error(
+                        f"📋 {step_label} · Governed output · no recommendation (blocked)"
+                    )
+                if flags:
+                    st.caption("Regulatory flags: " + " · ".join(flags))
+                with st.expander("View structured output"):
+                    st.json(content)
 
         st.divider()
         st.subheader("Governed outcome")

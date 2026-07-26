@@ -282,6 +282,7 @@ PRODUCT_LOOKUP_SCHEMA = {
                 "description": "Optional catalogue category filter.",
             }
         },
+        "required": [],
         "additionalProperties": False,
     },
 }
@@ -295,6 +296,7 @@ SEGMENT_COMPARISON_SCHEMA = {
     "input_schema": {
         "type": "object",
         "properties": {},
+        "required": [],
         "additionalProperties": False,
     },
 }
@@ -360,6 +362,18 @@ TOOL_DEFINITIONS = (
     SEGMENT_COMPARISON_SCHEMA,
     REGULATORY_CONSTRAINT_CHECKER_SCHEMA,
     RECOMMENDATION_FORMATTER_SCHEMA,
+)
+
+GROQ_TOOL_DEFINITIONS = tuple(
+    {
+        "type": "function",
+        "function": {
+            "name": definition["name"],
+            "description": definition["description"],
+            "parameters": definition["input_schema"],
+        },
+    }
+    for definition in TOOL_DEFINITIONS
 )
 
 

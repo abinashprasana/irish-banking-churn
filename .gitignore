@@ -1,6 +1,7 @@
 
 # Configuration and secrets
 .env
+.streamlit/secrets.toml
 
 # Python caching and environment
 __pycache__/
@@ -13,4 +14,3 @@ venv/
 
 # Exclude markdown files
 *.md
-

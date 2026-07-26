@@ -11,6 +11,6 @@ matplotlib
 seaborn
 faker
 joblib
-anthropic
+groq
 pydantic
 pytest
