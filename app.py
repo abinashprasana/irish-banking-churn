@@ -1193,12 +1193,13 @@ with tab6:
             elif event_type == "tool_call":
                 name = content.get("name", "unknown")
                 inp = content.get("input", {})
-                summary = f"Tool call: {name}"
+                summary = _trace_call_summary(name, inp)
                 with st.expander(
                     f"🔧 {step_label} · {summary}",
                     expanded=True,
                 ):
-                    st.json(content)
+                    with st.expander("View raw payload"):
+                        st.json(content)
 
             elif event_type == "tool_result":
                 is_error = content.get("is_error", False)
@@ -1211,12 +1212,13 @@ with tab6:
                         st.error(content.get("result", content))
                 else:
                     result = content.get("result", {})
-                    summary = f"Tool result: {name}"
+                    summary = _trace_result_summary(name, result)
                     with st.expander(
                         f"📦 {step_label} · {summary}",
                         expanded=True,
                     ):
-                        st.json(content)
+                        with st.expander("View raw result"):
+                            st.json(content)
 
             elif event_type == "gate_check":
                 passed = content.get("passed")
