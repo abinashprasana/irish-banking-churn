@@ -1,4 +1,4 @@
-"""Process-local safety limits for the shared Groq free-tier quota."""
+"""Process-local request guards for a Groq Free Plan deployment."""
 
 from __future__ import annotations
 
@@ -29,10 +29,13 @@ class SessionRunLimitError(RateLimitSafetyError):
 
 
 class InMemoryRequestQuota:
-    """Thread-safe request counter that resets each UTC day.
+    """Thread-safe local request counter that resets each UTC day.
 
-    This intentionally mirrors the provider's request limits rather than agent
-    runs: every physical SDK request, including a retry, consumes one slot.
+    The configured ceilings match Groq's published base request limits for the
+    selected model. This counter does not read provider account usage, token
+    limits, requests made by other processes, or account-specific exceptions.
+    Every physical SDK request made by this process, including a retry, consumes
+    one local slot.
     """
 
     def __init__(

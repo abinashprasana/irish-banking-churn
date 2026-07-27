@@ -10,19 +10,22 @@ Faker.seed(RANDOM_STATE)
 
 NUM_RECORDS = 10000
 
-# ~21% churn rate — estimated average for Irish retail banking during the migration event
+# Synthetic churn target chosen to create a useful imbalanced classification task.
 TARGET_CHURN_RATE = 0.21
 
-# ~15% of customers are former KBC/Ulster Bank — source: Central Bank of Ireland (~1.2M accounts migrated)
+# Synthetic scenario share. The Central Bank account total provides historical
+# context but does not establish this customer proportion.
 KBC_ULSTER_MIGRATION_PROB = 0.15
 
-# 60% of switchers reported difficulties — source: CCPC 2022 survey
+# CCPC research found that 60% of surveyed customers experienced challenges
+# switching provider. Reusing that figure for migration-flagged synthetic records
+# is a modelling assumption, not a subgroup estimate from the survey.
 SWITCHING_DIFFICULTY_PROB = 0.60
 
 AGE_MIN = 18
 AGE_MAX = 75
 AGE_BETA_A = 3.0
-AGE_BETA_B = 4.0  # skewed towards 30-55 working-age range
+AGE_BETA_B = 4.0  # Constructed age distribution parameter.
 
 MAX_SAVINGS_BALANCE = 50000.0
 BALANCE_EXP_SCALE = 8000.0
@@ -79,7 +82,7 @@ def generate_transactions_direct_debits(num_records, account_types):
     transaction_counts = np.array(transaction_counts)
     has_direct_debits = np.array(has_direct_debits)
 
-    # transaction amount scales with count to reflect realistic spend patterns
+    # Constructed transaction amounts increase with count and stay within selected bounds.
     transaction_amounts = transaction_counts * np.random.uniform(20.0, 50.0) + np.random.uniform(50.0, 500.0)
     transaction_amounts = np.clip(transaction_amounts, 100.0, 8000.0)
 
@@ -91,6 +94,18 @@ def generate_transactions_direct_debits(num_records, account_types):
             direct_debit_counts.append(0)
 
     return transaction_counts, np.round(transaction_amounts, 2), has_direct_debits, np.array(direct_debit_counts)
+
+
+def generate_digital_secondary(ages):
+    result = []
+    for a in ages:
+        if a < 35:
+            result.append(np.random.choice([True, False], p=[0.65, 0.35]))
+        elif a < 55:
+            result.append(np.random.choice([True, False], p=[0.45, 0.55]))
+        else:
+            result.append(np.random.choice([True, False], p=[0.20, 0.80]))
+    return np.array(result)
 
 
 def generate_switching_status(num_records):
@@ -117,7 +132,7 @@ def generate_switching_status(num_records):
 
 
 def generate_service_complaints_credit(num_records, ages):
-    # older customers visit branches more frequently
+    # Synthetic assumption: use a different branch-visit distribution above age 55.
     branch_visits = []
     for age in ages:
         if age > 55:
@@ -145,7 +160,7 @@ def compute_churn_labels(df):
     """
     score = np.full(len(df), BASELINE_BIAS)
 
-    # strong positive signals — high weight because these are the clearest churn indicators
+    # Constructed larger positive score contributions.
     score += np.where((df['was_kbc_ulster_customer']) & (df['months_since_switching'] < 12), 1.5, 0.0)
     score += np.where(df['experienced_switching_difficulty'], 1.5, 0.0)
     score += np.where(df['has_complaint_history'], 2.0, 0.0)
@@ -153,14 +168,15 @@ def compute_churn_labels(df):
     score += np.where((df['uses_digital_bank_secondary']) & (df['num_products'] == 1), 1.4, 0.0)
     score += np.where(df['tenure_months'] < 6, 1.6, 0.0)
 
-    # medium positive signals
+    # Constructed smaller positive score contributions.
     score += np.where(df['num_products'] == 1, 0.8, 0.0)
     score += np.where(df['monthly_transaction_count'] < 15, 0.6, 0.0)
-    # no direct debits is a strong switching signal in the Irish market — nothing anchors the customer
+    # Synthetic label rule. Absence of direct debits adds weight to the
+    # constructed churn score.
     score += np.where(~df['has_direct_debits'], 0.7, 0.0)
     score += np.where((df['branch_visits_monthly'] == 0) & (df['age'] > 50), 0.8, 0.0)
 
-    # negative signals — these act as retention anchors
+    # Constructed negative score contributions.
     score += np.where(df['has_mortgage'], -2.5, 0.0)
     score += np.where(df['tenure_months'] > 60, -1.0, 0.0)
     score += np.where(df['num_products'] >= 3, -0.8, 0.0)
@@ -184,15 +200,7 @@ def main():
     account_types, balances, product_counts = generate_account_products(NUM_RECORDS)
     tx_counts, tx_amounts, has_dd, dd_counts = generate_transactions_direct_debits(NUM_RECORDS, account_types)
 
-    uses_digital_sec = []
-    for a in ages:
-        if a < 35:
-            uses_digital_sec.append(np.random.choice([True, False], p=[0.65, 0.35]))
-        elif a < 55:
-            uses_digital_sec.append(np.random.choice([True, False], p=[0.45, 0.55]))
-        else:
-            uses_digital_sec.append(np.random.choice([True, False], p=[0.20, 0.80]))
-    uses_digital_sec = np.array(uses_digital_sec)
+    uses_digital_sec = generate_digital_secondary(ages)
 
     was_kbc_ulster, months_since_switch, experienced_difficulty = generate_switching_status(NUM_RECORDS)
     branch_visits, service_calls, has_complaint, credit_bands, has_savings_goal = generate_service_complaints_credit(NUM_RECORDS, ages)

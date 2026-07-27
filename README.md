@@ -2,18 +2,18 @@
 
 # 🏦 Irish Banking Customer Churn & Retention Agent
 
-**An explainable machine learning system and a governed AI agent built around the largest account migration event in Irish banking history.**
+**An explainable machine learning system and a governed AI agent built around Ireland's 2022 and 2023 account migration.**
 
-[![Python](https://img.shields.io/badge/Python-3.8+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![XGBoost](https://img.shields.io/badge/XGBoost-Gradient%20Boosted-FF6600?style=for-the-badge&logo=xgboost&logoColor=white)](https://xgboost.readthedocs.io)
-[![Groq](https://img.shields.io/badge/Groq-Llama%203.3%2070B-F55036?style=for-the-badge&logo=groq&logoColor=white)](https://console.groq.com/docs/model/llama-3.3-70b-versatile)
+[![Groq](https://img.shields.io/badge/Groq-Tool%20Calling-F55036?style=for-the-badge&logo=groq&logoColor=white)](https://console.groq.com/docs/tool-use)
 [![Streamlit](https://img.shields.io/badge/Live%20Demo-Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://abinashprasana-irish-banking-churn-app-aidovf.streamlit.app/)
 [![ROC--AUC](https://img.shields.io/badge/ROC--AUC-0.959-2ea44f?style=for-the-badge)](.)
 [![Tests](https://img.shields.io/badge/Tests-20%2F20%20passing-2ea44f?style=for-the-badge)](.)
 
 <br/>
 
-*KBC Bank Ireland & Ulster Bank exits 2022–2023 · 1.2M accounts migrated · SMOTEENN · SHAP · DiCE · Agentic Retention Recommendations · Groq Llama 3.3 · EU AI Act Article 86*
+*Account migration after the KBC Bank Ireland and Ulster Bank exit announcements · 1.17M accounts closed by June 2023 · SMOTEENN · SHAP · DiCE · Live Phase 1 scoring · Governed retention recommendations*
 
 </div>
 
@@ -21,11 +21,11 @@
 
 ## 📖 What This Project Is
 
-Between 2022 and 2023, KBC Bank Ireland and Ulster Bank (NatWest Group) both pulled out of the Irish retail banking market. That forced over 1.2 million customers to close their accounts and find a new bank, all within a short window. It caused real chaos: around 60% of people who switched reported serious problems, things like direct debits failing, money not transferring correctly, and poor customer support throughout.
+KBC Bank Ireland and Ulster Bank announced their intentions to leave the Irish market in 2021. The [Central Bank of Ireland](https://www.centralbank.ie/statistics/data-and-analysis/credit-and-banking-statistics/account-migration-statistics) recorded 1,167,219 current and deposit account closures at the two banks between the start of 2022 and the end of June 2023. Separate [CCPC research](https://www.ccpc.ie/about-us/advocacy-and-research/research/publication-details/ccpc-switching-research-%28phase-2%29) found that 60% of respondents experienced switching challenges. The respondents had an open KBC or Ulster current account, or had closed one within the previous six months.
 
-I built this project because those customers haven't just settled in and moved on. Research shows institutional trust takes 3 to 5 years to rebuild after a forced switch, and we're only in year 3 or 4 now. That means Irish banks are still sitting on an unusually high churn risk that won't calm down before 2027. I wanted to build something that actually reflects that. Not a generic churn model, but one calibrated to what's happening in this specific market right now.
+That disruption gives the project a clear Irish setting, but it does not prove that the same customers remain at unusually high churn risk today. The dataset is synthetic and uses migration related fields to examine that question. It is not presented as a measurement of current customer behaviour at any bank.
 
-The result is an XGBoost classifier that predicts which customers are most likely to leave, SHAP values that explain why, and DiCE counterfactuals that suggest what a relationship manager could actually do about it. The whole thing runs in a six-tab Streamlit dashboard. But prediction and explanation alone still leave a gap: a relationship manager looking at a 99% churn probability and a SHAP waterfall still has to figure out what to actually offer that customer, whether it's allowed under policy, and whether a human needs to sign off first. The sixth tab closes that gap with an AI retention agent that takes a flagged customer, investigates the options using four deterministic tools, and returns a policy-checked recommendation, or a structured refusal if the rules say no.
+The result is an XGBoost classifier that estimates churn probability, SHAP values that show how the model reached a score, and DiCE counterfactuals that explore candidate changes to selected inputs. The whole system runs in a six-tab Streamlit dashboard. Prediction and explanation still leave a practical gap: a relationship manager must decide whether any response is suitable, whether it passes local controls, and whether advisor review is required. The sixth tab demonstrates that workflow with an AI retention agent. It investigates a synthetic case using four deterministic tools and returns either a policy-checked recommendation or a structured refusal.
 
 ---
 
@@ -43,20 +43,20 @@ No setup needed, runs directly in the browser.
 
 | Detail | Value |
 |:---|:---|
-| 📦 Type | Fully synthetic, statistically calibrated |
+| 📦 Type | Fully synthetic, generated locally |
 | 📋 Total records | 10,000 customer profiles |
 | 🎯 Churn rate | ~21% (2,100 churners, 7,900 retained) |
 | 🏗️ Features | 19 input variables |
 | 📐 Train / test split | 80% training (8,000) / 20% test (2,000), stratified |
 | 🏦 Migration flag | ~15% former KBC Bank Ireland or Ulster Bank customers |
-| 😤 Switching difficulty | 60% of migrated customers experienced friction |
+| 😤 Switching difficulty | 60% of surveyed respondents experienced challenges |
 | 📊 Sources | Central Bank of Ireland, CCPC 2022 account migration survey |
 
 </div>
 
-All records are synthetic. No real customer data was used. I built the statistical parameters around actual published figures from the Central Bank of Ireland and the CCPC's 2022 account migration survey, so the distributions reflect what the real market looks like rather than being made up.
+All records are synthetic. No real customer data was used. The generator borrows the cited CCPC figure of 60 percent as the switching difficulty probability for migration flagged synthetic records. Applying the survey figure to that synthetic subgroup is a modelling assumption, not a subgroup estimate reported by the CCPC. Central Bank data supplies the historical account migration context. The 15 percent migration flag, 21 percent churn target, other distributions, and churn label rule are also constructed assumptions. The dataset should not be read as a measurement of the real market.
 
-What makes this dataset different from a standard churn dataset is the Irish-specific columns: `was_kbc_ulster_customer`, `months_since_switching`, `experienced_switching_difficulty`, and `uses_digital_bank_secondary` (Revolut / N26 usage). Those four features are what lets the model capture the migration-driven risk that standard banking churn models would miss entirely.
+The dataset includes Irish migration context through `was_kbc_ulster_customer`, `months_since_switching`, `experienced_switching_difficulty`, and `uses_digital_bank_secondary`. Those fields let the synthetic study examine a migration related scenario that a generic churn dataset would not contain.
 
 ---
 
@@ -64,15 +64,15 @@ What makes this dataset different from a standard churn dataset is the Irish-spe
 
 ```mermaid
 flowchart TD
-    A["📁 Data Generation\ngenerate_data.py\n10,000 synthetic records · 19 features\nCalibrated to CBI & CCPC statistics"]
+    A["📁 Data Generation\ngenerate_data.py\n10,000 synthetic records · 19 features\nSelected parameters informed by CBI & CCPC"]
     B["🔧 Preprocessing\nLabelEncoder · Boolean cast to int\nStratified 80/20 train / test split"]
     C["⚖️ SMOTEENN\nTraining set only\n6,320 neg + 1,680 pos  →  2,724 neg + 3,662 pos\nTest set left at original 79% / 21%"]
     D1["Logistic Regression\nBaseline"]
     D2["Random Forest\nEnsemble baseline"]
     D3["⚡ XGBoost\nSelected model\n200 est · depth 6 · lr 0.05"]
-    E["📊 Model Comparison\nAccuracy · Precision · Recall\nF1 · ROC-AUC · PR-AUC"]
+    E["📊 Model Comparison\nAccuracy · Precision · Recall\nF1 · ROC-AUC · Average precision"]
     F1["🔍 SHAP TreeExplainer\nGlobal beeswarm & bar plots\nLocal waterfall chart"]
-    F2["🎲 DiCE Counterfactuals\nXGBoostClassifierWrapper guard\n3 diverse scenarios per high-risk customer\nLocked: age · switching history"]
+    F2["🎲 DiCE Counterfactuals\nXGBoostClassifierWrapper guard\nUp to 3 candidate scenarios\nLocked: age · switching history"]
     G["🏦 Streamlit Dashboard\nTab 1 Overview  ·  Tab 2 Data Explorer\nTab 3 Model Performance\nTab 4 SHAP Explainability  ·  Tab 5 Risk Predictor\nTab 6 Retention Agent"]
 
     A --> B --> C
@@ -101,7 +101,7 @@ I trained three classifiers and compared them on the original imbalanced test se
 
 <div align="center">
 
-| Model | Accuracy | Precision | Recall | F1 Score | ROC-AUC | PR-AUC |
+| Model | Accuracy | Precision | Recall | F1 Score | ROC-AUC | Average precision |
 |:---|:---:|:---:|:---:|:---:|:---:|:---:|
 | **XGBoost (Selected)** | **0.8990** | **0.7080** | **0.8833** | **0.7860** | **0.9593** | **0.8420** |
 | Random Forest | 0.8790 | 0.6660 | 0.8500 | 0.7469 | 0.9438 | 0.7708 |
@@ -109,7 +109,7 @@ I trained three classifiers and compared them on the original imbalanced test se
 
 </div>
 
-I used PR-AUC as the primary metric rather than accuracy because the test set is imbalanced. A model that labels every customer as "retained" would still hit 79% accuracy, which is useless. PR-AUC measures how well the model performs across all possible decision thresholds without that distortion. XGBoost's **0.842** PR-AUC is a **+0.102 gain** over Logistic Regression, which is a meaningful jump on an imbalanced problem.
+I used average precision as the main comparison rather than accuracy because the test set is imbalanced. A model that labels every customer as retained would still reach 79% accuracy while missing every churner. Average precision summarises the precision and recall tradeoff. XGBoost reaches **0.842**, which is **0.102 above** Logistic Regression on this holdout sample.
 
 <div align="center">
 
@@ -117,7 +117,7 @@ I used PR-AUC as the primary metric rather than accuracy because the test set is
 |:---|:---:|
 | F1 Score | **+0.119** |
 | ROC-AUC | **+0.058** |
-| PR-AUC | **+0.102** |
+| Average precision | **+0.102** |
 
 </div>
 
@@ -125,62 +125,37 @@ I used PR-AUC as the primary metric rather than accuracy because the test set is
 
 ## 🔍 Feature Importance (SHAP)
 
-SHAP Shapley values were computed using `TreeExplainer` on the full 2,000-record test set. The top 5 features driving churn predictions across the portfolio are:
+SHAP Shapley values were computed using `TreeExplainer` on the full 2,000-record test set. The top 5 features driving predictions across that holdout sample are:
 
 <div align="center">
 
 | Rank | Feature | Mean Absolute SHAP | What It Means |
 |:---:|:---|:---:|:---|
-| 1 | `num_products` | **2.841** | The single strongest retention anchor. Customers with only one product have nothing tying them to the bank. |
-| 2 | `months_since_switching` | **1.028** | How recently the customer was forced to switch. More recent = higher risk. |
-| 3 | `has_direct_debits` | **0.883** | Direct debits create real friction to leave. No direct debits is a clear warning sign. |
-| 4 | `tenure_months` | **0.838** | Longer relationships reduce switching intent, regardless of how they started. |
-| 5 | `has_savings_goal` | **0.529** | Customers with a savings goal are more engaged and less likely to leave. |
+| 1 | `num_products` | **2.841** | Largest mean absolute SHAP effect in the fitted model. |
+| 2 | `months_since_switching` | **1.028** | Second largest model effect in the synthetic holdout sample. |
+| 3 | `has_direct_debits` | **0.883** | The fitted model used this field as an engagement signal. |
+| 4 | `tenure_months` | **0.838** | Tenure contributed materially to the model's predictions. |
+| 5 | `has_savings_goal` | **0.529** | This field also influenced the fitted model's output. |
 
 </div>
 
-The fact that `num_products` and `months_since_switching` are the top two features is exactly what I expected. Product depth is the main thing keeping customers in place, and the recency of the forced migration is still the dominant risk factor, which is why this model makes sense specifically for the current Irish market moment.
+`num_products` and `months_since_switching` are the two largest average SHAP effects in this fitted model. That result reflects the generated data and its label rule. It should not be interpreted as proof that either field causes churn in the current Irish market.
+
+The tree SHAP values shown here explain the model's raw output. Their magnitudes are not changes in probability percentage points.
 
 ---
 
 ## ⚡ Sample Counterfactual Explanations (DiCE)
 
-For any customer the model flags above 50% churn probability, the Risk Predictor tab generates three counterfactual scenarios: the smallest set of changes that would bring them below the churn threshold. These are meant to give relationship managers something concrete to work with, not just a risk score.
+For a customer above the 50% churn threshold, the Risk Predictor asks DiCE for up to three candidate counterfactuals below the threshold. The random search may return fewer candidates and does not guarantee the smallest possible change. The results are exploratory prompts for an advisor, not prescribed customer actions.
 
-<details>
-<summary>🔴 Sample output: high-risk customer at 87% churn probability</summary>
-
-```
-Input profile:
-  age=34 · tenure=8 months · num_products=1 · has_direct_debits=False
-  was_kbc_ulster_customer=True · months_since_switching=9
-  has_savings_goal=False · credit_score_band=Low
-
-Scenario 1: Add products and set up direct debits:
-  num_products:       1  →  3
-  has_direct_debits:  0  →  1
-  direct_debit_count: 0  →  4
-  → Predicted outcome: Retained (12% risk)
-
-Scenario 2: Open a savings goal and increase transaction activity:
-  has_savings_goal:          0  →  1
-  monthly_transaction_count: 11  →  34
-  → Predicted outcome: Retained (31% risk)
-
-Scenario 3: Increase balance and transaction volume:
-  monthly_balance_eur:       420  →  3,100
-  monthly_transaction_count: 11   →  52
-  → Predicted outcome: Retained (44% risk)
-```
-
-> These are model-generated suggestions. A relationship manager should review them before any customer contact.
-</details>
+The dashboard reports the original value and each candidate input returned by the current DiCE run. It does not claim that changing a real customer circumstance would prevent churn. The values vary with the profile and random search, so no fixed counterfactual result is presented here as a reproducible benchmark.
 
 ---
 
 ## 🤖 Phase 2: AI Retention Agent
 
-SHAP and DiCE answer two important questions: who is likely to leave, and why. But a relationship manager looking at a 99% churn probability and a waterfall chart still has to decide what to actually do. What offer is appropriate? Is it allowed for this specific customer? Does it need a human sign-off before anything goes out? Those questions are not about prediction. They are about action within rules.
+Phase 1 estimates churn risk, SHAP makes the model evidence inspectable, and DiCE explores candidate model scenarios. None of those outputs decides what should happen next. A relationship manager still has to consider whether a response is suitable, whether it passes the local project rules, and whether the configured advisor review condition applies.
 
 That's what the retention agent handles. It takes the Phase 1 output for a flagged customer, uses four deterministic tools to look up what's available and what the customer's cohort looks like, proposes a retention action, and then runs it through a deterministic policy gate before it can become a recommendation. If the gate blocks the action, the output is a structured refusal, not an exception or a warning. The relationship manager sees exactly which rule failed and why.
 
@@ -192,7 +167,7 @@ flowchart LR
     B["🤖 Groq tool loop\nLlama 3.3 70B · max 6 turns\n1,024 completion tokens / call"]
     C["🔧 Four deterministic tools\nproduct_lookup · segment_comparison\nregulatory_constraint_checker\nrecommendation_formatter"]
     D["🔒 Policy gate\nARR-001 · HOLD-002 · HUM-003 · VUL-004\nDeterministic Python · no LLM override"]
-    E["✅ Governed recommendation\naction · justification · confidence\nregulatory_flags · checker_verdict"]
+    E["✅ Governed recommendation\naction · justification · agent confidence\nregulatory_flags · checker_verdict"]
     F["🚫 Structured refusal\nno_recommendation\nfailed_rule_ids returned"]
 
     A --> B --> C --> D
@@ -217,14 +192,20 @@ The churn probability in the agent prompt is not taken from a stored value. `run
 |:---|:---|
 | 🗂️ `product_lookup` | Reads the local synthetic retention-offer catalogue; product policy metadata is authoritative and cannot be overridden by the model. |
 | 📊 `segment_comparison` | Calls the trained Phase 1 model for the target customer's current churn risk, then computes an exact read-only cohort summary from the local dataset. |
-| 🛡️ `regulatory_constraint_checker` | Runs all four deterministic policy rules against the exact customer and proposed action; issues an immutable decision fingerprinted to that specific pair. |
+| 🛡️ `regulatory_constraint_checker` | Runs all four local project policy rules against the exact synthetic customer and proposed action; issues an immutable decision fingerprinted to that specific pair. These rules are not legal determinations. |
 | 📋 `recommendation_formatter` | Validates the fixed Pydantic output schema and enforces the matching runtime-issued policy decision; the formatter cannot approve something the gate blocked. |
 
 </div>
 
 The policy gate is deterministic Python code. It evaluates all four rules on every run without short-circuiting, and the LLM has no mechanism to override its verdict. An action the gate blocks can only produce a structured `no_recommendation` refusal; it cannot be formatted as an approved recommendation.
 
-The LLM backend is Groq (`llama-3.3-70b-versatile`, free tier). This is a deliberate cost-safe choice: the full tool-calling agent is available to every visitor on the live demo without an API bill, which would not have been possible with a paid-only provider. The governance properties (the bounded loop, the four tools, the deterministic gate) are identical regardless of which model is behind the API call. The tool-calling loop follows Groq's [local tool-calling guide](https://console.groq.com/docs/tool-use), and the in-process quota counters are sized against the published [rate-limit reference](https://console.groq.com/docs/rate-limits) for the free tier (30 RPM, 1,000 requests/day).
+The `confidence` field is supplied by the agent to satisfy the output schema. It is not a calibrated probability, a Phase 1 churn score, or a regulatory assessment.
+
+The live LLM backend is currently configured for Groq using `llama-3.3-70b-versatile`. This is a deliberate cost-safety choice for a public demonstration intended to stay within Groq's Free Plan. Live tool calling is available only when the deployment owner supplies a key that Groq accepts for the configured model. A local format check cannot prove that the key or model access is valid. Without a key, the app displays recorded governed traces and makes no provider request. Those fallback files preserve the shape of a completed run, but they do not rerun the reasoning loop, tools, or policy gate when viewed. The bounded live path still uses the four tools and deterministic gate.
+
+The live loop follows Groq's [local tool-calling guide](https://console.groq.com/docs/tool-use). The application adds process-local guards of 30 requests per minute, a 950-request daily safety cap, and five live runs per browser session. These are application safeguards, not a reading of provider account usage. They do not count requests from another running instance or protect against token limits. Groq's [rate-limit reference](https://console.groq.com/docs/rate-limits), account Limits page, and response headers remain the source of truth.
+
+As of 27 July 2026, Groq lists `llama-3.3-70b-versatile` for shutdown on 16 August 2026 and recommends `openai/gpt-oss-120b` or `qwen/qwen3.6-27b` as replacements. The configured model therefore needs a live tool-calling migration test before that date. The model ID has not been changed here without that verification. See Groq's [deprecation notice](https://console.groq.com/docs/deprecations).
 
 ---
 
@@ -249,8 +230,10 @@ The dry-run eval does something worth explaining: for each of the four recorded 
 
 ## 🗂️ Sample Agent Traces
 
+The samples below are recorded, zero request scripted replays. Their Phase 1 probabilities were captured from the local trained model and are rechecked by the dry run evaluation. The reasoning text is not a Groq response, and viewing a sample does not execute the tools or policy gate again.
+
 <details>
-<summary>✅ Approved outcome: fee waiver with mandatory human review (IRLBANK_01136, 99.76% churn risk)</summary>
+<summary>✅ Local gate passed: fee waiver with advisor review required (IRLBANK_01136, 99.76% churn risk)</summary>
 
 ```
 Customer: IRLBANK_01136
@@ -274,7 +257,7 @@ Agent reasoning:
   Step 6  model_thought   "The matching synthetic cohort has a 69.78% churn rate, and
                            the catalogue includes a non-credit, non-upsell six-month fee
                            waiver. Because this customer's churn probability exceeds 75%,
-                           I will include human review and run the deterministic policy gate."
+                           I will mark advisor review as required and run the deterministic policy gate."
 
   Step 7  tool_call       regulatory_constraint_checker {
                             "action_id": "fee_waiver_6m",
@@ -283,15 +266,15 @@ Agent reasoning:
   Step 8  gate_check      ARR-001: PASS · HOLD-002: PASS · HUM-003: PASS · VUL-004: PASS
                           checker_verdict: approved
 
-  Step 9  model_thought   "All four deterministic rules approved fee_waiver_6m for this
-                           exact customer and action. I can now send the governed action
+  Step 9  model_thought   "The fee_waiver_6m action passed all four local project rules
+                           for this exact customer. I can now send the governed action
                            to the formatter with the HUM-003 human-review flag."
 
   Step 10 tool_call       recommendation_formatter {
                             "action": "fee_waiver_6m",
                             "justification": "Six months of current-account fee relief
-                              directly addresses retention friction without adding credit
-                              or another product; a relationship manager must review
+                              matches a non-credit catalogue option and does not add
+                              another product; a relationship manager must review
                               eligibility and account terms before contact.",
                             "confidence": 0.94,
                             "checker_verdict": "approved"
@@ -300,10 +283,9 @@ Agent reasoning:
 Final output:
   {
     "action": "fee_waiver_6m",
-    "justification": "Six months of current-account fee relief directly addresses
-                      retention friction without adding credit or another product;
-                      a relationship manager must review eligibility and account
-                      terms before contact.",
+    "justification": "Six months of current-account fee relief matches a non-credit
+                      catalogue option and does not add another product; a relationship
+                      manager must review eligibility and account terms before contact.",
     "confidence": 0.94,
     "regulatory_flags": ["HUM-003:human_review_required"],
     "checker_verdict": "approved"
@@ -314,7 +296,7 @@ Final output:
 </details>
 
 <details>
-<summary>🚫 Blocked outcome: ARR-001 stops a credit action for a customer in arrears (IRLBANK_01255, 99.97% churn risk)</summary>
+<summary>🚫 Local gate blocked: ARR-001 stops a credit action when the synthetic arrears flag is set (IRLBANK_01255, 99.97% churn risk)</summary>
 
 ```
 Customer: IRLBANK_01255
@@ -343,8 +325,9 @@ Agent reasoning:
                             "action_id": "mortgage_fixed_rate_review",
                             "requires_human_review": true
                           }
-  Step 8  gate_check      ARR-001: FAIL. "Blocked: the customer is in arrears and the
-                                           proposed action is credit-related."
+  Step 8  gate_check      ARR-001: FAIL. "Blocked by the prototype rule: the synthetic
+                                           arrears flag is set and the proposed action
+                                           is credit related."
                           HOLD-002: PASS · HUM-003: PASS · VUL-004: PASS
                           checker_verdict: blocked
                           failed_rule_ids: ["ARR-001"]
@@ -397,8 +380,8 @@ irish-banking-churn/
 │   └── irish_banking_churn.csv       Generated dataset [git-ignored]
 │
 ├── 📂 demo_traces/                   Four complete zero-request offline runs; 2 of 4 are refusals
-│   ├── 01_allowed_fee_waiver.json    Approved: fee relief · HUM-003 human review required
-│   ├── 02_allowed_service_review.json Approved: dedicated service review · high-risk customer
+│   ├── 01_allowed_fee_waiver.json    Local checks passed: fee relief · HUM-003 advisor review required
+│   ├── 02_allowed_service_review.json Local checks passed: dedicated service review · high-risk customer
 │   ├── 03_blocked_arrears_credit.json Blocked: ARR-001 stops credit action
 │   └── 04_blocked_vulnerable_upsell.json Blocked: VUL-004 stops upsell for vulnerable customer
 │
@@ -494,19 +477,17 @@ Replays all four recorded scenarios, verifies tool-call/result ID matching, vali
 
 ## ⚠️ Limitations
 
-This is a student portfolio project, so I want to be upfront about what it is and isn't.
+The data is synthetic. Selected parameters use published statistics, while many distributions and the churn label rule were constructed for this study. Production use would require representative bank data, external validation, and the relevant governance review.
 
-The data is synthetic. I calibrated it carefully against real published statistics, but synthetic data still can't replicate the full complexity of real customer behaviour. Before this model could be used in production, it would need to be retrained on actual bank data.
+The model does not include interest rates, housing market conditions, or inflation. Those factors may matter in real customer behaviour and would need to be tested with observed data.
 
-The model also doesn't know anything about the broader economy. Interest rates, the housing market, inflation: all of these push people to switch banks, and none of that is in here. That's a gap.
+The continuing value of `was_kbc_ulster_customer` and `months_since_switching` cannot be assumed. Their relevance would need to be monitored and recalibrated if the model were adapted to live data.
 
-The two Irish-specific features (`was_kbc_ulster_customer`, `months_since_switching`) will become less useful over time as the post-2022 migration period settles. Once the market normalises post-2027, those signals will decay and the model weights will need recalibrating.
-
-The Retention Agent is deliberately narrow. The catalogue, governance overlays, four policy rules, and recorded traces are all synthetic. The `in_arrears` and `vulnerable_customer` flags are explicit scenario metadata rather than Phase 1 model features. The agent never infers them from the churn score. The policy gate demonstrates a fail-closed engineering pattern informed by EBA expectations, but four rules applied to a synthetic catalogue are not a complete conduct-risk framework, eligibility engine, or production banking control. The live Groq path has been validated by automated fake-transport tests that confirm the tool-calling contract, schema format, and matching call IDs are all correct, but a smoke test against the real Groq API endpoint should be run before any live interview demo.
+The Retention Agent is deliberately narrow. The catalogue, governance overlays, four project policy rules, and recorded traces are all synthetic. The `in_arrears` and `vulnerable_customer` flags are explicit scenario metadata rather than Phase 1 model features. The agent never infers them from the churn score. The policy gate demonstrates a fail-closed engineering pattern, but it has not been assessed against the EBA Guidelines or any bank policy. Four rules applied to a synthetic catalogue are not a complete conduct-risk framework, eligibility engine, or production banking control. A live endpoint check should be completed before relying on the provider path.
 
 <div align="center">
 
-| 🔧 If I were to extend this | 📈 What it would add |
+| 🔧 Possible extension | 📈 What it would add |
 |:---|:---|
 | Real bank transaction data | Actual behavioural signal instead of simulated |
 | Macroeconomic features | Sensitivity to interest rates and housing market |
@@ -522,11 +503,11 @@ The Retention Agent is deliberately narrow. The catalogue, governance overlays, 
 
 ## 🏛️ Regulatory Context
 
-Under **Article 86 of the EU AI Act**, customers have a right to an explanation when an automated system makes a significant decision about their financial situation. Flagging someone as high-risk for churn can lead to changes in what products they're offered or how they're treated, so that needs to be explainable. The SHAP waterfall chart in the Risk Predictor tab gives a mathematical breakdown of exactly what pushed any individual prediction in either direction, and the DiCE counterfactuals show what would have to change to get a different outcome.
+From **2 August 2026**, [Article 86 of the EU AI Act](https://eur-lex.europa.eu/eli/reg/2024/1689/oj#art_86) provides a right to an explanation for decisions based on the output of specified Annex III high risk AI systems, except systems listed in point 2, when the decision produces legal effects or similarly significantly affects a person in a way they consider adverse to their health, safety, or fundamental rights. [Article 113](https://eur-lex.europa.eu/eli/reg/2024/1689/oj#art_113) sets that application date. This prototype makes no claim that it falls within Article 86. SHAP and DiCE are included so a reviewer can inspect the model evidence rather than treat a score as a complete decision.
 
-The **EBA Guidelines on Internal Governance** also require human oversight for automated decisions in financial services. The dashboard is built as a decision-support tool for relationship managers, not a system that takes automatic action. Every counterfactual output carries a note making that clear.
+The **[EBA Guidelines on internal governance under CRD](https://www.eba.europa.eu/activities/single-rulebook/regulatory-activities/internal-governance/guidelines-internal-governance-under-crd)** are in force for institutions within their stated scope and address responsibilities, risk management, and internal controls. They do not prescribe this retention workflow. Advisor review and the deterministic policy gate are engineering choices in this application and have not been assessed as evidence of regulatory compliance. The dashboard never takes action on a customer account.
 
-The retention agent extends this to Phase 2. Every recommendation the agent produces has passed through a deterministic Python policy gate before it reaches the relationship manager. The LLM cannot approve an action that the gate blocks, and the gate runs every rule without short-circuiting on every single run. The `HUM-003` rule additionally enforces that high-risk customers (above the 75% threshold) cannot receive a recommendation at all unless human review is explicitly included in the proposed action. The relationship manager is never presented with an output that bypassed that check. This is the same human-oversight principle already applied in Phase 1, extended into a structured, auditable form for Phase 2.
+Every live recommendation produced by the retention agent passes through a deterministic Python policy gate. The LLM cannot approve an action that the gate blocks, and the gate evaluates every project rule on each run. Above the configured 75% risk threshold, `HUM-003` requires the proposed action's `requires_human_review` flag to be true before the gate can pass it. That flag records a review requirement, not proof that a person completed a review. This is an application safeguard. It is not a statement that the four project rules form a complete regulatory control framework.
 
 Full details on the model, its validation, and ethical considerations are in [model_card.md](model_card.md).
 

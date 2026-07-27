@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "demo_id": "02_allowed_service_review",
-  "title": "Allowed: dedicated human-led service review",
+  "title": "Service review passed local checks",
   "recording": {
     "mode": "recorded_phase1_runtime_with_scripted_agent_trace",
     "real_api_calls": 0,
@@ -262,27 +262,27 @@
         "rule_results": [
           {
             "rule_id": "ARR-001",
-            "description": "Customers in arrears cannot receive credit or credit-limit offers.",
+            "description": "Prototype policy rule: block credit-related retention offers when the synthetic arrears flag is set.",
             "passed": true,
-            "reason": "Passed: no prohibited arrears-related credit offer is proposed."
+            "reason": "Passed the prototype rule: the proposed action is not blocked by the synthetic arrears flag."
           },
           {
             "rule_id": "HOLD-002",
-            "description": "Do not offer a product the customer already holds.",
+            "description": "Prototype policy rule: do not propose a product the synthetic customer already holds.",
             "passed": true,
-            "reason": "Passed: the action does not duplicate an existing product holding."
+            "reason": "Passed the prototype rule: the action does not duplicate a product listed in the synthetic customer's holdings."
           },
           {
             "rule_id": "HUM-003",
-            "description": "Recommendations above the churn-risk threshold require human review.",
+            "description": "Prototype policy rule: above the configured 75 percent churn threshold, an action cannot pass unless it is marked as requiring advisor review.",
             "passed": true,
-            "reason": "Passed: the human-review requirement is satisfied or not triggered."
+            "reason": "Passed the prototype rule: the proposed action is marked as requiring advisor review, or the condition was not triggered."
           },
           {
             "rule_id": "VUL-004",
-            "description": "Vulnerable customers may receive only non-upsell service or fee-relief actions.",
+            "description": "Prototype policy rule: when the synthetic vulnerability flag is set, permit only service or fee-relief actions.",
             "passed": true,
-            "reason": "Passed: vulnerable-customer restrictions are satisfied or not triggered."
+            "reason": "Passed the prototype rule: the condition tied to the synthetic vulnerability flag is satisfied or not triggered."
           }
         ]
       },
@@ -305,27 +305,27 @@
           "rule_results": [
             {
               "rule_id": "ARR-001",
-              "description": "Customers in arrears cannot receive credit or credit-limit offers.",
+              "description": "Prototype policy rule: block credit-related retention offers when the synthetic arrears flag is set.",
               "passed": true,
-              "reason": "Passed: no prohibited arrears-related credit offer is proposed."
+              "reason": "Passed the prototype rule: the proposed action is not blocked by the synthetic arrears flag."
             },
             {
               "rule_id": "HOLD-002",
-              "description": "Do not offer a product the customer already holds.",
+              "description": "Prototype policy rule: do not propose a product the synthetic customer already holds.",
               "passed": true,
-              "reason": "Passed: the action does not duplicate an existing product holding."
+              "reason": "Passed the prototype rule: the action does not duplicate a product listed in the synthetic customer's holdings."
             },
             {
               "rule_id": "HUM-003",
-              "description": "Recommendations above the churn-risk threshold require human review.",
+              "description": "Prototype policy rule: above the configured 75 percent churn threshold, an action cannot pass unless it is marked as requiring advisor review.",
               "passed": true,
-              "reason": "Passed: the human-review requirement is satisfied or not triggered."
+              "reason": "Passed the prototype rule: the proposed action is marked as requiring advisor review, or the condition was not triggered."
             },
             {
               "rule_id": "VUL-004",
-              "description": "Vulnerable customers may receive only non-upsell service or fee-relief actions.",
+              "description": "Prototype policy rule: when the synthetic vulnerability flag is set, permit only service or fee-relief actions.",
               "passed": true,
-              "reason": "Passed: vulnerable-customer restrictions are satisfied or not triggered."
+              "reason": "Passed the prototype rule: the condition tied to the synthetic vulnerability flag is satisfied or not triggered."
             }
           ]
         }
@@ -348,7 +348,7 @@
         "name": "recommendation_formatter",
         "input": {
           "action": "dedicated_service_review",
-          "justification": "The customer's extremely high Phase 1 churn probability, recent switching difficulty, and complaint history support a prompt human-led service intervention. A dedicated review addresses service friction without selling credit or duplicating either held product.",
+          "justification": "The synthetic profile has a high Phase 1 churn score, recent switching difficulty, and complaint history. A dedicated review is a non-sales service option and does not duplicate either held product. An advisor would still decide whether any action is suitable.",
           "confidence": 0.94,
           "regulatory_flags": [],
           "checker_verdict": "approved"
@@ -361,7 +361,7 @@
       "type": "final_output",
       "content": {
         "action": "dedicated_service_review",
-        "justification": "The customer's extremely high Phase 1 churn probability, recent switching difficulty, and complaint history support a prompt human-led service intervention. A dedicated review addresses service friction without selling credit or duplicating either held product.",
+        "justification": "The synthetic profile has a high Phase 1 churn score, recent switching difficulty, and complaint history. A dedicated review is a non-sales service option and does not duplicate either held product. An advisor would still decide whether any action is suitable.",
         "confidence": 0.94,
         "regulatory_flags": [
           "HUM-003:human_review_required"
@@ -379,7 +379,7 @@
         "is_error": false,
         "result": {
           "action": "dedicated_service_review",
-          "justification": "The customer's extremely high Phase 1 churn probability, recent switching difficulty, and complaint history support a prompt human-led service intervention. A dedicated review addresses service friction without selling credit or duplicating either held product.",
+          "justification": "The synthetic profile has a high Phase 1 churn score, recent switching difficulty, and complaint history. A dedicated review is a non-sales service option and does not duplicate either held product. An advisor would still decide whether any action is suitable.",
           "confidence": 0.94,
           "regulatory_flags": [
             "HUM-003:human_review_required"
@@ -400,7 +400,7 @@
   ],
   "recommendation": {
     "action": "dedicated_service_review",
-    "justification": "The customer's extremely high Phase 1 churn probability, recent switching difficulty, and complaint history support a prompt human-led service intervention. A dedicated review addresses service friction without selling credit or duplicating either held product.",
+    "justification": "The synthetic profile has a high Phase 1 churn score, recent switching difficulty, and complaint history. A dedicated review is a non-sales service option and does not duplicate either held product. An advisor would still decide whether any action is suitable.",
     "confidence": 0.94,
     "regulatory_flags": [
       "HUM-003:human_review_required"

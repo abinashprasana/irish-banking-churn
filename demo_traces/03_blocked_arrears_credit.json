@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "demo_id": "03_blocked_arrears_credit",
-  "title": "Blocked: arrears safeguard stops a credit-related mortgage action",
+  "title": "Local arrears rule blocks a credit-related mortgage action",
   "recording": {
     "mode": "recorded_phase1_runtime_with_scripted_agent_trace",
     "real_api_calls": 0,
@@ -247,27 +247,27 @@
         "rule_results": [
           {
             "rule_id": "ARR-001",
-            "description": "Customers in arrears cannot receive credit or credit-limit offers.",
+            "description": "Prototype policy rule: block credit-related retention offers when the synthetic arrears flag is set.",
             "passed": false,
-            "reason": "Blocked: the customer is in arrears and the proposed action is credit-related."
+            "reason": "Blocked by the prototype rule: the synthetic arrears flag is set and the proposed action is credit-related."
           },
           {
             "rule_id": "HOLD-002",
-            "description": "Do not offer a product the customer already holds.",
+            "description": "Prototype policy rule: do not propose a product the synthetic customer already holds.",
             "passed": true,
-            "reason": "Passed: the action does not duplicate an existing product holding."
+            "reason": "Passed the prototype rule: the action does not duplicate a product listed in the synthetic customer's holdings."
           },
           {
             "rule_id": "HUM-003",
-            "description": "Recommendations above the churn-risk threshold require human review.",
+            "description": "Prototype policy rule: above the configured 75 percent churn threshold, an action cannot pass unless it is marked as requiring advisor review.",
             "passed": true,
-            "reason": "Passed: the human-review requirement is satisfied or not triggered."
+            "reason": "Passed the prototype rule: the proposed action is marked as requiring advisor review, or the condition was not triggered."
           },
           {
             "rule_id": "VUL-004",
-            "description": "Vulnerable customers may receive only non-upsell service or fee-relief actions.",
+            "description": "Prototype policy rule: when the synthetic vulnerability flag is set, permit only service or fee-relief actions.",
             "passed": true,
-            "reason": "Passed: vulnerable-customer restrictions are satisfied or not triggered."
+            "reason": "Passed the prototype rule: the condition tied to the synthetic vulnerability flag is satisfied or not triggered."
           }
         ]
       },
@@ -292,27 +292,27 @@
           "rule_results": [
             {
               "rule_id": "ARR-001",
-              "description": "Customers in arrears cannot receive credit or credit-limit offers.",
+              "description": "Prototype policy rule: block credit-related retention offers when the synthetic arrears flag is set.",
               "passed": false,
-              "reason": "Blocked: the customer is in arrears and the proposed action is credit-related."
+              "reason": "Blocked by the prototype rule: the synthetic arrears flag is set and the proposed action is credit-related."
             },
             {
               "rule_id": "HOLD-002",
-              "description": "Do not offer a product the customer already holds.",
+              "description": "Prototype policy rule: do not propose a product the synthetic customer already holds.",
               "passed": true,
-              "reason": "Passed: the action does not duplicate an existing product holding."
+              "reason": "Passed the prototype rule: the action does not duplicate a product listed in the synthetic customer's holdings."
             },
             {
               "rule_id": "HUM-003",
-              "description": "Recommendations above the churn-risk threshold require human review.",
+              "description": "Prototype policy rule: above the configured 75 percent churn threshold, an action cannot pass unless it is marked as requiring advisor review.",
               "passed": true,
-              "reason": "Passed: the human-review requirement is satisfied or not triggered."
+              "reason": "Passed the prototype rule: the proposed action is marked as requiring advisor review, or the condition was not triggered."
             },
             {
               "rule_id": "VUL-004",
-              "description": "Vulnerable customers may receive only non-upsell service or fee-relief actions.",
+              "description": "Prototype policy rule: when the synthetic vulnerability flag is set, permit only service or fee-relief actions.",
               "passed": true,
-              "reason": "Passed: vulnerable-customer restrictions are satisfied or not triggered."
+              "reason": "Passed the prototype rule: the condition tied to the synthetic vulnerability flag is satisfied or not triggered."
             }
           ]
         }

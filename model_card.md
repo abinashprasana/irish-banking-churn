@@ -7,33 +7,32 @@ This model card details the model type, training characteristics, performance me
 - **Model type:** XGBoost Binary Classifier
 - **Version:** 1.0
 - **Date:** June 2026
-- **Framework:** XGBoost 2.x, scikit-learn, imbalanced-learn
-- **License:** MIT
+- **Framework:** XGBoost through its scikit-learn API, with scikit-learn and imbalanced-learn
 
 ## Intended Use
-- **Primary use:** Predicting retail banking customer churn risk for retail banks in the Republic of Ireland.
-- **Intended users:** Data science/analytics teams and client relationship managers in retail banking and fintech.
-- **Out-of-scope:** Not intended for automated credit underwriting, loan approvals, credit scoring, or any financial transaction requiring authorization by the Central Bank of Ireland or the UK Financial Conduct Authority (FCA).
+- **Primary use:** Demonstrating churn modelling, explanation, and governed recommendation workflows in a synthetic Irish retail banking scenario.
+- **Intended users:** People reviewing machine learning and decision-support system design.
+- **Out-of-scope:** Not intended for automated credit underwriting, loan approval, credit scoring, customer contact, or initiating any financial transaction.
 
 ## Training Data
-- **Source:** Synthetic dataset containing 10,000 customer records generated using statistical parameters modeled on actual published Irish retail banking statistics.
-- **Context:** Reflects the KBC Bank Ireland and Ulster Bank market exits (2022-2023) where ~1.2 million accounts migrated. In 2025-2026, those customers are now in their third or fourth year with a new provider; the synthetic population models the persisting lower-loyalty behaviours that characterise this ongoing transition period, as institutional trust typically takes 3-5 years to rebuild after a forced migration.
-- **Sampling Strategy:** Class imbalance handled via SMOTEENN (SMOTE + Edited Nearest Neighbors) on training data only. Resampled from a starting distribution of `6,320` negative and `1,680` positive samples to a balanced set of `2,724` negative and `3,662` positive samples.
+- **Source:** A locally generated synthetic dataset containing 10,000 customer records. The generator borrows the [CCPC figure of 60 percent](https://www.ccpc.ie/about-us/advocacy-and-research/research/publication-details/ccpc-switching-research-%28phase-2%29) as the switching difficulty probability for migration flagged synthetic records. The CCPC respondents had an open KBC or Ulster current account, or had closed one within the previous six months. Applying their survey figure to the generated subgroup is a modelling assumption, not a subgroup estimate reported by the CCPC. Central Bank data supplies historical account migration context. The 15 percent migration flag, 21 percent churn target, other distributions, and churn label rule are also constructed assumptions.
+- **Context:** Uses the KBC Bank Ireland and Ulster Bank market exits as its setting. The [Central Bank of Ireland](https://www.centralbank.ie/statistics/data-and-analysis/credit-and-banking-statistics/account-migration-statistics) recorded 1,167,219 current and deposit account closures at the two exiting banks between the start of 2022 and the end of June 2023. The synthetic population explores possible post migration loyalty patterns; it does not measure the current behaviour of those account holders.
+- **Sampling Strategy:** Class imbalance handled via SMOTEENN (SMOTE + Edited Nearest Neighbors) on training data only. The training set changed from `6,320` negative and `1,680` positive samples to a resampled set of `2,724` negative and `3,662` positive samples.
 
 ## Evaluation Data
 - **Size:** 20% stratified holdout test split (2,000 records: `1,580` retained, `420` churned).
-- **Distribution:** Original imbalanced target distribution (no resampling applied to the evaluation set to ensure realistic performance expectations).
+- **Distribution:** Original generated target distribution. No resampling was applied to the evaluation set.
 
 ## Performance
 The model was evaluated against baseline classifiers (Logistic Regression and Random Forest) on the original, imbalanced holdout test set. Metric values achieved by the deployed XGBoost model are:
 
-| Model | Accuracy | Precision | Recall | F1 Score | ROC-AUC | PR-AUC |
+| Model | Accuracy | Precision | Recall | F1 Score | ROC-AUC | Average precision |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | **XGBoost (Selected)** | **0.8990** | **0.7080** | **0.8833** | **0.7860** | **0.9593** | **0.8420** |
 | Random Forest | 0.8790 | 0.6660 | 0.8500 | 0.7469 | 0.9438 | 0.7708 |
 | Logistic Regression | 0.8385 | 0.5883 | 0.7690 | 0.6667 | 0.9011 | 0.7403 |
 
-*Note: For imbalanced data, PR-AUC (0.8420) is the key metric showing high precision and recall stability compared to the baseline.*
+*Note: Average precision is reported because the positive churn class is less common. XGBoost scores 0.8420 on the holdout sample.*
 
 ### Top 5 Most Important Features (by Mean Absolute SHAP Value)
 1. `num_products` (Mean Absolute SHAP: 2.841)
@@ -43,16 +42,16 @@ The model was evaluated against baseline classifiers (Logistic Regression and Ra
 5. `has_savings_goal` (Mean Absolute SHAP: 0.529)
 
 ## Ethical Considerations
-- **Data Privacy:** Synthetic data only. No personally identifiable information (PII) or real customer data was used, eliminating privacy breach risks.
-- **Explainability (EU AI Act Article 86):** Model interpretations are structured using SHAP (global feature importance, local waterfall plots) and DICE counterfactuals. This provides a transparent mathematical framework to satisfy customers' rights to an explanation for automated financial assessments.
-- **EBA Guidelines on Internal Governance:** Under European Banking Authority guidelines, automated AI decisions must have human-in-the-loop oversight. Model predictions should act as decision-support alerts for relationship managers, rather than triggering automated account freezing or negative customer treatment.
+- **Data Privacy:** The dataset is synthetic and contains no real customer records or personally identifiable information.
+- **Explainability (EU AI Act Article 86):** From 2 August 2026, Article 86 provides a right to an explanation for decisions based on the output of specified Annex III high risk AI systems, except systems listed in point 2, where the decision produces legal effects or similarly significantly affects a person in a way they consider adverse to their health, safety, or fundamental rights. Article 113 sets that application date. This prototype makes no claim that it falls within Article 86. SHAP and DiCE are used to make the model easier to inspect.
+- **EBA Guidelines on Internal Governance:** The [in-force Guidelines on internal governance under CRD](https://www.eba.europa.eu/activities/single-rulebook/regulatory-activities/internal-governance/guidelines-internal-governance-under-crd) apply to institutions within their stated scope and address responsibilities, risk management, and internal controls. They do not prescribe this retention workflow. Advisor review and the policy gate are engineering choices in this application and have not been assessed as evidence of regulatory compliance.
 
 ## Limitations
-- **Synthetic Nature:** While parameters are realistic, real-world customer behaviors may deviate from synthetic distributions.
-- **Geographic Lock-in:** Modeled specifically on the retail banking dynamics of the Republic of Ireland (e.g. unique switching friction from the dual bank exits). It will not generalize to other EU, UK, or global retail banking markets without retraining.
-- **Macroeconomic Factors:** The current iteration does not incorporate interest rate fluctuations, housing market parameters, or inflationary pressures, which significantly drive financial migrations. As the Irish market normalises post-2027, the relevance of migration-specific variables will gradually decay and model weights will require recalibration.
+- **Synthetic Nature:** One switching difficulty probability borrows a published survey figure, while its subgroup mapping, the migration share, churn target, many other distributions, and the churn label rule were constructed for this study. They should not be treated as observed customer behaviour.
+- **Geographic Lock-in:** The generated scenario uses Irish banking context. Performance should not be assumed to generalise to any live Irish or international customer population.
+- **Macroeconomic Factors:** The current iteration does not include interest rates, housing market conditions, or inflation. If the model were adapted to real data, those omitted factors and the continuing relevance of migration-specific fields would need to be tested.
 
 ## Caveats and Recommendations
-- **Retraining Cadence:** Retrain model quarterly to reflect changing customer movement trends. As the post-2022 switching landscape continues to settle through 2025-2026 and beyond, the signal strength of migration-specific features (`months_since_switching`, `was_kbc_ulster_customer`) will decay and model weights will need recalibration to avoid over-weighting stale signals.
-- **Data Drift:** Closely monitor features related to secondary digital accounts (e.g., uses_digital_bank_secondary). Revolut/N26 usage levels in Ireland are shifting rapidly.
-- **Human Validation:** All counterfactual suggestions (e.g., asking a client to set up a savings goal or add a mortgage) are mathematical suggestions and must be verified by a banking advisor before direct client outreach.
+- **Retraining Cadence:** No fixed cadence can be justified from synthetic data alone. A production owner should set retraining and review intervals from observed drift, model performance, and governance requirements.
+- **Data Drift:** If adapted to live data, monitor all features for drift, including `months_since_switching`, `was_kbc_ulster_customer`, and `uses_digital_bank_secondary`.
+- **Human Validation:** Counterfactual examples are mathematical candidates rather than prescribed customer actions. Any real use would require suitability, eligibility, and governance review outside this application before customer contact.

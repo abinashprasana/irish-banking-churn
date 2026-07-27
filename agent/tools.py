@@ -304,9 +304,10 @@ SEGMENT_COMPARISON_SCHEMA = {
 REGULATORY_CONSTRAINT_CHECKER_SCHEMA = {
     "name": "regulatory_constraint_checker",
     "description": (
-        "Run every deterministic retention policy rule for a proposed catalogue "
-        "action. Customer facts and canonical product metadata are injected by "
-        "the runtime and cannot be supplied or overridden by the model."
+        "Run every deterministic local project rule for a proposed catalogue "
+        "action. These rules are demonstration controls, not legal findings. "
+        "Customer facts and canonical product metadata are injected by the runtime "
+        "and cannot be supplied or overridden by the model."
     ),
     "input_schema": {
         "type": "object",
@@ -317,7 +318,10 @@ REGULATORY_CONSTRAINT_CHECKER_SCHEMA = {
             },
             "requires_human_review": {
                 "type": "boolean",
-                "description": "Whether the recommendation includes human review.",
+                "description": (
+                    "Whether the proposed action is marked as requiring human review. "
+                    "This flag does not record a completed review."
+                ),
             },
         },
         "required": ["action_id", "requires_human_review"],
@@ -339,6 +343,10 @@ RECOMMENDATION_FORMATTER_SCHEMA = {
             "confidence": {"type": "number", "minimum": 0, "maximum": 1},
             "regulatory_flags": {
                 "type": "array",
+                "description": (
+                    "Synthetic project policy records. These values do not represent "
+                    "a regulatory determination."
+                ),
                 "items": {"type": "string"},
             },
             "checker_verdict": {

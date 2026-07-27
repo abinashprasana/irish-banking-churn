@@ -15,6 +15,23 @@ ALLOWED_ACTION_CATEGORIES = frozenset(
 )
 VULNERABLE_ALLOWED_CATEGORIES = frozenset({"fee_relief", "service"})
 
+ARR_001_DESCRIPTION = (
+    "Prototype policy rule: block credit-related retention offers when the "
+    "synthetic arrears flag is set."
+)
+HOLD_002_DESCRIPTION = (
+    "Prototype policy rule: do not propose a product the synthetic customer "
+    "already holds."
+)
+HUM_003_DESCRIPTION = (
+    "Prototype policy rule: above the configured 75 percent churn threshold, "
+    "an action cannot pass unless it is marked as requiring advisor review."
+)
+VUL_004_DESCRIPTION = (
+    "Prototype policy rule: when the synthetic vulnerability flag is set, "
+    "permit only service or fee-relief actions."
+)
+
 
 def _normalise_identifier(value: str, field_name: str) -> str:
     if not isinstance(value, str) or not value.strip():
@@ -125,14 +142,16 @@ def check_arrears_credit(
     customer: CustomerPolicyContext, action: ActionPolicyContext
 ) -> RuleResult:
     rule_id = "ARR-001"
-    description = "Customers in arrears cannot receive credit or credit-limit offers."
+    description = ARR_001_DESCRIPTION
     blocked = customer.in_arrears and (
         action.is_credit or action.category in {"credit", "mortgage"}
     )
     reason = (
-        "Blocked: the customer is in arrears and the proposed action is credit-related."
+        "Blocked by the prototype rule: the synthetic arrears flag is set and "
+        "the proposed action is credit-related."
         if blocked
-        else "Passed: no prohibited arrears-related credit offer is proposed."
+        else "Passed the prototype rule: the proposed action is not blocked by "
+        "the synthetic arrears flag."
     )
     return _result(rule_id, description, not blocked, reason)
 
@@ -141,15 +160,17 @@ def check_existing_product(
     customer: CustomerPolicyContext, action: ActionPolicyContext
 ) -> RuleResult:
     rule_id = "HOLD-002"
-    description = "Do not offer a product the customer already holds."
+    description = HOLD_002_DESCRIPTION
     blocked = (
         action.target_product is not None
         and action.target_product in customer.held_products
     )
     reason = (
-        f"Blocked: the customer already holds {action.target_product}."
+        "Blocked by the prototype rule: the synthetic customer already holds "
+        f"{action.target_product}."
         if blocked
-        else "Passed: the action does not duplicate an existing product holding."
+        else "Passed the prototype rule: the action does not duplicate a product "
+        "listed in the synthetic customer's holdings."
     )
     return _result(rule_id, description, not blocked, reason)
 
@@ -158,18 +179,18 @@ def check_high_risk_human_review(
     customer: CustomerPolicyContext, action: ActionPolicyContext
 ) -> RuleResult:
     rule_id = "HUM-003"
-    description = (
-        "Recommendations above the churn-risk threshold require human review."
-    )
+    description = HUM_003_DESCRIPTION
     blocked = (
         customer.churn_probability > HIGH_RISK_HUMAN_REVIEW_THRESHOLD
         and not action.requires_human_review
     )
     reason = (
-        "Blocked: churn probability exceeds "
-        f"{HIGH_RISK_HUMAN_REVIEW_THRESHOLD:.0%} but human review was not included."
+        "Blocked by the prototype rule: churn probability exceeds "
+        f"{HIGH_RISK_HUMAN_REVIEW_THRESHOLD:.0%} but the proposed action was not "
+        "marked as requiring advisor review."
         if blocked
-        else "Passed: the human-review requirement is satisfied or not triggered."
+        else "Passed the prototype rule: the proposed action is marked as requiring "
+        "advisor review, or the condition was not triggered."
     )
     return _result(rule_id, description, not blocked, reason)
 
@@ -178,17 +199,16 @@ def check_vulnerable_customer(
     customer: CustomerPolicyContext, action: ActionPolicyContext
 ) -> RuleResult:
     rule_id = "VUL-004"
-    description = (
-        "Vulnerable customers may receive only non-upsell service or fee-relief actions."
-    )
+    description = VUL_004_DESCRIPTION
     blocked = customer.vulnerable_customer and (
         action.is_upsell or action.category not in VULNERABLE_ALLOWED_CATEGORIES
     )
     reason = (
-        "Blocked: vulnerable-customer safeguards permit only non-upsell service "
-        "or fee-relief actions."
+        "Blocked by the prototype rule: the synthetic vulnerability flag permits "
+        "only non-upsell service or fee-relief actions."
         if blocked
-        else "Passed: vulnerable-customer restrictions are satisfied or not triggered."
+        else "Passed the prototype rule: the condition tied to the synthetic "
+        "vulnerability flag is satisfied or not triggered."
     )
     return _result(rule_id, description, not blocked, reason)
 
@@ -196,22 +216,22 @@ def check_vulnerable_customer(
 RULES: tuple[PolicyRule, ...] = (
     PolicyRule(
         "ARR-001",
-        "Customers in arrears cannot receive credit or credit-limit offers.",
+        ARR_001_DESCRIPTION,
         check_arrears_credit,
     ),
     PolicyRule(
         "HOLD-002",
-        "Do not offer a product the customer already holds.",
+        HOLD_002_DESCRIPTION,
         check_existing_product,
     ),
     PolicyRule(
         "HUM-003",
-        "Recommendations above the churn-risk threshold require human review.",
+        HUM_003_DESCRIPTION,
         check_high_risk_human_review,
     ),
     PolicyRule(
         "VUL-004",
-        "Vulnerable customers may receive only non-upsell service or fee-relief actions.",
+        VUL_004_DESCRIPTION,
         check_vulnerable_customer,
     ),
 )

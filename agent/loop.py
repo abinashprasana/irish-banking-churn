@@ -42,14 +42,15 @@ _GROQ_KEY_PLACEHOLDERS = frozenset(
 
 SYSTEM_PROMPT = """You are a retention recommendation agent for a synthetic Irish banking demonstration.
 Use product_lookup and segment_comparison before choosing an action. Before any final
-action, call regulatory_constraint_checker for that exact action. Then call
+action, call regulatory_constraint_checker for that exact action. That tool applies
+local synthetic project rules, not law or a bank policy. Then call
 recommendation_formatter. If an action is blocked, check a safer alternative or
 format a no_recommendation refusal. Never claim regulatory compliance, guaranteed
 savings, or product eligibility. Customer facts and catalogue policy metadata are
-injected by the runtime and are authoritative. The churn probability is recomputed
-from the trained Phase 1 model for the current feature vector and must not be replaced
-with a model-authored value. Use only the supplied tools and pass strict JSON arguments
-matching their schemas.
+injected by the runtime and are authoritative within this demonstration. The churn
+probability is recomputed from the trained Phase 1 model for the current feature vector
+and must not be replaced with a model-authored value. Use only the supplied tools and
+pass strict JSON arguments matching their schemas.
 """
 
 
@@ -112,7 +113,7 @@ def _validated_groq_api_key(value: Any) -> str | None:
 def resolve_groq_api_key(secrets: Any | None = None) -> str | None:
     """Prefer a valid Streamlit secret in production, then the local environment."""
 
-    secret_value: Any = None
+    secret_value = None
     if secrets is not None:
         try:
             secret_value = secrets.get("GROQ_API_KEY")
@@ -164,7 +165,7 @@ class _GuardedChatCompletions:
                 f"max_completion_tokens must be capped at {MAX_TOKENS}"
             )
         self.call_count += 1
-        last_exc: Exception | None = None
+        last_exc = None
         for attempt in range(3):
             self._quota_guard.reserve_request()
             self.request_count += 1
@@ -503,8 +504,8 @@ def run_retention_agent(
                 arguments = function["arguments"]
                 try:
                     tool_input = _parse_tool_arguments(arguments)
-                    displayed_input: Any = dict(tool_input)
-                    argument_error: Exception | None = None
+                    displayed_input = dict(tool_input)
+                    argument_error = None
                 except Exception as exc:
                     tool_input = {}
                     displayed_input = {"raw_arguments": arguments}

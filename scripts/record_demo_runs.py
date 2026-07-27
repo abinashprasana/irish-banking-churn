@@ -40,7 +40,7 @@ def main() -> None:
     print(f"Maximum completion tokens per request: {MAX_TOKENS}")
     print(f"Model-call cap per customer run: {MAX_LIVE_API_CALLS}")
 
-    completed: list[tuple[Path, dict[str, object]]] = []
+    completed = []
     for path in paths:
         artifact = json.loads(path.read_text(encoding="utf-8"))
         client = create_live_client(api_key=api_key)

@@ -535,7 +535,7 @@ def test_recorded_demos_and_phase2_wiring_remain_valid():
 
     app_source = (PROJECT_ROOT / "app.py").read_text(encoding="utf-8")
     ast.parse(app_source)
-    assert '"🛡️ Retention Agent"' in app_source
+    assert '"Retention agent"' in app_source
     assert "Bring your own" not in app_source
     assert "GROQ_API_KEY" in app_source
     assert "SESSION_RUN_CAP" in app_source

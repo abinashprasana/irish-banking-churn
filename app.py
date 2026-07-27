@@ -1,6 +1,7 @@
 import os
 import json
 import warnings
+from html import escape
 warnings.filterwarnings('ignore')
 
 import pandas as pd
@@ -10,7 +11,14 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import roc_curve, precision_recall_curve
+from sklearn.metrics import (
+    average_precision_score,
+    confusion_matrix,
+    f1_score,
+    precision_recall_curve,
+    roc_auc_score,
+    roc_curve,
+)
 import shap
 import dice_ml
 
@@ -22,105 +30,1572 @@ from agent.tools import (
 
 st.set_page_config(
     page_title="Irish Banking Churn Predictor",
-    page_icon="🏦",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="collapsed",
 )
 
 st.markdown("""
 <style>
-/* ── Base text — dark slate palette ── */
-h1, h2, h3, h4, h5, h6 { color: #f1f5f9 !important; letter-spacing: -0.3px; }
-p, li, .stMarkdown p { color: #cbd5e1 !important; }
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
 
-/* ── Layout ── */
-.block-container { padding: 2rem 2.5rem; }
-
-/* ── Tab bar ── */
-.stTabs [data-baseweb="tab-list"] {
-    gap: 4px;
-    background: #1e293b;
-    border-radius: 12px;
-    padding: 5px;
+:root {
+    --ink: #102A43;
+    --atlantic: #245B78;
+    --atlantic-bright: #4EA2C6;
+    --deep-ocean: #071827;
+    --deep-ocean-soft: #0D2335;
+    --cloud: #E4ECEE;
+    --paper: #F8FBFA;
+    --approval: #147D64;
+    --approval-soft: #DFF3EC;
+    --block: #A33A32;
+    --block-soft: #F8E6E3;
+    --line: #C8D6DA;
+    --line-soft: #DCE6E8;
+    --muted: #5C6F7E;
+    --shadow-soft: 0 18px 45px rgba(16, 42, 67, 0.08);
+    --shadow-lift: 0 22px 55px rgba(16, 42, 67, 0.13);
 }
-.stTabs [data-baseweb="tab"] {
-    border-radius: 9px;
-    padding: 0.45rem 1rem;
+
+html, body, [class*="css"], [data-testid="stAppViewContainer"] {
+    font-family: "IBM Plex Sans", Arial, sans-serif;
+    color: var(--ink);
+}
+
+[data-testid="stAppViewContainer"] {
+    background:
+        radial-gradient(ellipse 44rem 34rem at -4% 2%, rgba(65, 145, 151, 0.2), transparent 68%),
+        radial-gradient(ellipse 48rem 38rem at 104% 16%, rgba(59, 116, 145, 0.18), transparent 70%),
+        linear-gradient(180deg, #E8EFF0 0%, #DDE8EA 48%, #E7EEF0 100%);
+    position: relative;
+}
+
+[data-testid="stAppViewContainer"]::before {
+    background-image:
+        radial-gradient(circle, rgba(36, 91, 120, 0.1) 0.65px, transparent 0.85px);
+    background-size: 28px 28px;
+    content: "";
+    height: 52rem;
+    inset: 0 0 auto;
+    mask-image: linear-gradient(to bottom, black 0, rgba(0, 0, 0, 0.28) 30rem, transparent 52rem);
+    -webkit-mask-image: linear-gradient(to bottom, black 0, rgba(0, 0, 0, 0.28) 30rem, transparent 52rem);
+    opacity: 0.22;
+    pointer-events: none;
+    position: absolute;
+    z-index: 0;
+}
+
+[data-testid="stHeader"] {
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+[data-testid="stDecoration"] {
+    display: none;
+}
+
+.block-container,
+[data-testid="stMainBlockContainer"] {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 2.15rem 3rem 5rem !important;
+    position: relative;
+    width: 100%;
+    z-index: 1;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: var(--ink) !important;
+    font-family: "IBM Plex Sans", Arial, sans-serif !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.025em;
+}
+
+h2 {
+    font-size: clamp(1.55rem, 2.4vw, 2rem) !important;
+    margin-top: 1.6rem !important;
+    padding-top: 0.95rem;
+    position: relative;
+}
+
+h2::before {
+    background: var(--atlantic);
+    border-radius: 999px;
+    content: "";
+    height: 2px;
+    left: 0;
+    position: absolute;
+    top: 0;
+    width: 32px;
+}
+
+h3 {
+    font-size: 1.14rem !important;
+}
+
+p, li, .stMarkdown p {
+    color: var(--ink);
+    line-height: 1.6;
+}
+
+code, [data-testid="stMetricValue"], .ledger-value, .stat-value {
+    font-family: "IBM Plex Mono", Consolas, monospace !important;
+    font-variant-numeric: tabular-nums;
+}
+
+hr {
+    border-color: var(--line) !important;
+    margin: 1.5rem 0 !important;
+}
+
+.page-masthead {
+    background:
+        radial-gradient(circle at 82% 18%, rgba(78, 162, 198, 0.2), transparent 25rem),
+        var(--deep-ocean);
+    border: 0;
+    border-radius: 24px;
+    box-shadow: 0 28px 70px rgba(7, 24, 39, 0.22), inset 0 0 0 1px rgba(191, 218, 231, 0.13);
+    color: #FFFFFF;
+    display: grid;
+    grid-template-columns: minmax(0, 1.12fr) minmax(360px, 0.88fr);
+    isolation: isolate;
+    min-height: 470px;
+    overflow: hidden;
+    position: relative;
+}
+
+.page-masthead::before {
+    background-image:
+        linear-gradient(rgba(207, 231, 241, 0.055) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(207, 231, 241, 0.055) 1px, transparent 1px);
+    background-size: 42px 42px;
+    content: "";
+    inset: 0;
+    mask-image: linear-gradient(90deg, transparent, black 42%, black);
+    pointer-events: none;
+    position: absolute;
+    z-index: -1;
+}
+
+.page-masthead::after {
+    background: var(--atlantic-bright);
+    box-shadow: 0 0 34px rgba(78, 162, 198, 0.48);
+    content: "";
+    height: 2px;
+    left: 0;
+    position: absolute;
+    top: 0;
+    transform-origin: left;
+    width: 38%;
+}
+
+.hero-copy {
+    align-self: center;
+    padding: 4rem 1.4rem 4rem 4rem;
+    position: relative;
+    z-index: 2;
+}
+
+.hero-kicker {
+    align-items: center;
+    color: #BFD8E4;
+    display: flex;
+    font-family: "IBM Plex Mono", Consolas, monospace;
+    font-size: 0.68rem;
     font-weight: 600;
-    font-size: 0.88rem;
-    color: #94a3b8 !important;
-    background: transparent;
-    border: none;
+    gap: 0.55rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
 }
+
+.hero-kicker::before {
+    background: #68D5B3;
+    border-radius: 999px;
+    box-shadow: 0 0 0 5px rgba(104, 213, 179, 0.1);
+    content: "";
+    height: 7px;
+    width: 7px;
+}
+
+.page-masthead h1 {
+    color: #FFFFFF !important;
+    font-size: clamp(2.6rem, 5vw, 4.9rem);
+    font-weight: 500 !important;
+    letter-spacing: -0.052em;
+    line-height: 0.96;
+    margin: 1.45rem 0 1.2rem;
+    max-width: 780px;
+}
+
+.page-masthead h1 span {
+    display: block;
+}
+
+.page-masthead h1 .hero-accent {
+    color: #8EC7DD;
+}
+
+.page-masthead p {
+    color: #C7D8E2;
+    font-size: clamp(0.98rem, 1.4vw, 1.08rem);
+    line-height: 1.7;
+    margin: 0;
+    max-width: 650px;
+}
+
+.hero-facts {
+    border-top: 1px solid rgba(207, 231, 241, 0.16);
+    display: grid;
+    gap: 0;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-top: 2.1rem;
+    max-width: 670px;
+    padding-top: 1.1rem;
+}
+
+.hero-fact {
+    min-width: 0;
+    padding-right: 1rem;
+}
+
+.hero-fact + .hero-fact {
+    border-left: 1px solid rgba(207, 231, 241, 0.16);
+    padding-left: 1rem;
+}
+
+.hero-fact strong {
+    color: #FFFFFF;
+    display: block;
+    font-family: "IBM Plex Mono", Consolas, monospace;
+    font-size: 0.92rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.hero-fact span {
+    color: #91AAB8;
+    display: block;
+    font-size: 0.72rem;
+    line-height: 1.35;
+}
+
+.hero-scene {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    min-height: 470px;
+    overflow: hidden;
+    padding: 2.5rem;
+    position: relative;
+}
+
+.scene-frame {
+    aspect-ratio: 1;
+    border: 1px solid rgba(191, 218, 231, 0.1);
+    border-radius: 28px;
+    max-width: 410px;
+    position: relative;
+    transform: rotate(-3deg);
+    width: 100%;
+}
+
+.scene-frame::before,
+.scene-frame::after {
+    border: 1px solid rgba(191, 218, 231, 0.12);
+    border-radius: 50%;
+    content: "";
+    inset: 11%;
+    position: absolute;
+}
+
+.scene-frame::before {
+    display: none;
+}
+
+.scene-frame::after {
+    border-color: rgba(78, 162, 198, 0.28);
+    border-style: dashed;
+    inset: 25%;
+}
+
+.scene-axis {
+    background: linear-gradient(90deg, transparent, rgba(142, 199, 221, 0.4), transparent);
+    height: 1px;
+    left: 5%;
+    position: absolute;
+    right: 5%;
+    top: 50%;
+    display: none;
+}
+
+.scene-axis.vertical {
+    left: 50%;
+    top: 5%;
+    transform: rotate(90deg);
+    transform-origin: left;
+    width: 90%;
+}
+
+.scene-core {
+    align-items: center;
+    background: rgba(13, 35, 53, 0.92);
+    border: 1px solid rgba(142, 199, 221, 0.55);
+    border-radius: 50%;
+    box-shadow: 0 0 0 14px rgba(78, 162, 198, 0.06), 0 0 38px rgba(78, 162, 198, 0.16);
+    display: flex;
+    flex-direction: column;
+    height: 128px;
+    justify-content: center;
+    left: 50%;
+    position: absolute;
+    text-align: center;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 128px;
+    z-index: 2;
+}
+
+.scene-core small {
+    color: #8EC7DD;
+    font-family: "IBM Plex Mono", Consolas, monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.scene-core strong {
+    color: #FFFFFF;
+    font-size: 0.96rem;
+    font-weight: 500;
+    margin-top: 0.25rem;
+}
+
+.scene-node {
+    background: rgba(7, 24, 39, 0.9);
+    border: 1px solid rgba(191, 218, 231, 0.24);
+    border-radius: 10px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
+    color: #D9E7ED;
+    font-family: "IBM Plex Mono", Consolas, monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    padding: 0.68rem 0.78rem;
+    position: absolute;
+    text-transform: uppercase;
+    z-index: 3;
+}
+
+.scene-node::before {
+    background: #68D5B3;
+    border-radius: 50%;
+    content: "";
+    display: inline-block;
+    height: 5px;
+    margin-right: 0.45rem;
+    vertical-align: 0.08rem;
+    width: 5px;
+}
+
+.scene-node.input {
+    left: 7%;
+    top: 18%;
+}
+
+.scene-node.risk {
+    right: 6%;
+    top: 21%;
+}
+
+.scene-node.reason {
+    bottom: 18%;
+    left: 5%;
+}
+
+.scene-node.policy {
+    bottom: 15%;
+    right: 7%;
+}
+
+.scene-sweep {
+    border: 1px solid transparent;
+    border-top-color: #8EC7DD;
+    border-radius: 50%;
+    inset: 17%;
+    opacity: 0.7;
+    position: absolute;
+}
+
+.scene-flow {
+    inset: 0;
+    overflow: visible;
+    pointer-events: none;
+    position: absolute;
+    z-index: 1;
+}
+
+.scene-flow path {
+    fill: none;
+    vector-effect: non-scaling-stroke;
+}
+
+.scene-flow-base {
+    stroke: rgba(191, 218, 231, 0.15);
+    stroke-width: 1;
+}
+
+.scene-flow-signal {
+    animation: flowSignal 5.8s linear infinite;
+    stroke: #68D5B3;
+    stroke-dasharray: 3 46;
+    stroke-linecap: round;
+    stroke-width: 1.7;
+}
+
+.scene-caption {
+    bottom: 1rem;
+    color: #7893A2;
+    font-family: "IBM Plex Mono", Consolas, monospace;
+    font-size: 0.55rem;
+    left: 1rem;
+    letter-spacing: 0.08em;
+    position: absolute;
+    text-transform: uppercase;
+}
+
+.eyebrow {
+    color: var(--atlantic) !important;
+    font-size: 0.72rem !important;
+    font-weight: 600;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+}
+
+.section-note {
+    color: var(--muted);
+    max-width: 820px;
+    margin-top: -0.35rem;
+}
+
+.stTabs [data-baseweb="tab-list"] {
+    backdrop-filter: blur(14px);
+    background: rgba(244, 249, 248, 0.9);
+    border: 1px solid rgba(188, 207, 211, 0.9);
+    border-radius: 14px;
+    box-shadow: 0 14px 34px rgba(16, 42, 67, 0.11);
+    gap: 0.35rem;
+    margin: -1.45rem 1.35rem 0;
+    padding: 0.42rem;
+    overflow-x: auto;
+    position: relative;
+    z-index: 5;
+}
+
+.stTabs [data-baseweb="tab"] {
+    background: transparent !important;
+    border: 0 !important;
+    border-bottom: 0 !important;
+    border-radius: 9px !important;
+    color: var(--muted) !important;
+    flex: 0 0 auto;
+    font-size: 0.84rem;
+    font-weight: 500;
+    overflow: hidden;
+    padding: 0.78rem 1rem;
+    position: relative;
+    transition: background-color 180ms ease, color 180ms ease, transform 180ms ease;
+    white-space: nowrap;
+}
+
+.stTabs [data-baseweb="tab"]:hover {
+    background: #EDF4F7 !important;
+    color: var(--atlantic) !important;
+    transform: translateY(-1px);
+}
+
 .stTabs [aria-selected="true"] {
-    background: #334155 !important;
-    color: #f1f5f9 !important;
-    box-shadow: 0 1px 6px rgba(0,0,0,0.35) !important;
+    background: var(--ink) !important;
+    box-shadow: 0 6px 16px rgba(16, 42, 67, 0.18);
+    color: var(--ink) !important;
 }
 
-/* ── Primary button ── */
-.stButton > button[kind="primary"] {
-    background: linear-gradient(135deg, #1d4ed8, #3b82f6) !important;
-    border: none !important;
+.stTabs [aria-selected="true"] p {
+    color: #FFFFFF !important;
+}
+
+.stTabs [data-baseweb="tab-highlight"] {
+    background: linear-gradient(90deg, #68D5B3, #4EA2C6) !important;
+    border-radius: 999px;
+    height: 3px !important;
+    transition:
+        transform 340ms cubic-bezier(0.22, 1, 0.36, 1),
+        right 340ms cubic-bezier(0.22, 1, 0.36, 1),
+        width 340ms cubic-bezier(0.22, 1, 0.36, 1) !important;
+    z-index: 7;
+}
+
+.stTabs [data-baseweb="tab-border"] {
+    background: rgba(36, 91, 120, 0.12) !important;
+    height: 1px !important;
+}
+
+.stTabs [data-baseweb="tab-panel"] {
+    padding-top: 1.4rem;
+}
+
+.stat-band {
+    display: grid;
+    grid-template-columns: repeat(var(--stat-count, 3), minmax(0, 1fr));
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    box-shadow: var(--shadow-soft);
+    margin: 1.2rem 0 1.5rem;
+    overflow: hidden;
+}
+
+.stat-item {
+    min-height: 150px;
+    padding: 1.4rem 1.45rem 1.25rem;
+    position: relative;
+    transition: background-color 180ms ease, transform 180ms ease;
+}
+
+.stat-item::before {
+    background: var(--atlantic);
+    content: "";
+    height: 3px;
+    left: 1.45rem;
+    position: absolute;
+    top: 0;
+    width: 38px;
+}
+
+.stat-item:hover {
+    background: #F8FBFC;
+}
+
+.stat-item + .stat-item {
+    border-left: 1px solid var(--line);
+}
+
+.stat-item.approval {
+    box-shadow: none;
+}
+
+.stat-item.approval::before {
+    background: var(--approval);
+}
+
+.stat-item.block {
+    box-shadow: none;
+}
+
+.stat-item.block::before {
+    background: var(--block);
+}
+
+.stat-label {
+    color: var(--muted);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+}
+
+.stat-value {
+    color: var(--ink);
+    font-size: clamp(1.95rem, 3vw, 2.7rem);
+    font-weight: 600;
+    line-height: 1.15;
+    margin: 0.28rem 0 0.36rem;
+}
+
+.stat-note {
+    color: var(--muted);
+    font-size: 0.82rem;
+    line-height: 1.45;
+}
+
+.feature-panel {
+    background: var(--paper);
+    border: 1px solid rgba(173, 190, 199, 0.62);
+    border-radius: 18px;
+    box-shadow: 0 12px 30px rgba(16, 42, 67, 0.065);
+    min-height: 220px;
+    overflow: hidden;
+    padding: 1.35rem 1.35rem 1.2rem;
+    position: relative;
+    transition: border-color 220ms ease, box-shadow 220ms ease, transform 220ms ease;
+}
+
+.feature-panel::after {
+    border-right: 1px solid rgba(36, 91, 120, 0.3);
+    border-top: 1px solid rgba(36, 91, 120, 0.3);
+    content: "";
+    height: 18px;
+    position: absolute;
+    right: 11px;
+    top: 11px;
+    transition: border-color 220ms ease, height 220ms ease, width 220ms ease;
+    width: 18px;
+}
+
+.feature-panel:hover {
+    border-color: #AFC4D0;
+    box-shadow: var(--shadow-lift);
+    transform: translateY(-4px);
+}
+
+.feature-panel:hover::after {
+    border-color: var(--atlantic);
+    height: 24px;
+    width: 24px;
+}
+
+.feature-index {
+    color: #91A8B5;
+    font-family: "IBM Plex Mono", Consolas, monospace;
+    font-size: 0.64rem;
+    letter-spacing: 0.08em;
+}
+
+.feature-visual {
+    align-items: flex-end;
+    display: flex;
+    gap: 5px;
+    height: 44px;
+    margin-bottom: 1.15rem;
+}
+
+.feature-visual span {
+    background: #BFD8E4;
+    border-radius: 2px 2px 0 0;
+    display: block;
+    width: 7px;
+}
+
+.feature-visual span:nth-child(1) { height: 18px; }
+.feature-visual span:nth-child(2) { height: 32px; }
+.feature-visual span:nth-child(3) { height: 24px; }
+.feature-visual span:nth-child(4) { background: var(--atlantic); height: 42px; }
+.feature-visual span:nth-child(5) { height: 29px; }
+
+.feature-panel.explain .feature-visual {
+    align-items: center;
+    gap: 0;
+}
+
+.feature-panel.explain .feature-visual span {
+    background: var(--line);
+    border-radius: 999px;
+    height: 2px;
+    position: relative;
+    width: 36px;
+}
+
+.feature-panel.explain .feature-visual span::after {
+    background: var(--atlantic);
+    border: 3px solid #D9EAF1;
+    border-radius: 50%;
+    content: "";
+    height: 10px;
+    left: 50%;
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 10px;
+}
+
+.feature-panel.counter .feature-visual {
+    align-items: center;
+}
+
+.feature-panel.counter .feature-visual span {
+    background: transparent;
+    border: 1px solid #AFC4D0;
+    border-radius: 50%;
+    height: 30px;
+    position: relative;
+    width: 30px;
+}
+
+.feature-panel.counter .feature-visual span + span {
+    margin-left: -10px;
+}
+
+.feature-panel.counter .feature-visual span:last-child {
+    border-color: var(--approval);
+}
+
+.feature-panel.counter .feature-visual span:nth-child(n+4) {
+    display: none;
+}
+
+.feature-panel h4 {
+    font-size: 1.05rem;
+    margin: 0 0 0.45rem;
+}
+
+.feature-panel p {
+    color: var(--muted);
+    font-size: 0.9rem;
+}
+
+.system-story {
+    background: rgba(255, 255, 255, 0.74);
+    border: 1px solid rgba(173, 190, 199, 0.55);
+    border-radius: 24px;
+    box-shadow: var(--shadow-soft);
+    display: grid;
+    gap: clamp(2.2rem, 5vw, 5.5rem);
+    grid-template-columns: minmax(300px, 0.82fr) minmax(0, 1.18fr);
+    margin: 2.7rem 0 1.5rem;
+    overflow: clip;
+    padding: clamp(1.25rem, 3vw, 2.25rem);
+    position: relative;
+    view-timeline-axis: block;
+    view-timeline-name: --system-story;
+}
+
+.system-story::before {
+    display: none;
+}
+
+.story-map {
+    align-self: start;
+    background:
+        radial-gradient(circle at 68% 40%, rgba(78, 162, 198, 0.17), transparent 18rem),
+        var(--deep-ocean);
+    border-radius: 18px;
+    box-shadow: 0 20px 45px rgba(7, 24, 39, 0.18);
+    min-height: 620px;
+    overflow: hidden;
+    padding: 1.5rem;
+    position: sticky;
+    top: 5.5rem;
+}
+
+.story-map::before {
+    background-image:
+        linear-gradient(rgba(207, 231, 241, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(207, 231, 241, 0.05) 1px, transparent 1px);
+    background-size: 30px 30px;
+    content: "";
+    inset: 0;
+    mask-image: linear-gradient(to bottom, black, transparent 92%);
+    -webkit-mask-image: linear-gradient(to bottom, black, transparent 92%);
+    pointer-events: none;
+    position: absolute;
+}
+
+.story-map-copy {
+    max-width: 420px;
+    position: relative;
+    z-index: 2;
+}
+
+.story-map-copy .eyebrow {
+    color: #8EC7DD !important;
+}
+
+.story-map-copy h3 {
+    color: #FFFFFF !important;
+    font-size: clamp(1.7rem, 3vw, 2.45rem) !important;
+    line-height: 1.06;
+    margin: 0.6rem 0 0.85rem;
+}
+
+.story-map-copy p {
+    color: #BFD1DB;
+    font-size: 0.92rem;
+    margin: 0;
+}
+
+.story-map-graphic {
+    bottom: 0;
+    height: 430px;
+    left: 1.5rem;
+    max-width: 420px;
+    position: absolute;
+    width: calc(100% - 3rem);
+    z-index: 1;
+}
+
+.story-track,
+.story-progress {
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+}
+
+.story-track {
+    stroke: rgba(191, 218, 231, 0.28);
+    stroke-dasharray: 4 8;
+    stroke-width: 1.5;
+}
+
+.story-progress {
+    stroke: #68D5B3;
+    stroke-width: 2.8;
+}
+
+.story-node {
+    fill: var(--deep-ocean);
+    stroke: #8EC7DD;
+    stroke-width: 1.5;
+    transform-box: fill-box;
+    transform-origin: center;
+}
+
+.story-node.core {
+    fill: #68D5B3;
+    stroke: #DDF8EF;
+}
+
+.story-node-label {
+    fill: #BFD1DB;
+    font-family: "IBM Plex Mono", Consolas, monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+}
+
+.story-steps {
+    display: grid;
+    gap: 16vh;
+    padding: 8vh 0 12vh;
+    position: relative;
+}
+
+.story-step {
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(173, 190, 199, 0.58);
+    border-radius: 16px;
+    box-shadow: 0 14px 34px rgba(16, 42, 67, 0.07);
+    min-height: 155px;
+    padding: 1.3rem 1.4rem 1.35rem 4.4rem;
+    position: relative;
+}
+
+.story-step-number {
+    align-items: center;
+    background: #E6F0F4;
+    border: 1px solid #C5D8E1;
+    border-radius: 50%;
+    color: var(--atlantic);
+    display: flex;
+    font-family: "IBM Plex Mono", Consolas, monospace;
+    font-size: 0.66rem;
+    font-weight: 600;
+    height: 34px;
+    justify-content: center;
+    left: 1.25rem;
+    position: absolute;
+    top: 1.25rem;
+    width: 34px;
+}
+
+.story-step h4 {
+    font-size: 1rem;
+    margin: 0 0 0.42rem;
+}
+
+.story-step p {
+    color: var(--muted);
+    font-size: 0.88rem;
+    line-height: 1.62;
+    margin: 0;
+}
+
+.story-proof {
+    border-top: 1px solid var(--line-soft);
+    color: var(--atlantic);
+    font-family: "IBM Plex Mono", Consolas, monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.04em;
+    margin-top: 0.85rem;
+    padding-top: 0.72rem;
+}
+
+.risk-panel {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    box-shadow: var(--shadow-soft);
+    overflow: hidden;
+    padding: 1.45rem 1.55rem;
+    margin: 0.8rem 0;
+    position: relative;
+}
+
+.risk-panel::before {
+    background: var(--atlantic);
+    content: "";
+    inset: 0 auto 0 0;
+    position: absolute;
+    width: 5px;
+}
+
+.risk-panel.low {
+    border-left-color: var(--line);
+}
+
+.risk-panel.low::before {
+    background: var(--approval);
+}
+
+.risk-panel.high {
+    border-left-color: var(--line);
+}
+
+.risk-panel.high::before {
+    background: var(--block);
+}
+
+.risk-topline {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: flex-start;
+}
+
+.risk-value {
+    color: var(--ink);
+    font-family: "IBM Plex Mono", Consolas, monospace;
+    font-size: clamp(2.35rem, 5vw, 3.3rem);
+    font-weight: 600;
+    line-height: 1;
+    margin-top: 0.35rem;
+}
+
+.status-label {
+    border: 1px solid currentColor;
+    border-radius: 999px;
+    color: var(--atlantic);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    padding: 0.38rem 0.55rem;
+    text-transform: uppercase;
+}
+
+.status-label.low {
+    color: var(--approval);
+}
+
+.status-label.high {
+    color: var(--block);
+}
+
+.risk-panel p {
+    color: var(--muted);
+    margin: 0.7rem 0 0;
+}
+
+.empty-panel {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    box-shadow: var(--shadow-soft);
+    padding: 2.4rem 2rem;
+    margin-top: 0.8rem;
+}
+
+.empty-panel strong {
+    display: block;
+    font-size: 1.05rem;
+    margin-bottom: 0.45rem;
+}
+
+.empty-panel p {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.policy-ledger {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    box-shadow: var(--shadow-soft);
+    margin: 1rem 0;
+    overflow: hidden;
+    position: relative;
+}
+
+.policy-ledger::after {
+    animation: ledgerBeam 6.5s ease-in-out infinite;
+    background: linear-gradient(90deg, transparent, rgba(104, 213, 179, 0.9), transparent);
+    content: "";
+    height: 1px;
+    left: -22%;
+    position: absolute;
+    top: 0;
+    width: 22%;
+}
+
+.policy-ledger::before {
+    background: var(--approval);
+    content: "";
+    inset: 0 auto 0 0;
+    position: absolute;
+    width: 6px;
+}
+
+.policy-ledger.blocked {
+    border-left-color: var(--line);
+}
+
+.policy-ledger.blocked::before {
+    background: var(--block);
+}
+
+.policy-ledger.review {
+    border-left-color: var(--line);
+}
+
+.policy-ledger.review::before {
+    background: var(--atlantic);
+}
+
+.ledger-header {
+    align-items: center;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.05rem 1.35rem;
+}
+
+.ledger-title {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.ledger-state {
+    align-items: center;
+    color: var(--approval);
+    display: flex;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+}
+
+.ledger-state::before {
+    background: currentColor;
+    border-radius: 50%;
+    box-shadow: 0 0 0 5px rgba(20, 125, 100, 0.09);
+    content: "";
+    height: 7px;
+    margin-right: 0.55rem;
+    width: 7px;
+}
+
+.policy-ledger.blocked .ledger-state {
+    color: var(--block);
+}
+
+.policy-ledger.review .ledger-state {
+    color: var(--atlantic);
+}
+
+.ledger-grid {
+    display: grid;
+    grid-template-columns: 1.3fr 2fr 0.75fr;
+}
+
+.ledger-cell {
+    padding: 1rem 1.2rem 1.15rem;
+}
+
+.ledger-cell + .ledger-cell {
+    border-left: 1px solid var(--line);
+}
+
+.ledger-label {
+    color: var(--muted);
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.34rem;
+    text-transform: uppercase;
+}
+
+.ledger-value {
+    color: var(--ink);
+    font-size: 0.9rem;
+    overflow-wrap: anywhere;
+}
+
+.ledger-copy {
+    color: var(--ink);
+    font-size: 0.88rem;
+    line-height: 1.55;
+}
+
+.ledger-footer {
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 0.8rem;
+    padding: 0.8rem 1.2rem;
+}
+
+.stButton > button {
     border-radius: 10px !important;
-    font-weight: 700 !important;
+    font-family: "IBM Plex Sans", Arial, sans-serif;
+    font-weight: 600 !important;
+    min-height: 2.75rem;
+    overflow: hidden;
+    position: relative;
+    transition: box-shadow 180ms ease, transform 180ms ease, background-color 180ms ease;
+}
+
+.stButton > button::after {
+    background: linear-gradient(105deg, transparent 28%, rgba(255, 255, 255, 0.28) 48%, transparent 68%);
+    content: "";
+    inset: 0;
+    pointer-events: none;
+    position: absolute;
+    transform: translateX(-125%);
+}
+
+.stButton > button[kind="primary"] {
+    background: var(--atlantic) !important;
+    border: 1px solid var(--atlantic) !important;
     color: white !important;
-    letter-spacing: 0.3px !important;
-    box-shadow: 0 3px 12px rgba(59,130,246,0.3) !important;
-    transition: transform 0.1s, box-shadow 0.1s !important;
+    box-shadow: 0 10px 24px rgba(36, 91, 120, 0.2) !important;
 }
+
 .stButton > button[kind="primary"]:hover {
-    transform: translateY(-1px) !important;
-    box-shadow: 0 5px 18px rgba(59,130,246,0.45) !important;
+    background: var(--ink) !important;
+    border-color: var(--ink) !important;
+    box-shadow: 0 14px 30px rgba(16, 42, 67, 0.25) !important;
+    transform: translateY(-2px);
 }
 
-/* ── st.metric cards (used in Tab 5 fallback) ── */
+.stButton > button[kind="primary"]:hover::after {
+    animation: buttonSheen 720ms ease-out;
+}
+
+.stButton > button:active {
+    transform: translateY(0) scale(0.985) !important;
+}
+
+.stButton > button:focus-visible,
+.stTabs [data-baseweb="tab"]:focus-visible,
+input:focus-visible,
+button:focus-visible {
+    outline: 3px solid rgba(36, 91, 120, 0.35) !important;
+    outline-offset: 2px;
+}
+
 [data-testid="metric-container"] {
-    padding: 1.2rem 1.25rem;
+    background: transparent !important;
+    border-left: 2px solid var(--atlantic);
+    padding: 0.25rem 0.8rem;
+}
+
+[data-testid="stMetricValue"] {
+    color: var(--ink) !important;
+    font-size: 1.6rem !important;
+    font-weight: 600 !important;
+}
+
+[data-testid="stMetricLabel"],
+.stCaption,
+[data-testid="stCaptionContainer"] {
+    color: var(--muted) !important;
+}
+
+[data-testid="stAlertContainer"] {
+    background: var(--paper) !important;
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--atlantic);
     border-radius: 12px;
-    background: #1e293b !important;
-    border: 1px solid #334155;
-    border-top: 3px solid #60a5fa;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+    color: var(--ink) !important;
+    box-shadow: 0 8px 24px rgba(16, 42, 67, 0.045);
 }
-[data-testid="stMetricValue"] { font-size: 1.8rem !important; font-weight: 800 !important; color: #f1f5f9 !important; }
-[data-testid="stMetricDelta"] { font-size: 0.82rem !important; }
-[data-testid="stMetricLabel"] { color: #94a3b8 !important; }
 
-/* ── Alert boxes — tinted dark ── */
-div[data-testid="stInfo"] {
-    border-left: 4px solid #3b82f6;
-    border-radius: 0 10px 10px 0;
-    background: rgba(59,130,246,0.1) !important;
+[data-testid="stAlertContainer"]:has([data-testid="stAlertContentSuccess"]) {
+    border-left-color: var(--approval);
 }
-div[data-testid="stInfo"] p { color: #93c5fd !important; }
-div[data-testid="stSuccess"] {
-    border-left: 4px solid #22c55e;
-    border-radius: 0 10px 10px 0;
-    background: rgba(34,197,94,0.1) !important;
-}
-div[data-testid="stSuccess"] p { color: #86efac !important; }
-div[data-testid="stWarning"] {
-    border-left: 4px solid #f59e0b;
-    border-radius: 0 10px 10px 0;
-    background: rgba(245,158,11,0.1) !important;
-}
-div[data-testid="stWarning"] p { color: #fcd34d !important; }
-div[data-testid="stError"] {
-    border-left: 4px solid #ef4444;
-    border-radius: 0 10px 10px 0;
-    background: rgba(239,68,68,0.1) !important;
-}
-div[data-testid="stError"] p { color: #fca5a5 !important; }
 
-/* ── Captions ── */
-.stCaption, [data-testid="stCaptionContainer"] { color: #64748b !important; }
+[data-testid="stAlertContainer"]:has([data-testid="stAlertContentError"]) {
+    border-left-color: var(--block);
+}
 
-/* ── Expanders ── */
-.streamlit-expanderHeader { font-weight: 600; border-radius: 8px; color: #e2e8f0 !important; }
+[data-testid="stAlertContainer"]:has([data-testid="stAlertContentWarning"]) {
+    border-left-color: var(--atlantic);
+}
 
-/* ── Misc ── */
-[data-testid="stProgress"] > div { border-radius: 6px; overflow: hidden; }
-[data-testid="stDataFrame"] { border-radius: 10px; overflow: hidden; }
+[data-testid="stAlertContainer"] p {
+    color: var(--ink) !important;
+}
+
+[data-testid="stExpander"] {
+    background: var(--paper);
+    border: 1px solid var(--line) !important;
+    border-radius: 12px !important;
+    overflow: hidden;
+    transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+
+[data-testid="stExpander"]:hover {
+    border-color: #AFC4D0 !important;
+    box-shadow: 0 9px 22px rgba(16, 42, 67, 0.055);
+}
+
+[data-testid="stExpander"] summary {
+    color: var(--ink) !important;
+    font-weight: 500;
+}
+
+[data-testid="stDataFrame"],
+[data-testid="stTable"],
+[data-testid="stImage"] img,
+.stPlotlyChart {
+    border: 1px solid var(--line);
+    border-radius: 14px !important;
+    box-shadow: 0 12px 30px rgba(16, 42, 67, 0.055);
+    overflow: hidden;
+}
+
+.stPlotlyChart {
+    background: rgba(248, 251, 250, 0.72);
+    transition: border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+}
+
+@media (hover: hover) {
+    .stPlotlyChart:hover {
+        border-color: rgba(36, 91, 120, 0.38);
+        box-shadow: 0 16px 38px rgba(16, 42, 67, 0.1);
+        transform: translateY(-2px);
+    }
+}
+
+[data-baseweb="select"] > div,
+[data-testid="stTextInput"] input {
+    background: var(--paper) !important;
+    border-color: var(--line) !important;
+    border-radius: 9px !important;
+}
+
+[data-testid="stProgress"] > div {
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+@keyframes heroRise {
+    from {
+        opacity: 0;
+        transform: translateY(18px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes sceneOrbit {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes flowSignal {
+    to {
+        stroke-dashoffset: -196;
+    }
+}
+
+@keyframes ledgerBeam {
+    0%, 18% {
+        left: -22%;
+        opacity: 0;
+    }
+    35% {
+        opacity: 1;
+    }
+    62%, 100% {
+        left: 104%;
+        opacity: 0;
+    }
+}
+
+@keyframes buttonSheen {
+    to {
+        transform: translateX(125%);
+    }
+}
+
+@keyframes drawStory {
+    from {
+        stroke-dashoffset: 940;
+    }
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes wakeStoryNode {
+    from {
+        opacity: 0.35;
+        transform: scale(0.78);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes signalPulse {
+    0%, 100% {
+        opacity: 0.55;
+        transform: scale(0.98);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.03);
+    }
+}
+
+@keyframes viewReveal {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.hero-copy > * {
+    animation: heroRise 680ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.hero-copy h1 {
+    animation-delay: 90ms;
+}
+
+.hero-copy p {
+    animation-delay: 170ms;
+}
+
+.hero-facts {
+    animation-delay: 250ms;
+}
+
+.scene-sweep {
+    animation: sceneOrbit 18s linear infinite;
+}
+
+.scene-core {
+    animation: signalPulse 4.5s ease-in-out infinite;
+}
+
+@supports (animation-timeline: view()) {
+    .stat-band,
+    .feature-panel,
+    .risk-panel,
+    .policy-ledger,
+    [data-testid="stAlertContainer"],
+    [data-testid="stExpander"],
+    .stPlotlyChart,
+    [data-testid="stDataFrame"],
+    [data-testid="stImage"] {
+        animation: viewReveal linear both;
+        animation-range: entry 5% cover 24%;
+        animation-timeline: view();
+    }
+
+    .story-progress {
+        animation: drawStory linear both;
+        animation-range: entry 8% exit 82%;
+        animation-timeline: --system-story;
+        stroke-dasharray: 940;
+    }
+
+    .story-node {
+        animation: wakeStoryNode linear both;
+        animation-timeline: --system-story;
+    }
+
+    .story-node.n1 { animation-range: entry 7% entry 19%; }
+    .story-node.n2 { animation-range: entry 20% entry 34%; }
+    .story-node.n3 { animation-range: entry 35% entry 49%; }
+    .story-node.n4 { animation-range: entry 50% entry 64%; }
+    .story-node.n5 { animation-range: entry 65% entry 79%; }
+}
+
+@media (max-width: 900px) {
+    .block-container,
+    [data-testid="stMainBlockContainer"] {
+        padding: 1rem 1rem 3rem !important;
+    }
+
+    .page-masthead {
+        grid-template-columns: 1fr;
+    }
+
+    .hero-copy {
+        padding: 3rem 2rem 1.4rem;
+    }
+
+    .hero-scene {
+        min-height: 390px;
+        padding: 1.5rem 2rem 3rem;
+    }
+
+    .scene-frame {
+        max-width: 340px;
+    }
+
+    .system-story {
+        gap: 1.5rem;
+        grid-template-columns: 1fr;
+    }
+
+    .system-story::before {
+        display: none;
+    }
+
+    .story-map {
+        min-height: 500px;
+        position: relative;
+        top: auto;
+    }
+
+    .story-map-graphic {
+        height: 350px;
+        left: 50%;
+        max-width: 360px;
+        transform: translateX(-50%);
+        width: calc(100% - 3rem);
+    }
+
+    div[data-testid="stHorizontalBlock"]:has(.feature-panel) {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    div[data-testid="stHorizontalBlock"]:has(.feature-panel) > div[data-testid="stColumn"] {
+        flex: 1 1 100%;
+        width: 100%;
+    }
+
+    .feature-panel {
+        min-height: 0;
+    }
+
+    .story-steps {
+        gap: 1rem;
+        padding: 0 0 0.5rem;
+    }
+
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 0.25rem;
+        margin-left: 0.75rem;
+        margin-right: 0.75rem;
+    }
+
+    .stat-band,
+    .ledger-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stat-item + .stat-item,
+    .ledger-cell + .ledger-cell {
+        border-left: 0;
+        border-top: 1px solid var(--line);
+    }
+
+    .stat-item {
+        min-height: auto;
+    }
+
+    .risk-topline,
+    .ledger-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 600px) {
+    .page-masthead {
+        border-radius: 18px;
+    }
+
+    .hero-copy {
+        padding: 2.4rem 1.35rem 1rem;
+    }
+
+    .page-masthead h1 {
+        font-size: clamp(2.35rem, 12vw, 3.15rem);
+    }
+
+    .hero-facts {
+        grid-template-columns: 1fr;
+    }
+
+    .hero-fact {
+        padding: 0.65rem 0;
+    }
+
+    .hero-fact + .hero-fact {
+        border-left: 0;
+        border-top: 1px solid rgba(207, 231, 241, 0.13);
+        padding-left: 0;
+    }
+
+    .hero-scene {
+        min-height: 315px;
+        padding: 1rem 1.1rem 2.4rem;
+    }
+
+    .scene-frame {
+        max-width: 280px;
+    }
+
+    .scene-core {
+        height: 96px;
+        width: 96px;
+    }
+
+    .scene-node {
+        font-size: 0.5rem;
+        padding: 0.52rem 0.58rem;
+    }
+
+    .stTabs [data-baseweb="tab-list"] {
+        margin-top: -1rem;
+    }
+
+    .story-map {
+        min-height: 590px;
+    }
+
+    .story-map-graphic {
+        bottom: 0.65rem;
+        height: 330px;
+    }
+
+    .story-step {
+        padding-left: 3.9rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.001ms !important;
+    }
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -145,33 +1620,162 @@ continuous_features = list(phase1_runtime.continuous_features)
 df_data = pd.read_csv(DATA_PATH)
 
 
+def _render_stat_band(items):
+    """Render a compact row of comparable facts."""
+    cells = []
+    for item in items:
+        tone = item.get("tone", "")
+        cells.append(
+            f'<div class="stat-item {escape(tone)}">'
+            f'<div class="stat-label">{escape(str(item["label"]))}</div>'
+            f'<div class="stat-value">{escape(str(item["value"]))}</div>'
+            f'<div class="stat-note">{escape(str(item["note"]))}</div>'
+            "</div>"
+        )
+    st.markdown(
+        f'<div class="stat-band" style="--stat-count:{len(items)}">'
+        + "".join(cells)
+        + "</div>",
+        unsafe_allow_html=True,
+    )
+
+
+def _style_plot(fig, height=340):
+    """Apply the shared Atlantic Ledger chart treatment."""
+    fig.update_layout(
+        height=height,
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(family="IBM Plex Sans, Arial, sans-serif", color="#102A43", size=12),
+        title=dict(font=dict(size=15, color="#102A43"), x=0.02, xanchor="left"),
+        legend=dict(
+            bgcolor="rgba(255,255,255,0)",
+            font=dict(color="#5C6F7E"),
+            title_font=dict(color="#5C6F7E"),
+        ),
+        margin=dict(l=58, r=24, t=54, b=56),
+        hoverlabel=dict(
+            bgcolor="#102A43",
+            bordercolor="#102A43",
+            font=dict(color="#FFFFFF", family="IBM Plex Sans, Arial, sans-serif"),
+        ),
+    )
+    fig.update_xaxes(
+        gridcolor="#E6ECF0",
+        linecolor="#B8C5CE",
+        tickfont=dict(color="#5C6F7E"),
+        title_font=dict(color="#5C6F7E"),
+        zeroline=False,
+    )
+    fig.update_yaxes(
+        gridcolor="#E6ECF0",
+        linecolor="#B8C5CE",
+        tickfont=dict(color="#5C6F7E"),
+        title_font=dict(color="#5C6F7E"),
+        zeroline=False,
+    )
+    return fig
+
+
+def _display_identifier(value):
+    return str(value).replace("_", " ").strip().title()
+
+
+def _natural_prose(value):
+    return (
+        str(value)
+        .replace("—", ",")
+        .replace("–", " to ")
+    )
+
+
+def _render_policy_ledger(recommendation):
+    verdict = recommendation.get("checker_verdict", "blocked")
+    flags = recommendation.get("regulatory_flags", [])
+    needs_review = verdict == "approved" and any(
+        "human_review_required" in str(flag).lower() for flag in flags
+    )
+    if verdict != "approved":
+        ledger_class = "blocked"
+        state = "Blocked by local gate"
+    elif needs_review:
+        ledger_class = "review"
+        state = "Passed, advisor review required"
+    else:
+        ledger_class = ""
+        state = "Passed local checks"
+
+    flag_text = ", ".join(str(flag) for flag in flags) if flags else "No flags"
+    action = _display_identifier(recommendation.get("action", "no recommendation"))
+    justification = _natural_prose(
+        recommendation.get("justification", "No justification supplied.")
+    )
+    confidence = float(recommendation.get("confidence", 0))
+    st.markdown(
+        f'<div class="policy-ledger {ledger_class}">'
+        '<div class="ledger-header">'
+        '<div class="ledger-title">Local policy decision</div>'
+        f'<div class="ledger-state">{escape(state)}</div>'
+        "</div>"
+        '<div class="ledger-grid">'
+        '<div class="ledger-cell">'
+        '<div class="ledger-label">Proposed action</div>'
+        f'<div class="ledger-value">{escape(action)}</div>'
+        "</div>"
+        '<div class="ledger-cell">'
+        '<div class="ledger-label">Decision record</div>'
+        f'<div class="ledger-copy">{escape(justification)}</div>'
+        "</div>"
+        '<div class="ledger-cell">'
+        '<div class="ledger-label">Agent confidence, not calibrated</div>'
+        f'<div class="ledger-value">{confidence:.0%}</div>'
+        "</div>"
+        "</div>"
+        f'<div class="ledger-footer">Local policy record: {escape(flag_text)}</div>'
+        "</div>",
+        unsafe_allow_html=True,
+    )
+
+
 def _trace_call_summary(name: str, inp: dict) -> str:
-    """One-line human-readable label for a tool_call step."""
+    """One line label for a tool call step."""
     if name == "product_lookup":
-        return f"product_lookup · category: {inp.get('category', 'all')}"
+        category = _display_identifier(inp.get("category", "all"))
+        return f"Search available products in {category}"
     if name == "segment_comparison":
-        return "segment_comparison · cohort risk comparison for this customer"
+        return "Compare this customer with a similar cohort"
     if name == "regulatory_constraint_checker":
-        action = inp.get("action_id", "?")
-        review = "human review required" if inp.get("requires_human_review") else "no human review flag"
-        return f"regulatory_constraint_checker · action: {action} · {review}"
+        action = _display_identifier(inp.get("action_id", "proposed action"))
+        review = (
+            "advisor review marked as required"
+            if inp.get("requires_human_review")
+            else "advisor review not marked as required"
+        )
+        return f"Check local rules for {action}, {review}"
     if name == "recommendation_formatter":
-        action = inp.get("action", "?")
+        action = _display_identifier(inp.get("action", "proposed action"))
         confidence = inp.get("confidence")
-        conf_str = f" · confidence: {confidence:.0%}" if confidence is not None else ""
-        return f"recommendation_formatter · action: {action}{conf_str}"
-    return name
+        conf_str = (
+            f", {confidence:.0%} agent confidence"
+            if confidence is not None
+            else ""
+        )
+        return f"Format {action}{conf_str}"
+    return _display_identifier(name)
 
 
 def _trace_result_summary(name: str, result: dict) -> str:
-    """One-line human-readable label for a tool_result step."""
+    """One line label for a tool result step."""
     if name == "product_lookup":
         offers = result.get("offers", [])
         if not offers:
-            return "product_lookup · no matching offers"
-        label = ", ".join(o.get("name", o.get("action_id", "?")) for o in offers[:2])
-        suffix = f" +{len(offers) - 2} more" if len(offers) > 2 else ""
-        return f"product_lookup · {len(offers)} offer(s): {label}{suffix}"
+            return "Product search found no matching offers"
+        label = ", ".join(
+            o.get("name", _display_identifier(o.get("action_id", "?")))
+            for o in offers[:2]
+        )
+        suffix = f" and {len(offers) - 2} more" if len(offers) > 2 else ""
+        return f"Product search found {len(offers)} offers, {label}{suffix}"
     if name == "segment_comparison":
         size = result.get("cohort_size", "?")
         rate = result.get("churn_rate")
@@ -179,27 +1783,21 @@ def _trace_result_summary(name: str, result: dict) -> str:
         risk = pred.get("churn_probability")
         rate_str = f"{rate:.1%}" if rate is not None else "?"
         risk_str = f"{risk:.1%}" if risk is not None else "?"
-        return (
-            f"segment_comparison · cohort: {size} customers · "
-            f"cohort churn rate: {rate_str} · live risk: {risk_str}"
-        )
+        return f"Cohort of {size}, churn rate {rate_str}, customer risk {risk_str}"
     if name == "regulatory_constraint_checker":
         verdict = result.get("checker_verdict", "?")
         failed = result.get("failed_rule_ids", [])
         rules = result.get("rule_results", [])
         passed_n = sum(1 for r in rules if r.get("passed"))
         if verdict == "approved":
-            return f"regulatory_constraint_checker · all {len(rules)} rules passed"
+            return f"Policy check passed all {len(rules)} rules"
         fail_str = ", ".join(failed)
-        return (
-            f"regulatory_constraint_checker · blocked · "
-            f"{passed_n}/{len(rules)} rules passed · failed: {fail_str}"
-        )
+        return f"Policy check blocked, {passed_n} of {len(rules)} rules passed, failed {fail_str}"
     if name == "recommendation_formatter":
-        action = result.get("action", "?")
+        action = _display_identifier(result.get("action", "proposed action"))
         verdict = result.get("checker_verdict", "?")
-        return f"recommendation_formatter · action: {action} · verdict: {verdict}"
-    return name
+        return f"Structured output for {action}, verdict {verdict}"
+    return _display_identifier(name)
 
 
 class XGBoostClassifierWrapper:
@@ -252,6 +1850,11 @@ def get_test_predictions():
 
 
 X_test, y_test, y_prob, train_dtypes = get_test_predictions()
+y_pred = xgb_model.predict(X_test)
+xgb_f1 = float(f1_score(y_test, y_pred))
+xgb_roc_auc = float(roc_auc_score(y_test, y_prob))
+xgb_average_precision = float(average_precision_score(y_test, y_prob))
+xgb_confusion_matrix = confusion_matrix(y_test, y_pred, labels=[0, 1])
 
 
 @st.cache_resource
@@ -270,148 +1873,279 @@ def init_dice_explainer():
 
 dice_explainer = init_dice_explainer()
 
-CHURN_COLOR = '#EF553B'
-RETAIN_COLOR = '#636EFA'
+CHURN_COLOR = '#A33A32'
+RETAIN_COLOR = '#245B78'
 
-st.title("Irish Banking Customer Churn Predictor")
-st.markdown("---")
+st.markdown(
+    f"""
+    <div class="page-masthead">
+      <div class="hero-copy">
+        <div class="hero-kicker">Irish retail banking model</div>
+        <h1>
+          <span>Know who may leave.</span>
+          <span class="hero-accent">Decide with care.</span>
+        </h1>
+        <p>A working prototype that connects customer risk, model evidence, and a governed response in one review.</p>
+        <div class="hero-facts">
+          <div class="hero-fact">
+            <strong>{len(df_data):,}</strong>
+            <span>synthetic customer records</span>
+          </div>
+          <div class="hero-fact">
+            <strong>{len(feature_names)}</strong>
+            <span>validated model inputs</span>
+          </div>
+          <div class="hero-fact">
+            <strong>4 tools</strong>
+            <span>inside the governed agent</span>
+          </div>
+        </div>
+      </div>
+      <div class="hero-scene" aria-label="A visual map from customer signals to a governed retention decision">
+        <div class="scene-frame">
+          <svg class="scene-flow" viewBox="0 0 410 410" aria-hidden="true">
+            <path class="scene-flow-base" d="M78 92 C142 58 268 64 333 104 C305 147 258 170 205 205 C158 237 111 264 80 322 C147 357 260 358 332 326 C295 270 259 232 205 205"></path>
+            <path class="scene-flow-signal" d="M78 92 C142 58 268 64 333 104 C305 147 258 170 205 205 C158 237 111 264 80 322 C147 357 260 358 332 326 C295 270 259 232 205 205"></path>
+          </svg>
+          <div class="scene-axis"></div>
+          <div class="scene-axis vertical"></div>
+          <div class="scene-sweep"></div>
+          <div class="scene-core">
+            <small>Policy checked result</small>
+            <strong>Pass or block</strong>
+          </div>
+          <div class="scene-node input">Customer signals</div>
+          <div class="scene-node risk">Churn risk</div>
+          <div class="scene-node reason">Model evidence</div>
+          <div class="scene-node policy">Policy check</div>
+          <div class="scene-caption">Prediction to governed action</div>
+        </div>
+      </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
 tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
-    "🏦 Overview",
-    "📊 Data Explorer",
-    "📈 Model Performance",
-    "🔍 SHAP Explainability",
-    "⚡ Risk Predictor",
-    "🛡️ Retention Agent"
+    "Overview",
+    "Data explorer",
+    "Model performance",
+    "SHAP explanations",
+    "Risk predictor",
+    "Retention agent",
 ])
 
 
 with tab1:
-    st.header("🏦 The Irish Banking Context")
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.markdown("""
-<div style="background:linear-gradient(135deg,#1e3a5f 0%,#2c5282 100%);border-radius:14px;padding:1.5rem 1.25rem;color:white;min-height:140px;">
-  <div style="font-size:2.6rem;font-weight:900;color:#93c5fd;line-height:1.1;">1.2M+</div>
-  <div style="font-size:0.68rem;font-weight:700;letter-spacing:1.3px;opacity:0.6;text-transform:uppercase;margin-top:0.3rem;">Accounts Migrated</div>
-  <div style="font-size:0.82rem;opacity:0.82;line-height:1.5;margin-top:0.55rem;">Forced out of KBC Bank Ireland and Ulster Bank between 2022 and 2023.</div>
-</div>""", unsafe_allow_html=True)
-    with col2:
-        st.markdown("""
-<div style="background:linear-gradient(135deg,#7c2d12 0%,#b91c1c 100%);border-radius:14px;padding:1.5rem 1.25rem;color:white;min-height:140px;">
-  <div style="font-size:2.6rem;font-weight:900;color:#fca5a5;line-height:1.1;">60%</div>
-  <div style="font-size:0.68rem;font-weight:700;letter-spacing:1.3px;opacity:0.6;text-transform:uppercase;margin-top:0.3rem;">Faced Switching Difficulty</div>
-  <div style="font-size:0.82rem;opacity:0.82;line-height:1.5;margin-top:0.55rem;">Source: CCPC 2022 survey. Direct debit failures, delays, and poor support throughout.</div>
-</div>""", unsafe_allow_html=True)
-    with col3:
-        st.markdown("""
-<div style="background:linear-gradient(135deg,#14532d 0%,#166534 100%);border-radius:14px;padding:1.5rem 1.25rem;color:white;min-height:140px;">
-  <div style="font-size:2.6rem;font-weight:900;color:#86efac;line-height:1.1;">Branch</div>
-  <div style="font-size:0.68rem;font-weight:700;letter-spacing:1.3px;opacity:0.6;text-transform:uppercase;margin-top:0.3rem;">Top Reason for Bank Choice</div>
-  <div style="font-size:0.82rem;opacity:0.82;line-height:1.5;margin-top:0.55rem;">Digital-only alternatives failed to gain trust during the migration crisis.</div>
-</div>""", unsafe_allow_html=True)
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    st.info(
-        "The 2022–2023 exits of KBC Bank Ireland and Ulster Bank (NatWest Group) remain the defining disruption "
-        "in modern Irish retail banking. Over 1.2 million customers were forced to migrate to AIB, Bank of Ireland, "
-        "or Permanent TSB within a compressed two-year window. Now in 2025–2026, those customers are entering their "
-        "third or fourth year with a new provider. Behavioural research suggests institutional trust takes 3–5 years "
-        "to rebuild after a forced migration. The Irish market is still in an elevated churn risk window that will "
-        "not normalise before 2027. This project models those persisting switching behaviours to help retail banks "
-        "identify at-risk customers before they leave."
+    st.header("The Irish banking context")
+    st.markdown(
+        '<p class="section-note">The project starts with the disruption that led to more than 1.1 million recorded account closures. It uses that period as context for a synthetic study of loyalty and service signals.</p>',
+        unsafe_allow_html=True,
     )
 
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("#### 🧩 What this project builds")
-    st.markdown("<br>", unsafe_allow_html=True)
+    _render_stat_band([
+        {
+            "label": "Accounts closed",
+            "value": "1.17M",
+            "note": "The Central Bank recorded 1,167,219 current and deposit account closures at the two exiting banks by the end of June 2023.",
+        },
+        {
+            "label": "Switching difficulty",
+            "value": "60%",
+            "note": (
+                "CCPC research found that six in ten surveyed customers with an open or "
+                "recently closed KBC or Ulster current account experienced switching challenges."
+            ),
+            "tone": "block",
+        },
+        {
+            "label": "Local branch mattered",
+            "value": "28%",
+            "note": "Among respondents who had switched, 28 percent cited a local branch as a key reason for their choice.",
+            "tone": "approval",
+        },
+    ])
 
-    lc1, lc2, lc3 = st.columns(3)
+    st.info(
+        "As KBC Bank Ireland and Ulster Bank prepared to leave the market, customers who still needed current or "
+        "deposit account services had to arrange alternatives. This synthetic study uses that period as context "
+        "for loyalty and service signals. It is not a production banking system."
+    )
+    st.caption(
+        "Published context: [Central Bank of Ireland account migration statistics]"
+        "(https://www.centralbank.ie/statistics/data-and-analysis/credit-and-banking-statistics/account-migration-statistics) "
+        "and [CCPC switching research]"
+        "(https://www.ccpc.ie/about-us/advocacy-and-research/research/publication-details/"
+        "ccpc-switching-research-%28phase-2%29)."
+    )
+
+    st.markdown("#### What the project contains")
+
+    lc1, lc2, lc3 = st.columns([1.25, 1, 1])
     with lc1:
-        st.markdown("##### 🤖 XGBoost + SMOTEENN")
-        st.write(
-            "An XGBoost gradient boosted classifier predicts churn probability for each customer. "
-            "Class imbalance (21% positive rate) is handled with SMOTEENN on the training set only, "
-            "evaluated on a clean 20% stratified holdout."
+        st.markdown(
+            """
+            <div class="feature-panel model">
+              <div class="feature-index">01 / PREDICT</div>
+              <div class="feature-visual" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+              <h4>XGBoost with SMOTEENN</h4>
+              <p>The classifier estimates churn probability for each customer. SMOTEENN is applied to training data, then performance is checked on a clean holdout sample.</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
         )
     with lc2:
-        st.markdown("##### 🔍 SHAP Explainability")
-        st.write(
-            "Shapley values explain what drives each prediction. Globally across the portfolio with "
-            "beeswarm and bar plots, and locally for individual customers with a waterfall chart."
+        st.markdown(
+            """
+            <div class="feature-panel explain">
+              <div class="feature-index">02 / EXPLAIN</div>
+              <div class="feature-visual" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+              <h4>SHAP explanations</h4>
+              <p>Global views show the strongest model signals. A local waterfall explains what moved one customer toward churn or retention.</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
         )
     with lc3:
-        st.markdown("##### ⚡ DiCE Counterfactuals")
-        st.write(
-            "Diverse counterfactual explanations show what would need to change for a high-risk customer "
-            "to drop below the churn threshold, giving relationship managers specific, actionable targets."
+        st.markdown(
+            """
+            <div class="feature-panel counter">
+              <div class="feature-index">03 / EXPLORE</div>
+              <div class="feature-visual" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+              <h4>DiCE counterfactuals</h4>
+              <p>Counterfactual examples show which permitted input changes can produce a model score below the churn threshold.</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
         )
 
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown(
+        f"""
+        <section class="system-story" aria-label="How one customer moves through both phases of the project">
+          <div class="story-map">
+            <div class="story-map-copy">
+              <div class="eyebrow">One customer record</div>
+              <h3>How the two phases meet</h3>
+              <p>This is a process map, not a performance chart. The line follows the real path through the application.</p>
+            </div>
+            <svg class="story-map-graphic" viewBox="0 0 360 520" aria-hidden="true">
+              <path class="story-track" d="M72 44 C240 55 300 100 250 145 C190 198 92 200 100 260 C108 320 300 302 270 365 C245 416 108 426 150 478"></path>
+              <path class="story-progress" d="M72 44 C240 55 300 100 250 145 C190 198 92 200 100 260 C108 320 300 302 270 365 C245 416 108 426 150 478"></path>
+              <circle class="story-node n1" cx="72" cy="44" r="9"></circle>
+              <circle class="story-node n2" cx="250" cy="145" r="9"></circle>
+              <circle class="story-node n3" cx="100" cy="260" r="9"></circle>
+              <circle class="story-node n4" cx="270" cy="365" r="9"></circle>
+              <circle class="story-node core n5" cx="150" cy="478" r="11"></circle>
+              <text class="story-node-label" x="92" y="40">PROFILE</text>
+              <text class="story-node-label" x="268" y="141">PHASE 1</text>
+              <text class="story-node-label" x="120" y="256">EVIDENCE</text>
+              <text class="story-node-label" x="290" y="361">AGENT</text>
+              <text class="story-node-label" x="170" y="474">REVIEW</text>
+            </svg>
+          </div>
+          <div class="story-steps">
+            <article class="story-step">
+              <div class="story-step-number">01</div>
+              <h4>The selected profile</h4>
+              <p>Tab 5 builds one ordered feature vector from the same {len(feature_names)} columns stored with the trained model.</p>
+              <div class="story-proof">{len(feature_names)} inputs checked against the saved schema</div>
+            </article>
+            <article class="story-step">
+              <div class="story-step-number">02</div>
+              <h4>Phase 1 scores the record</h4>
+              <p>The cached XGBoost model runs predict_proba on that feature vector. The selected customer and result are kept together for Tab 6.</p>
+              <div class="story-proof">model.predict_proba(feature_vector)[0, 1]</div>
+            </article>
+            <article class="story-step">
+              <div class="story-step-number">03</div>
+              <h4>Evidence comes before action</h4>
+              <p>A local SHAP explanation shows what moved the score. For higher risk profiles, DiCE can test changes to fields that are allowed to vary.</p>
+              <div class="story-proof">TreeExplainer with constrained counterfactuals</div>
+            </article>
+            <article class="story-step">
+              <div class="story-step-number">04</div>
+              <h4>The agent checks its proposal</h4>
+              <p>Product lookup and segment comparison supply context. The policy checker must run before the recommendation formatter.</p>
+              <div class="story-proof">Four local tools with matching call records</div>
+            </article>
+            <article class="story-step">
+              <div class="story-step-number">05</div>
+              <h4>A person remains responsible</h4>
+              <p>The deterministic gate passes or blocks a proposed action against local project rules. Above the configured 75 percent threshold, the proposal must be marked as requiring advisor review before it can pass. The application neither records a completed review nor contacts customers.</p>
+              <div class="story-proof">Review requirement, not review completion</div>
+            </article>
+          </div>
+        </section>
+        """,
+        unsafe_allow_html=True,
+    )
 
     exp_col1, exp_col2 = st.columns(2)
     with exp_col1:
-        with st.expander("⚖️ EU AI Act — Article 86"):
+        with st.expander("EU AI Act, Article 86"):
             st.markdown(
-                "Under Article 86 of the EU AI Act, customers have a right to explanation when automated systems "
-                "make significant decisions about their access to financial services. Flagging a customer as high-risk "
-                "for churn could affect product offers, credit availability, or how they are treated by relationship "
-                "managers. Both SHAP and DiCE provide the auditable, customer-level justifications that satisfy this requirement."
+                "From 2 August 2026, Article 86 provides a right to an explanation for decisions based on the output "
+                "of specified Annex III high risk AI systems, except systems listed in point 2, when the decision "
+                "produces legal effects or similarly significantly affects a person in a way they consider adverse "
+                "to their health, safety, or fundamental rights. "
+                "This prototype makes no claim that it falls within that scope. SHAP and DiCE show how model evidence "
+                "can be made reviewable. "
+                "[Read Article 86 on EUR Lex]"
+                "(https://eur-lex.europa.eu/eli/reg/2024/1689/oj#art_86)."
             )
     with exp_col2:
-        with st.expander("🏛️ EBA Guidelines on Internal Governance"):
+        with st.expander("EBA guidelines on internal governance"):
             st.markdown(
-                "Under European Banking Authority guidelines on internal governance, automated AI systems in banking "
-                "must maintain clear human-in-the-loop oversight. This model is intentionally a decision-support tool, "
-                "not an autonomous action-taker. All counterfactual recommendations and risk flags are designed to alert "
-                "and assist advisors. Final customer treatments require human validation before execution."
+                "The EBA's in-force Guidelines on internal governance under CRD apply to institutions within their "
+                "stated scope and address responsibilities, risk management, and internal controls. They do not "
+                "prescribe this retention workflow. The checks in this application are engineering choices and have "
+                "not been assessed as evidence of regulatory compliance. "
+                "[Read the EBA guidelines]"
+                "(https://www.eba.europa.eu/activities/single-rulebook/regulatory-activities/"
+                "internal-governance/guidelines-internal-governance-under-crd)."
             )
 
 
 with tab2:
-    st.header("📊 Churn Rate by Segment")
-    st.markdown("Statistical distributions from the 10,000-record synthetic dataset.")
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.header("Churn by customer segment")
+    st.markdown(
+        '<p class="section-note">A closer look at the 10,000 synthetic customer records used in this study.</p>',
+        unsafe_allow_html=True,
+    )
 
     overall_churn = df_data['churn'].mean() * 100
-    kbc_mask = df_data['was_kbc_ulster_customer'] == True
+    kbc_mask = df_data['was_kbc_ulster_customer']
     kbc_churn = df_data[kbc_mask]['churn'].mean() * 100
     other_churn = df_data[~kbc_mask]['churn'].mean() * 100
     churn_ratio = kbc_churn / other_churn
 
-    m1, m2, m3 = st.columns(3)
-    with m1:
-        st.markdown(f"""
-<div style="background:#1e293b;border-radius:12px;padding:1.2rem 1.25rem;border:1px solid #334155;border-top:4px solid #60a5fa;box-shadow:0 2px 10px rgba(0,0,0,0.25);">
-  <div style="font-size:0.68rem;font-weight:700;color:#64748b;letter-spacing:1.1px;text-transform:uppercase;">📊 Overall Churn Rate</div>
-  <div style="font-size:2.4rem;font-weight:900;color:#93c5fd;line-height:1.15;margin-top:0.25rem;">{overall_churn:.1f}%</div>
-  <div style="font-size:0.79rem;color:#64748b;margin-top:0.25rem;">Across all 10,000 customers</div>
-</div>""", unsafe_allow_html=True)
-    with m2:
-        st.markdown(f"""
-<div style="background:#1e293b;border-radius:12px;padding:1.2rem 1.25rem;border:1px solid #334155;border-top:4px solid #f87171;box-shadow:0 2px 10px rgba(0,0,0,0.25);">
-  <div style="font-size:0.68rem;font-weight:700;color:#64748b;letter-spacing:1.1px;text-transform:uppercase;">⚠️ Former KBC / Ulster</div>
-  <div style="font-size:2.4rem;font-weight:900;color:#fca5a5;line-height:1.15;margin-top:0.25rem;">{kbc_churn:.1f}%</div>
-  <div style="font-size:0.79rem;color:#64748b;margin-top:0.25rem;">{churn_ratio:.1f}x higher than other customers</div>
-</div>""", unsafe_allow_html=True)
-    with m3:
-        st.markdown(f"""
-<div style="background:#1e293b;border-radius:12px;padding:1.2rem 1.25rem;border:1px solid #334155;border-top:4px solid #4ade80;box-shadow:0 2px 10px rgba(0,0,0,0.25);">
-  <div style="font-size:0.68rem;font-weight:700;color:#64748b;letter-spacing:1.1px;text-transform:uppercase;">✅ All Other Customers</div>
-  <div style="font-size:2.4rem;font-weight:900;color:#86efac;line-height:1.15;margin-top:0.25rem;">{other_churn:.1f}%</div>
-  <div style="font-size:0.79rem;color:#64748b;margin-top:0.25rem;">Baseline churn rate pre-migration</div>
-</div>""", unsafe_allow_html=True)
+    _render_stat_band([
+        {
+            "label": "Overall churn",
+            "value": f"{overall_churn:.1f}%",
+            "note": "Measured across all 10,000 customer records.",
+        },
+        {
+            "label": "Former KBC or Ulster",
+            "value": f"{kbc_churn:.1f}%",
+            "note": f"This is {churn_ratio:.1f} times the rate for other customers.",
+            "tone": "block",
+        },
+        {
+            "label": "Other customers",
+            "value": f"{other_churn:.1f}%",
+            "note": "The comparison rate for customers outside the migration cohort.",
+            "tone": "approval",
+        },
+    ])
 
     st.info(
-        f"Former KBC and Ulster Bank customers churn at {kbc_churn:.1f}% versus {other_churn:.1f}% for other customers "
-        f"({churn_ratio:.1f}x higher). This gap narrows as months since switching increases, "
-        f"but remains elevated across the dataset, reflecting the ongoing post-migration loyalty deficit in 2025–2026."
+        f"Within this synthetic dataset, former KBC and Ulster Bank customer records have a {kbc_churn:.1f}% "
+        f"churn rate versus {other_churn:.1f}% for other records ({churn_ratio:.1f}x higher). The gap narrows "
+        "as months since switching increases, but it remains visible in the generated data."
     )
 
-    st.markdown("---")
+    st.divider()
 
     c1, c2 = st.columns(2)
 
@@ -426,11 +2160,12 @@ with tab2:
             title='Churn rate by account type',
             color_discrete_sequence=[CHURN_COLOR]
         )
-        fig_acct.update_layout(showlegend=False, height=320, margin=dict(l=60, r=20, t=40, b=60))
-        st.plotly_chart(fig_acct, use_container_width=True)
+        _style_plot(fig_acct, height=320)
+        fig_acct.update_layout(showlegend=False)
+        st.plotly_chart(fig_acct, width="stretch")
         st.caption(
-            "Customers with only a current or savings account churn at a noticeably higher rate than those "
-            "holding a mortgage. The mortgage acts as a strong retention anchor in the Irish market."
+            "In this synthetic dataset, records with only a current or savings account have higher observed churn "
+            "than records with a mortgage. This is a pattern in the generated data, not a causal market finding."
         )
 
         prod_churn = df_data.groupby('num_products')['churn'].mean().reset_index()
@@ -443,11 +2178,12 @@ with tab2:
             title='Churn rate by number of products held',
             color_discrete_sequence=[CHURN_COLOR]
         )
-        fig_prod.update_layout(showlegend=False, height=320, margin=dict(l=60, r=20, t=40, b=60))
-        st.plotly_chart(fig_prod, use_container_width=True)
+        _style_plot(fig_prod, height=320)
+        fig_prod.update_layout(showlegend=False)
+        st.plotly_chart(fig_prod, width="stretch")
         st.caption(
-            "Each additional product substantially reduces churn risk. "
-            "Customers with a single product have very little tying them to the bank."
+            "Observed churn falls as the number of products rises in this synthetic dataset. "
+            "The chart shows an association created by the study, not the effect of adding a product."
         )
 
     with c2:
@@ -462,11 +2198,12 @@ with tab2:
             title='Tenure distribution by churn status',
             color_discrete_map={'Retained': RETAIN_COLOR, 'Churned': CHURN_COLOR}
         )
-        fig_tenure.update_layout(height=320, margin=dict(l=60, r=20, t=40, b=60))
-        st.plotly_chart(fig_tenure, use_container_width=True)
+        _style_plot(fig_tenure, height=320)
+        fig_tenure.update_traces(opacity=0.78)
+        st.plotly_chart(fig_tenure, width="stretch")
         st.caption(
-            "Churn is concentrated in customers with short tenures. "
-            "After roughly five years, customers become substantially more stable."
+            "Churned records are concentrated at shorter tenures in this synthetic dataset. "
+            "The five year pattern is descriptive here and should not be treated as a production threshold."
         )
 
         complaint_churn = df_data.groupby('has_complaint_history')['churn'].mean().reset_index()
@@ -483,52 +2220,51 @@ with tab2:
             color='has_complaint_history',
             color_discrete_map={'Complaint on record': CHURN_COLOR, 'No complaints': RETAIN_COLOR}
         )
-        fig_complaint.update_layout(showlegend=False, height=320, margin=dict(l=60, r=20, t=40, b=60))
-        st.plotly_chart(fig_complaint, use_container_width=True)
+        _style_plot(fig_complaint, height=320)
+        fig_complaint.update_layout(showlegend=False)
+        st.plotly_chart(fig_complaint, width="stretch")
         st.caption(
-            "Having even a single complaint on record is one of the strongest predictors of churn. "
-            "These customers are already disengaged and are actively looking at alternatives."
+            "In this synthetic dataset, customers with a complaint record have a higher observed churn rate. "
+            "That makes service recovery worth examining."
         )
 
 
 with tab3:
-    st.header("📈 XGBoost Performance")
-    st.markdown("All metrics evaluated on the held-out 20% test set. The model never saw these records during training.")
-    st.success("🏆 XGBoost outperformed both the Logistic Regression and Random Forest baselines on every metric and was selected as the deployed model.")
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.header("XGBoost performance")
+    st.markdown(
+        '<p class="section-note">Every score comes from the 20 percent test sample. These records were kept out of training.</p>',
+        unsafe_allow_html=True,
+    )
+    st.success(
+        "These scores come from the stratified holdout sample. "
+        "XGBoost was benchmarked against Logistic Regression and Random Forest during training."
+    )
 
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        st.markdown("""
-<div style="background:linear-gradient(135deg,#1e3a5f 0%,#2c5282 100%);border-radius:14px;padding:1.5rem 1.25rem;color:white;text-align:center;">
-  <div style="font-size:0.68rem;font-weight:700;letter-spacing:1.3px;opacity:0.65;text-transform:uppercase;">🎯 F1 Score</div>
-  <div style="font-size:3.2rem;font-weight:900;color:#93c5fd;line-height:1.1;margin:0.3rem 0;">0.786</div>
-  <div style="font-size:0.78rem;opacity:0.85;background:rgba(255,255,255,0.12);border-radius:6px;padding:0.3rem 0.6rem;display:inline-block;">+0.119 vs Logistic Regression</div>
-  <div style="font-size:0.78rem;opacity:0.7;margin-top:0.6rem;line-height:1.4;">Balances precision and recall. Catches most churners without too many false alarms.</div>
-</div>""", unsafe_allow_html=True)
-    with c2:
-        st.markdown("""
-<div style="background:linear-gradient(135deg,#14532d 0%,#166534 100%);border-radius:14px;padding:1.5rem 1.25rem;color:white;text-align:center;">
-  <div style="font-size:0.68rem;font-weight:700;letter-spacing:1.3px;opacity:0.65;text-transform:uppercase;">📈 ROC-AUC</div>
-  <div style="font-size:3.2rem;font-weight:900;color:#86efac;line-height:1.1;margin:0.3rem 0;">0.959</div>
-  <div style="font-size:0.78rem;opacity:0.85;background:rgba(255,255,255,0.12);border-radius:6px;padding:0.3rem 0.6rem;display:inline-block;">+0.058 vs Logistic Regression</div>
-  <div style="font-size:0.78rem;opacity:0.7;margin-top:0.6rem;line-height:1.4;">Separation between churners and retained customers. Random guessing scores 0.50.</div>
-</div>""", unsafe_allow_html=True)
-    with c3:
-        st.markdown("""
-<div style="background:linear-gradient(135deg,#78350f 0%,#b45309 100%);border-radius:14px;padding:1.5rem 1.25rem;color:white;text-align:center;">
-  <div style="font-size:0.68rem;font-weight:700;letter-spacing:1.3px;opacity:0.65;text-transform:uppercase;">⭐ PR-AUC</div>
-  <div style="font-size:3.2rem;font-weight:900;color:#fcd34d;line-height:1.1;margin:0.3rem 0;">0.842</div>
-  <div style="font-size:0.78rem;opacity:0.85;background:rgba(255,255,255,0.12);border-radius:6px;padding:0.3rem 0.6rem;display:inline-block;">+0.102 vs Logistic Regression</div>
-  <div style="font-size:0.78rem;opacity:0.7;margin-top:0.6rem;line-height:1.4;">Primary metric for imbalanced data. Accuracy alone would be deeply misleading here.</div>
-</div>""", unsafe_allow_html=True)
+    _render_stat_band([
+        {
+            "label": "F1 score",
+            "value": f"{xgb_f1:.3f}",
+            "note": "Balances precision and recall across the holdout sample.",
+        },
+        {
+            "label": "ROC AUC",
+            "value": f"{xgb_roc_auc:.3f}",
+            "note": "Measures separation between churned and retained customers.",
+            "tone": "approval",
+        },
+        {
+            "label": "Average precision",
+            "value": f"{xgb_average_precision:.3f}",
+            "note": "Summarises precision and recall where churn is less common.",
+        },
+    ])
 
-    st.markdown("---")
+    st.divider()
 
     ch1, ch2, ch3 = st.columns(3)
 
     with ch1:
-        cm = np.array([[1427, 153], [49, 371]])
+        cm = xgb_confusion_matrix
         fig_cm = px.imshow(
             cm,
             text_auto=True,
@@ -538,11 +2274,11 @@ with tab3:
             color_continuous_scale='Blues',
             title='Confusion matrix'
         )
-        fig_cm.update_layout(height=360, margin=dict(l=20, r=20, t=50, b=20))
-        st.plotly_chart(fig_cm, use_container_width=True)
+        _style_plot(fig_cm, height=360)
+        st.plotly_chart(fig_cm, width="stretch")
         st.caption(
-            "371 of 420 actual churners correctly identified. "
-            "The 49 false negatives (bottom-left) are missed churners, which is the main cost in a retention context."
+            f"{int(cm[1, 1])} of {int(cm[1].sum())} actual churn records were correctly identified. "
+            f"The {int(cm[1, 0])} false negatives are missed churn records in this synthetic holdout sample."
         )
 
     with ch2:
@@ -551,13 +2287,13 @@ with tab3:
             x=fpr,
             y=tpr,
             labels={'x': 'False positive rate', 'y': 'True positive rate'},
-            title='ROC curve  (AUC = 0.959)'
+            title=f'ROC curve  (AUC = {xgb_roc_auc:.3f})'
         )
         fig_roc.add_shape(type='line', line=dict(dash='dash', color='gray'), x0=0, x1=1, y0=0, y1=1)
-        fig_roc.update_layout(height=360, margin=dict(l=60, r=20, t=50, b=60))
-        st.plotly_chart(fig_roc, use_container_width=True)
+        _style_plot(fig_roc, height=360)
+        st.plotly_chart(fig_roc, width="stretch")
         st.caption(
-            "The curve hugging the top-left corner shows strong separation between classes. "
+            "The curve close to the upper left corner shows strong separation between classes. "
             "The dashed diagonal is random chance (AUC = 0.50)."
         )
 
@@ -567,96 +2303,108 @@ with tab3:
             x=recall,
             y=precision,
             labels={'x': 'Recall', 'y': 'Precision'},
-            title='Precision-recall curve  (AUC = 0.842)'
+            title=f'Precision recall curve  (AP = {xgb_average_precision:.3f})'
         )
-        fig_pr.add_shape(type='line', line=dict(dash='dash', color='gray'), x0=0, x1=1, y0=0.21, y1=0.21)
-        fig_pr.update_layout(height=360, margin=dict(l=60, r=20, t=50, b=60))
-        st.plotly_chart(fig_pr, use_container_width=True)
+        class_prevalence = float(y_test.mean())
+        fig_pr.add_shape(
+            type='line',
+            line=dict(dash='dash', color='gray'),
+            x0=0,
+            x1=1,
+            y0=class_prevalence,
+            y1=class_prevalence,
+        )
+        _style_plot(fig_pr, height=360)
+        st.plotly_chart(fig_pr, width="stretch")
         st.caption(
-            "The dashed baseline is the class prevalence (21%). "
-            "The model stays well above this line across the full recall range."
+            f"The dashed baseline is the class prevalence ({class_prevalence:.0%}). "
+            "The model stays above this line across most operating points."
         )
 
 
 with tab4:
-    st.header("🔍 Global Feature Importance")
-    st.markdown("These plots show which features drive churn predictions across the entire customer portfolio.")
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    st.info(
-        "SHAP (SHapley Additive Explanations) assigns each feature a contribution score for every individual prediction. "
-        "Features are ranked by their average absolute impact across all 10,000 customers in the dataset. "
-        "Positive SHAP values push toward churn; negative values push toward retention."
+    st.header("Global feature importance")
+    st.markdown(
+        f'<p class="section-note">These views show which customer details had the strongest effect across the {len(X_test):,} record holdout sample.</p>',
+        unsafe_allow_html=True,
     )
 
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("##### 📋 Top 5 Features by Mean Absolute SHAP Value")
+    st.info(
+        f"SHAP gives each feature a contribution score for every prediction. Features are ranked by their "
+        f"average impact across the {len(X_test):,} records kept out of training. "
+        "Positive values move a prediction toward churn. Negative values move it toward retention."
+    )
+
+    st.markdown("##### Five strongest features by mean absolute SHAP value")
     rank_col1, rank_col2 = st.columns(2)
     with rank_col1:
         st.markdown("""
 | Rank | Feature | SHAP |
 |:---:|:---|:---:|
-| 🥇 1 | `num_products` | 2.841 |
-| 🥈 2 | `months_since_switching` | 1.028 |
-| 🥉 3 | `has_direct_debits` | 0.883 |
+| 1 | `num_products` | 2.841 |
+| 2 | `months_since_switching` | 1.028 |
+| 3 | `has_direct_debits` | 0.883 |
 | 4 | `tenure_months` | 0.838 |
 | 5 | `has_savings_goal` | 0.529 |
         """)
     with rank_col2:
         st.markdown("""
-**What the rankings tell us:**
+**Reading the ranking**
 
-The top two features are both structural outcomes of the 2022–2023 migration event. Product depth determines how much friction a customer faces if they try to leave, and months since switching captures how recently they were forced to move.
+The fitted model gives its largest average SHAP effects to product count and time since switching. In this synthetic holdout sample, those fields moved predictions more than the other inputs. This ranking describes the model and does not establish a causal effect in the Irish market.
 
-Features 3 through 5 are engagement anchors. Direct debits, long tenure, and savings goals all reflect a customer who is genuinely embedded with the bank rather than simply present.
+The next three inputs are direct debits, tenure, and a savings goal. Their positions show how the fitted model used the generated data, not how every real customer would behave.
         """)
-    st.markdown("<br>", unsafe_allow_html=True)
 
     shap_col1, shap_col2 = st.columns(2)
 
     with shap_col1:
-        st.markdown("**Beeswarm Plot — Feature Interactions**")
+        st.markdown("**Beeswarm plot and feature interactions**")
         beeswarm_path = os.path.join('assets', 'shap_summary_plot.png')
         if os.path.exists(beeswarm_path):
-            st.image(beeswarm_path, use_container_width=True)
+            st.image(beeswarm_path, width="stretch")
             st.caption(
-                "Each dot is one customer. Red = high feature value, blue = low. "
-                "Dots pushed right increase churn probability. Low product count (blue) is the strongest single signal."
+                "Each dot represents one customer. Red shows a higher feature value and blue shows a lower one. "
+                "Points on the right move the raw model output toward the churn class. "
+                "A low product count is the strongest single signal."
             )
         else:
             st.warning("Beeswarm plot not found. Run models/train_model.py to generate it.")
 
     with shap_col2:
-        st.markdown("**Bar Plot — Mean Absolute Impact**")
+        st.markdown("**Bar plot and mean absolute impact**")
         bar_path = os.path.join('assets', 'shap_bar_plot.png')
         if os.path.exists(bar_path):
-            st.image(bar_path, use_container_width=True)
+            st.image(bar_path, width="stretch")
             st.caption(
-                "Features ranked by their average impact across all 10,000 customers. "
-                "A longer bar means the feature consistently shifts the predicted probability by a larger amount."
+                f"Features ranked by their average impact across the {len(X_test):,} record holdout sample. "
+                "A longer bar means a larger average absolute contribution to the model's raw output. "
+                "The SHAP values are not probability percentage points."
             )
         else:
             st.warning("Bar plot not found. Run models/train_model.py to generate it.")
 
     st.markdown("<br>", unsafe_allow_html=True)
     st.info(
-        "Under Article 86 of the EU AI Act, banks must be able to explain automated decisions that affect a "
-        "customer's access to financial services. SHAP provides a mathematically grounded way to do that: "
-        "each explanation is derived from cooperative game theory, making it auditable and defensible to regulators. "
-        "Global monitoring also helps confirm that the model is not relying on proxy variables that could introduce bias."
+        "Article 86 is due to apply from 2 August 2026. This prototype makes no claim that it falls within the "
+        "Article's scope. Where its conditions are met, an affected person can obtain a clear and meaningful "
+        "explanation of the AI system's role and the main elements of the decision. The SHAP views here demonstrate "
+        "model evidence that a reviewer could inspect."
     )
 
 
 with tab5:
-    st.header("⚡ Customer Risk Assessment")
-    st.markdown("Enter a customer profile to generate a churn probability, a local SHAP explanation, and retention suggestions.")
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.header("Customer risk assessment")
+    st.markdown(
+        '<p class="section-note">Build a customer profile to see its churn probability, the main model signals, and candidate counterfactual examples.</p>',
+        unsafe_allow_html=True,
+    )
 
     col_input, col_output = st.columns([1, 1.5])
 
     with col_input:
 
-        st.markdown("**Customer Profile**")
+        st.markdown("**Customer profile**")
         customer_reference = st.text_input(
             "Customer reference",
             value="TAB5_CUSTOMER",
@@ -668,7 +2416,7 @@ with tab5:
         with r1b:
             tenure_months = st.slider("Tenure (months)", 1, 180, 24)
 
-        st.markdown("**Account Details**")
+        st.markdown("**Account details**")
         r2a, r2b = st.columns(2)
         with r2a:
             account_type = st.selectbox(
@@ -700,7 +2448,7 @@ with tab5:
                 disabled=not has_direct_debits
             )
 
-        st.markdown("**Switching History**")
+        st.markdown("**Switching history**")
         was_kbc_ulster_customer = st.checkbox("Former KBC Bank Ireland or Ulster Bank customer", value=False)
         if was_kbc_ulster_customer:
             sw1, sw2 = st.columns(2)
@@ -712,7 +2460,7 @@ with tab5:
             months_since_switching = 0
             experienced_switching_difficulty = False
 
-        st.markdown("**Engagement Signals**")
+        st.markdown("**Engagement signals**")
         e1, e2 = st.columns(2)
         with e1:
             uses_digital_bank_secondary = st.checkbox("Uses Revolut / N26 as secondary bank")
@@ -729,7 +2477,7 @@ with tab5:
         with e4:
             customer_service_calls_6months = st.slider("Service calls (last 6 months)", 0, 12, 1)
 
-        predict_btn = st.button("Predict churn risk", type="primary", use_container_width=True)
+        predict_btn = st.button("Predict churn risk", type="primary", width="stretch")
 
     with col_output:
 
@@ -793,43 +2541,41 @@ with tab5:
             churn_prob = phase1_prediction["churn_probability"]
 
             if churn_prob < 0.30:
-                risk_label = "Low Risk"
-                risk_msg = "This customer shows low switching risk. No immediate action needed."
-                risk_color = "#4ade80"
-                risk_bg = "rgba(74,222,128,0.08)"
-                risk_border = "rgba(74,222,128,0.25)"
-                prob_color = "#86efac"
+                risk_label = "Lower score band"
+                risk_msg = "The fitted model assigns a lower churn probability to this synthetic profile."
+                risk_class = "low"
             elif churn_prob < 0.60:
-                risk_label = "Medium Risk"
-                risk_msg = "This customer shows moderate switching risk. Consider a proactive check-in."
-                risk_color = "#fbbf24"
-                risk_bg = "rgba(251,191,36,0.08)"
-                risk_border = "rgba(251,191,36,0.25)"
-                prob_color = "#fcd34d"
+                risk_label = "Middle score band"
+                risk_msg = "The fitted model assigns a middle range churn probability to this synthetic profile."
+                risk_class = ""
             else:
-                risk_label = "High Risk"
-                risk_msg = "This customer is at high risk of leaving. Retention action is recommended."
-                risk_color = "#f87171"
-                risk_bg = "rgba(248,113,113,0.08)"
-                risk_border = "rgba(248,113,113,0.25)"
-                prob_color = "#fca5a5"
+                risk_label = "Higher score band"
+                risk_msg = (
+                    "The fitted model assigns a higher churn probability to this synthetic profile. "
+                    "Treat the score as decision support, not a customer decision."
+                )
+                risk_class = "high"
 
             st.markdown(f"""
-<div style="background:{risk_bg};border:1px solid {risk_border};border-left:5px solid {risk_color};border-radius:12px;padding:1.4rem 1.5rem;margin-bottom:0.75rem;">
-  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:0.5rem;">
+<div class="risk-panel {risk_class}">
+  <div class="risk-topline">
     <div>
-      <div style="font-size:0.66rem;font-weight:700;color:#64748b;letter-spacing:1.1px;text-transform:uppercase;">Churn Probability</div>
-      <div style="font-size:3.2rem;font-weight:900;color:{prob_color};line-height:1.1;">{churn_prob*100:.1f}%</div>
+      <div class="stat-label">Churn probability</div>
+      <div class="risk-value">{churn_prob*100:.1f}%</div>
     </div>
-    <div style="background:{risk_color};color:#0f172a;border-radius:8px;padding:0.35rem 0.9rem;font-weight:700;font-size:0.85rem;align-self:flex-start;margin-top:0.25rem;">{risk_label}</div>
+    <div class="status-label {risk_class}">{risk_label}</div>
   </div>
-  <div style="font-size:0.88rem;color:#cbd5e1;margin-top:0.6rem;">{risk_msg}</div>
+  <p>{risk_msg}</p>
 </div>""", unsafe_allow_html=True)
             st.progress(float(churn_prob))
+            st.caption(
+                "These locally configured display bands use cutoffs of 30 and 60 percent. "
+                "They are not calibrated or externally validated risk categories."
+            )
 
             st.divider()
 
-            st.markdown("##### 🔍 Local SHAP Explanation")
+            st.markdown("##### Local SHAP explanation")
             explainer = shap.TreeExplainer(xgb_model)
             shap_val = explainer(input_df)
             shap_values = np.asarray(shap_val.values[0], dtype=float)
@@ -862,8 +2608,11 @@ with tab5:
             if churn_prob > 0.50:
                 st.divider()
 
-                st.markdown("##### 💡 What could change this customer's outcome?")
-                st.caption("Model-generated suggestions only. A relationship manager should review before any customer contact.")
+                st.markdown("##### Which input changes produce a different model score?")
+                st.caption(
+                    "These are candidate model scenarios, not evidence that changing a customer circumstance "
+                    "would prevent churn. Any real use would need separate suitability and governance review."
+                )
 
                 with st.spinner("Generating counterfactual scenarios..."):
                     try:
@@ -918,11 +2667,11 @@ with tab5:
                                     changes.append({
                                         'Feature': col.replace('_', ' ').title(),
                                         'Current Value': orig_disp,
-                                        'Suggested Change': " or ".join(cf_disp_list)
+                                        'Candidate Input': " or ".join(cf_disp_list)
                                     })
 
                             if changes:
-                                st.dataframe(pd.DataFrame(changes), use_container_width=True, hide_index=True)
+                                st.dataframe(pd.DataFrame(changes), width="stretch", hide_index=True)
                             else:
                                 st.write("No distinct changes identified in the counterfactuals.")
                         else:
@@ -936,22 +2685,29 @@ with tab5:
 
         else:
             st.markdown("""
-<div style="background:#1e293b;border:2px dashed #334155;border-radius:14px;padding:2.5rem 2rem;text-align:center;margin-top:1rem;">
-  <div style="font-size:2.5rem;margin-bottom:0.75rem;">📋</div>
-  <div style="font-size:1rem;font-weight:700;color:#e2e8f0;margin-bottom:0.4rem;">No prediction yet</div>
-  <div style="font-size:0.88rem;color:#64748b;line-height:1.6;">Fill in the customer profile on the left and click <strong>Predict churn risk</strong> to see the churn probability, SHAP explanation, and counterfactual suggestions here.</div>
+<div class="empty-panel">
+  <strong>No prediction yet</strong>
+  <p>Complete the customer profile, then choose <b>Predict churn risk</b>. The probability, explanation, and counterfactual examples will appear here.</p>
 </div>""", unsafe_allow_html=True)
 
 
 with tab6:
-    st.header("🛡️ Retention Agent")
+    st.header("Retention agent")
     st.markdown(
+        '<p class="section-note">'
         "Inspect how a proposed retention action moves through four tools and a "
         "deterministic policy gate. Blocked outcomes are governed results, not errors."
+        "</p>",
+        unsafe_allow_html=True,
     )
     st.caption(
-        "Synthetic demonstration only — customer records, governance flags, offers, "
+        "This is a synthetic demonstration. The customer records, governance flags, offers, "
         "and recommendations are not real banking decisions."
+    )
+    st.caption(
+        "ARR-001, HOLD-002, HUM-003, and VUL-004 are local demonstration rules. "
+        "They are not legal findings and do not reproduce the Central Bank Consumer "
+        "Protection Code or a bank's own eligibility controls."
     )
 
     demo_dir = os.path.join(os.path.dirname(__file__), "demo_traces")
@@ -1000,22 +2756,25 @@ with tab6:
 
         tab5_customer = st.session_state.get("phase1_selected_customer")
         using_tab5_customer = isinstance(tab5_customer, dict)
+        trace_is_recorded = False
         if using_tab5_customer:
             customer = tab5_customer
             recommendation = None
             trace = []
             st.success(
-                "Using the exact customer object produced in Tab 5: "
+                "This run uses the customer created in the risk predictor: "
                 f"`{customer['customer_id']}`"
             )
             st.caption(
-                "Tab 5 stored this object after a validated Phase 1 "
-                "model.predict_proba call. The same object is passed to the agent below."
+                "The risk predictor stored this object after a validated Phase 1 model call. "
+                "The same object is passed to the agent."
             )
         else:
+            trace_is_recorded = True
             selected_title = st.selectbox(
                 "Select a recorded governed scenario",
                 options=[record["title"] for record in demo_records],
+                format_func=_natural_prose,
             )
             selected_demo = next(
                 record for record in demo_records if record["title"] == selected_title
@@ -1030,12 +2789,13 @@ with tab6:
 
         if api_key_available:
             st.success(
-                f"Live Groq agent available by default · {live_runs_remaining} of "
-                f"{SESSION_RUN_CAP} session runs remaining"
+                f"A Groq key is configured. Groq will validate the key and model access "
+                f"when the live run starts. {live_runs_remaining} of "
+                f"{SESSION_RUN_CAP} session runs remain."
             )
             st.caption(
-                "The server loads GROQ_API_KEY from Streamlit secrets in production "
-                "or the local environment. Visitors never enter or see the key."
+                "The app reads the key from deployment secrets or the local environment. "
+                "The interface does not accept or display it."
             )
         elif live_runs_remaining <= 0:
             st.caption(
@@ -1043,23 +2803,28 @@ with tab6:
             )
         elif using_tab5_customer:
             st.warning(
-                "The live Phase 1 customer is ready, but GROQ_API_KEY is missing or invalid. "
-                "No retention-agent output has been generated for this customer."
+                "The live Phase 1 customer is ready, but GROQ_API_KEY is missing or does "
+                "not pass the local format check. "
+                "No retention agent output has been generated for this customer."
             )
         else:
             st.warning(
-                "GROQ_API_KEY is missing or invalid on this deployment, so the recorded "
-                "zero-request fallback is shown."
+                "GROQ_API_KEY is missing or does not pass the local format check on this "
+                "deployment, so the recorded fallback is shown without making an API request."
             )
 
         if api_key_available:
             st.info(
-                f"**Groq free-tier runtime.** Model: `{MODEL_NAME}` · "
-                f"API-call cap per run: {MAX_LIVE_API_CALLS} · "
-                f"Token cap per call: {MAX_TOKENS} · "
-                f"Loop-turn cap: {MAX_LOOP_TURNS} · "
-                f"Process-local daily requests remaining: "
+                f"**Groq runtime.** Model: `{MODEL_NAME}` · "
+                f"Calls per run: {MAX_LIVE_API_CALLS} · "
+                f"Tokens per call: {MAX_TOKENS} · "
+                f"Loop turns: {MAX_LOOP_TURNS} · "
+                f"Local daily request budget remaining: "
                 f"{quota_snapshot['daily_requests_remaining']}"
+            )
+            st.caption(
+                "This local process counter does not read Groq account usage or requests "
+                "made by another running instance."
             )
             if st.button(
                 "Run live governed recommendation",
@@ -1076,7 +2841,7 @@ with tab6:
                         GLOBAL_REQUEST_QUOTA.ensure_run_available()
                         reserve_session_run(st.session_state)
                         live_client = create_live_client(api_key=groq_api_key)
-                        with st.spinner("Running the bounded agent loop..."):
+                        with st.spinner("The agent is checking the customer and policy rules..."):
                             live_result = run_retention_agent(
                                 customer,
                                 client=live_client,
@@ -1095,7 +2860,7 @@ with tab6:
                             st.error(
                                 "Live Groq authentication failed. The deployment owner "
                                 "must replace GROQ_API_KEY in Streamlit Secrets with a "
-                                "valid Groq Free Plan key."
+                                "valid Groq API key."
                             )
                         else:
                             st.error(f"Live run stopped safely: {exc}")
@@ -1105,6 +2870,7 @@ with tab6:
                 stored_live_result
                 and stored_live_result.get("customer_id") == customer["customer_id"]
             ):
+                trace_is_recorded = False
                 customer = stored_live_result["payload"]["customer"]
                 recommendation = stored_live_result["payload"]["recommendation"]
                 trace = stored_live_result["payload"]["trace"]
@@ -1144,13 +2910,16 @@ with tab6:
             )
             st.caption(
                 "Held products: "
-                + ", ".join(customer.get("held_products", []))
+                + ", ".join(
+                    _display_identifier(product)
+                    for product in customer.get("held_products", [])
+                )
             )
             governance = customer.get("governance", {})
             st.caption(
-                "Synthetic governance overlay — "
-                f'in arrears: {governance.get("in_arrears", False)}; '
-                "vulnerable customer: "
+                "Synthetic governance overlay. "
+                f'In arrears: {governance.get("in_arrears", False)}. '
+                "Vulnerable customer: "
                 f'{governance.get("vulnerable_customer", False)}'
             )
 
@@ -1171,19 +2940,30 @@ with tab6:
                 width="stretch",
                 hide_index=True,
             )
-            st.info(customer["governance_note"])
+            st.info(_natural_prose(customer["governance_note"]))
 
         if not trace or recommendation is None:
             st.divider()
             st.info(
                 "The Phase 1 customer is ready for the retention agent. "
-                "Configure Groq and choose **Run live agent** to create a governed "
+                "Configure Groq and choose **Run live governed recommendation** to create a governed "
                 "recommendation and trace for this exact customer."
             )
             st.stop()
 
         st.divider()
         st.subheader("Reasoning and governance trace")
+        if trace_is_recorded:
+            st.caption(
+                "This is a recorded, zero request scripted replay. Its Phase 1 probability came from "
+                "the local trained model, but the reasoning text is not a live Groq response. "
+                "Open a raw view only when you need the full payload."
+            )
+        else:
+            st.caption(
+                "This trace came from the live Groq run shown above. Read the plain language step "
+                "titles first, then open a raw view when you need the full payload."
+            )
         visible_steps = st.slider(
             "Replay through step",
             min_value=1,
@@ -1196,15 +2976,25 @@ with tab6:
             step_label = f'Step {event["step"]}'
 
             if event_type == "model_thought":
-                with st.expander(f"💭 {step_label} · Analysis", expanded=True):
-                    st.write(content.get("text", content))
+                with st.expander(f"{step_label}: Review the available evidence", expanded=True):
+                    if trace_is_recorded:
+                        st.write(
+                            "The recorded script describes how the evidence would be considered "
+                            "at this step."
+                        )
+                    else:
+                        st.write(
+                            "The model considered the customer evidence before choosing the next step."
+                        )
+                    with st.expander("View raw analysis"):
+                        st.write(content.get("text", content))
 
             elif event_type == "tool_call":
                 name = content.get("name", "unknown")
                 inp = content.get("input", {})
                 summary = _trace_call_summary(name, inp)
                 with st.expander(
-                    f"🔧 {step_label} · {summary}",
+                    f"{step_label}: {summary}",
                     expanded=True,
                 ):
                     with st.expander("View raw payload"):
@@ -1215,7 +3005,7 @@ with tab6:
                 name = content.get("name", "unknown")
                 if is_error:
                     with st.expander(
-                        f"❌ {step_label} · Tool error: {name}",
+                        f"{step_label}: Tool error in {_display_identifier(name)}",
                         expanded=True,
                     ):
                         st.error(content.get("result", content))
@@ -1223,7 +3013,7 @@ with tab6:
                     result = content.get("result", {})
                     summary = _trace_result_summary(name, result)
                     with st.expander(
-                        f"📦 {step_label} · {summary}",
+                        f"{step_label}: {summary}",
                         expanded=True,
                     ):
                         with st.expander("View raw result"):
@@ -1235,17 +3025,18 @@ with tab6:
                 failed_ids = content.get("failed_rule_ids", [])
                 if passed:
                     st.success(
-                        f"✅ {step_label} · Policy gate approved {action_id}"
+                        f"{step_label}: Local policy gate passed for {_display_identifier(action_id)}"
                     )
                 else:
                     st.error(
-                        f"⛔ {step_label} · Policy gate blocked {action_id}"
-                        + (f" (failed: {', '.join(failed_ids)})" if failed_ids else "")
+                        f"{step_label}: Local policy gate blocked {_display_identifier(action_id)}"
+                        + (f". Failed rules: {', '.join(failed_ids)}" if failed_ids else "")
                     )
                 for rule_result in content.get("rule_results", []):
-                    icon = "✅" if rule_result.get("passed") else "❌"
+                    rule_state = "Passed" if rule_result.get("passed") else "Blocked"
                     st.caption(
-                        f"{icon} {rule_result['rule_id']}: {rule_result['reason']}"
+                        f"{rule_state}. {rule_result['rule_id']}: "
+                        f"{_natural_prose(rule_result['reason'])}"
                     )
                 with st.expander("View full gate decision"):
                     st.json(content)
@@ -1257,35 +3048,19 @@ with tab6:
                 flags = content.get("regulatory_flags", [])
                 if verdict == "approved":
                     st.success(
-                        f"📋 {step_label} · Governed output · "
-                        f"action: {action} · confidence: {confidence:.0%}"
+                        f"{step_label}: Output passed the local gate. "
+                        f"Action: {_display_identifier(action)}. "
+                        f"Agent confidence: {confidence:.0%}, not calibrated."
                     )
                 else:
                     st.error(
-                        f"📋 {step_label} · Governed output · no recommendation (blocked)"
+                        f"{step_label}: Output blocked by the local gate. No recommendation was issued."
                     )
                 if flags:
-                    st.caption("Regulatory flags: " + " · ".join(flags))
+                    st.caption("Policy records: " + ", ".join(flags))
                 with st.expander("View structured output"):
                     st.json(content)
 
         st.divider()
-        st.subheader("Governed outcome")
-        checker_verdict = recommendation.get("checker_verdict", "blocked")
-        if checker_verdict == "approved":
-            st.success("APPROVED BY THE DETERMINISTIC POLICY GATE")
-        else:
-            st.error("NO RECOMMENDATION — THE PROPOSED ACTION WAS BLOCKED")
-
-        outcome_left, outcome_right = st.columns([1.7, 1])
-        with outcome_left:
-            st.markdown(f'**Action:** `{recommendation["action"]}`')
-            st.markdown(f'**Justification:** {recommendation["justification"]}')
-            flags = recommendation.get("regulatory_flags", [])
-            st.markdown(
-                "**Regulatory flags:** "
-                + (", ".join(flags) if flags else "None")
-            )
-        with outcome_right:
-            st.metric("Confidence", f'{recommendation["confidence"]:.0%}')
-            st.metric("Checker verdict", checker_verdict.upper())
+        st.subheader("Policy checked output")
+        _render_policy_ledger(recommendation)
