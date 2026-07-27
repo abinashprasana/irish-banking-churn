@@ -30,6 +30,15 @@ MODEL_NAME = "llama-3.3-70b-versatile"
 MAX_LOOP_TURNS = 6
 MAX_TOKENS = 1024
 MAX_LIVE_API_CALLS = 6
+_GROQ_KEY_PREFIX = "gsk_"
+_GROQ_KEY_PLACEHOLDERS = frozenset(
+    {
+        "...",
+        "your-free-tier-key",
+        "your-groq-api-key",
+        "your-groq-key-here",
+    }
+)
 
 SYSTEM_PROMPT = """You are a retention recommendation agent for a synthetic Irish banking demonstration.
 Use product_lookup and segment_comparison before choosing an action. Before any final
@@ -87,8 +96,21 @@ class ScriptedMockClient:
         self.chat = _MockChat(self)
 
 
+def _validated_groq_api_key(value: Any) -> str | None:
+    """Return a plausible Groq key while rejecting examples and malformed values."""
+
+    if not isinstance(value, str):
+        return None
+    candidate = value.strip()
+    if not candidate or candidate.casefold() in _GROQ_KEY_PLACEHOLDERS:
+        return None
+    if not candidate.startswith(_GROQ_KEY_PREFIX):
+        return None
+    return candidate
+
+
 def resolve_groq_api_key(secrets: Any | None = None) -> str | None:
-    """Prefer Streamlit secrets in production, then the local environment."""
+    """Prefer a valid Streamlit secret in production, then the local environment."""
 
     secret_value: Any = None
     if secrets is not None:
@@ -97,10 +119,10 @@ def resolve_groq_api_key(secrets: Any | None = None) -> str | None:
         except Exception:
             # Streamlit raises when no secrets file exists in local development.
             secret_value = None
-    if isinstance(secret_value, str) and secret_value.strip():
-        return secret_value.strip()
-    environment_value = os.environ.get("GROQ_API_KEY", "").strip()
-    return environment_value or None
+    resolved_secret = _validated_groq_api_key(secret_value)
+    if resolved_secret is not None:
+        return resolved_secret
+    return _validated_groq_api_key(os.environ.get("GROQ_API_KEY"))
 
 
 def _is_retryable(exc: Exception) -> bool:
@@ -189,12 +211,13 @@ def create_live_client(
     environment second. This factory accepts the resolved value and never logs it.
     """
 
-    if not isinstance(api_key, str) or not api_key.strip():
-        raise LiveModeError("GROQ_API_KEY is not configured")
+    validated_key = _validated_groq_api_key(api_key)
+    if validated_key is None:
+        raise LiveModeError("GROQ_API_KEY is missing, malformed, or still a placeholder")
     from groq import Groq
 
     return GroqLiveClient(
-        Groq(api_key=api_key.strip()),
+        Groq(api_key=validated_key),
         _LIVE_GATE_TOKEN,
         quota_guard,
     )

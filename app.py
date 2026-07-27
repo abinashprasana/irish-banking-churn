@@ -1043,12 +1043,12 @@ with tab6:
             )
         elif using_tab5_customer:
             st.warning(
-                "The live Phase 1 customer is ready, but GROQ_API_KEY is not configured. "
+                "The live Phase 1 customer is ready, but GROQ_API_KEY is missing or invalid. "
                 "No retention-agent output has been generated for this customer."
             )
         else:
             st.warning(
-                "GROQ_API_KEY is not configured on this deployment, so the recorded "
+                "GROQ_API_KEY is missing or invalid on this deployment, so the recorded "
                 "zero-request fallback is shown."
             )
 
@@ -1089,7 +1089,16 @@ with tab6:
                     except RateLimitSafetyError as exc:
                         st.error(str(exc))
                     except Exception as exc:
-                        st.error(f"Live run stopped safely: {exc}")
+                        status_code = getattr(exc, "status_code", None)
+                        error_text = str(exc).lower()
+                        if status_code == 401 or "invalid_api_key" in error_text:
+                            st.error(
+                                "Live Groq authentication failed. The deployment owner "
+                                "must replace GROQ_API_KEY in Streamlit Secrets with a "
+                                "valid Groq Free Plan key."
+                            )
+                        else:
+                            st.error(f"Live run stopped safely: {exc}")
 
             stored_live_result = st.session_state.get("retention_live_result")
             if (

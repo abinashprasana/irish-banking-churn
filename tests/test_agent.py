@@ -225,12 +225,12 @@ def test_actual_groq_sdk_contract_runs_full_tool_trajectory_without_network(
         return httpx.Response(200, json=payload, request=request)
 
     sdk_client = GroqSDK(
-        api_key="test-only",
+        api_key="gsk_test_only",
         http_client=httpx.Client(transport=httpx.MockTransport(handler)),
     )
     monkeypatch.setattr("groq.Groq", lambda *, api_key: sdk_client)
     quota = InMemoryRequestQuota(requests_per_minute=30, daily_request_cap=20)
-    live_client = create_live_client(api_key="test-only", quota_guard=quota)
+    live_client = create_live_client(api_key="gsk_test_only", quota_guard=quota)
 
     result = run_retention_agent(synthetic_customer(), client=live_client)
 
@@ -359,13 +359,13 @@ def test_live_client_is_groq_guarded_and_mock_remains_default(monkeypatch):
 
     class FakeGroq:
         def __init__(self, *, api_key):
-            assert api_key == "never-used-test-value"
+            assert api_key == "gsk_never_used_test_value"
             self.chat = type("FakeChat", (), {"completions": FakeCompletions()})()
 
     monkeypatch.setattr("groq.Groq", FakeGroq)
     quota = InMemoryRequestQuota(requests_per_minute=100, daily_request_cap=100)
     guarded = create_live_client(
-        api_key="never-used-test-value",
+        api_key="gsk_never_used_test_value",
         quota_guard=quota,
     )
     with pytest.raises(LiveModeError, match="max_completion_tokens"):
@@ -413,7 +413,7 @@ def test_groq_invalid_generated_tool_call_is_retried_and_counted(monkeypatch):
     monkeypatch.setattr("groq.Groq", RetryGroq)
     monkeypatch.setattr("agent.loop.time.sleep", lambda _: None)
     quota = InMemoryRequestQuota(requests_per_minute=30, daily_request_cap=10)
-    client = create_live_client(api_key="test-only", quota_guard=quota)
+    client = create_live_client(api_key="gsk_test_only", quota_guard=quota)
     client.chat.completions.create(max_completion_tokens=MAX_TOKENS)
 
     assert completions.attempts == 2
@@ -423,13 +423,21 @@ def test_groq_invalid_generated_tool_call_is_retried_and_counted(monkeypatch):
 
 
 def test_key_resolution_and_free_tier_quota_guards(monkeypatch):
-    monkeypatch.setenv("GROQ_API_KEY", "local-env-key")
-    assert resolve_groq_api_key({"GROQ_API_KEY": "production-secret"}) == (
-        "production-secret"
+    monkeypatch.setenv("GROQ_API_KEY", "gsk_local_env_key")
+    assert resolve_groq_api_key({"GROQ_API_KEY": "gsk_production_secret"}) == (
+        "gsk_production_secret"
     )
-    assert resolve_groq_api_key({}) == "local-env-key"
+    assert resolve_groq_api_key({}) == "gsk_local_env_key"
+    assert resolve_groq_api_key({"GROQ_API_KEY": "your-groq-key-here"}) == (
+        "gsk_local_env_key"
+    )
+    assert resolve_groq_api_key({"GROQ_API_KEY": "not-a-groq-key"}) == (
+        "gsk_local_env_key"
+    )
     monkeypatch.delenv("GROQ_API_KEY")
     assert resolve_groq_api_key({}) is None
+    assert resolve_groq_api_key({"GROQ_API_KEY": "your-groq-key-here"}) is None
+    assert resolve_groq_api_key({"GROQ_API_KEY": "not-a-groq-key"}) is None
 
     assert DAILY_REQUEST_CAP == 950
     now = [datetime(2026, 7, 26, tzinfo=timezone.utc)]
