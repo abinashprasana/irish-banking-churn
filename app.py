@@ -70,21 +70,6 @@ html, body, [class*="css"], [data-testid="stAppViewContainer"] {
     position: relative;
 }
 
-[data-testid="stAppViewContainer"]::before {
-    background-image:
-        radial-gradient(circle, rgba(36, 91, 120, 0.1) 0.65px, transparent 0.85px);
-    background-size: 28px 28px;
-    content: "";
-    height: 52rem;
-    inset: 0 0 auto;
-    mask-image: linear-gradient(to bottom, black 0, rgba(0, 0, 0, 0.28) 30rem, transparent 52rem);
-    -webkit-mask-image: linear-gradient(to bottom, black 0, rgba(0, 0, 0, 0.28) 30rem, transparent 52rem);
-    opacity: 0.22;
-    pointer-events: none;
-    position: absolute;
-    z-index: 0;
-}
-
 [data-testid="stHeader"] {
     background: transparent !important;
     box-shadow: none !important;
@@ -150,7 +135,8 @@ hr {
 
 .page-masthead {
     background:
-        radial-gradient(circle at 82% 18%, rgba(78, 162, 198, 0.2), transparent 25rem),
+        radial-gradient(ellipse 38% 70% at 84% 48%, rgba(78, 162, 198, 0.18), transparent 72%),
+        radial-gradient(ellipse 28% 42% at 72% 100%, rgba(104, 213, 179, 0.07), transparent 75%),
         var(--deep-ocean);
     border: 0;
     border-radius: 24px;
@@ -164,29 +150,15 @@ hr {
     position: relative;
 }
 
-.page-masthead::before {
-    background-image:
-        linear-gradient(rgba(207, 231, 241, 0.055) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(207, 231, 241, 0.055) 1px, transparent 1px);
-    background-size: 42px 42px;
-    content: "";
-    inset: 0;
-    mask-image: linear-gradient(90deg, transparent, black 42%, black);
-    pointer-events: none;
-    position: absolute;
-    z-index: -1;
-}
-
 .page-masthead::after {
-    background: var(--atlantic-bright);
-    box-shadow: 0 0 34px rgba(78, 162, 198, 0.48);
+    background: linear-gradient(90deg, #4EA2C6 0%, #68D5B3 46%, transparent 100%);
     content: "";
     height: 2px;
     left: 0;
     position: absolute;
     top: 0;
     transform-origin: left;
-    width: 38%;
+    width: 58%;
 }
 
 .hero-copy {
@@ -209,26 +181,34 @@ hr {
 }
 
 .hero-kicker::before {
-    background: #68D5B3;
+    background: linear-gradient(90deg, #4EA2C6, #68D5B3);
     border-radius: 999px;
-    box-shadow: 0 0 0 5px rgba(104, 213, 179, 0.1);
     content: "";
-    height: 7px;
-    width: 7px;
+    flex: 0 0 auto;
+    height: 3px;
+    width: 14px;
 }
 
 .page-masthead h1 {
     color: #FFFFFF !important;
-    font-size: clamp(2.6rem, 5vw, 4.9rem);
+    font-size: clamp(2.35rem, calc(1.77rem + 3.05vw), 4.9rem);
     font-weight: 500 !important;
     letter-spacing: -0.052em;
-    line-height: 0.96;
+    line-height: 0.99;
     margin: 1.45rem 0 1.2rem;
     max-width: 780px;
+    padding: 0 !important;
 }
 
-.page-masthead h1 span {
+.page-masthead h1 > span:first-child,
+.page-masthead h1 > span:first-child > span,
+.page-masthead h1 .hero-accent {
     display: block;
+    text-wrap: balance;
+}
+
+.page-masthead h1 [data-testid="stHeaderActionElements"] {
+    display: none !important;
 }
 
 .page-masthead h1 .hero-accent {
@@ -289,33 +269,42 @@ hr {
     position: relative;
 }
 
+.hero-scene::before {
+    background-image:
+        linear-gradient(rgba(207, 231, 241, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(207, 231, 241, 0.05) 1px, transparent 1px);
+    background-size: 42px 42px;
+    content: "";
+    inset: 0;
+    mask-image: radial-gradient(ellipse at center, black 28%, rgba(0, 0, 0, 0.72) 68%, transparent 100%);
+    -webkit-mask-image: radial-gradient(ellipse at center, black 28%, rgba(0, 0, 0, 0.72) 68%, transparent 100%);
+    pointer-events: none;
+    position: absolute;
+    z-index: 0;
+}
+
 .scene-frame {
     aspect-ratio: 1;
-    border: 1px solid rgba(191, 218, 231, 0.1);
+    background: linear-gradient(145deg, rgba(191, 218, 231, 0.025), transparent 48%);
+    border: 1px solid rgba(191, 218, 231, 0.14);
     border-radius: 28px;
+    box-shadow: inset 0 1px 0 rgba(191, 218, 231, 0.035);
+    isolation: isolate;
     max-width: 410px;
     position: relative;
     transform: rotate(-3deg);
     width: 100%;
-}
-
-.scene-frame::before,
-.scene-frame::after {
-    border: 1px solid rgba(191, 218, 231, 0.12);
-    border-radius: 50%;
-    content: "";
-    inset: 11%;
-    position: absolute;
+    z-index: 1;
 }
 
 .scene-frame::before {
-    display: none;
-}
-
-.scene-frame::after {
-    border-color: rgba(78, 162, 198, 0.28);
-    border-style: dashed;
+    border: 1px dashed rgba(78, 162, 198, 0.28);
+    border-radius: 50%;
+    content: "";
     inset: 25%;
+    pointer-events: none;
+    position: absolute;
+    z-index: 0;
 }
 
 .scene-axis {
@@ -338,7 +327,9 @@ hr {
 
 .scene-core {
     align-items: center;
-    background: rgba(13, 35, 53, 0.92);
+    background:
+        radial-gradient(circle at 35% 30%, rgba(78, 162, 198, 0.15), transparent 46%),
+        rgba(13, 35, 53, 0.94);
     border: 1px solid rgba(142, 199, 221, 0.55);
     border-radius: 50%;
     box-shadow: 0 0 0 14px rgba(78, 162, 198, 0.06), 0 0 38px rgba(78, 162, 198, 0.16);
@@ -346,10 +337,10 @@ hr {
     flex-direction: column;
     height: 128px;
     justify-content: center;
-    left: 50%;
+    left: 65%;
     position: absolute;
     text-align: center;
-    top: 50%;
+    top: 65%;
     transform: translate(-50%, -50%);
     width: 128px;
     z-index: 2;
@@ -371,17 +362,23 @@ hr {
 }
 
 .scene-node {
+    align-items: center;
+    backdrop-filter: blur(9px);
     background: rgba(7, 24, 39, 0.9);
     border: 1px solid rgba(191, 218, 231, 0.24);
     border-radius: 10px;
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
     color: #D9E7ED;
+    display: flex;
     font-family: "IBM Plex Mono", Consolas, monospace;
     font-size: 0.6rem;
+    gap: 0.45rem;
     letter-spacing: 0.08em;
+    box-sizing: border-box;
     padding: 0.68rem 0.78rem;
     position: absolute;
     text-transform: uppercase;
+    white-space: nowrap;
     z-index: 3;
 }
 
@@ -389,10 +386,9 @@ hr {
     background: #68D5B3;
     border-radius: 50%;
     content: "";
-    display: inline-block;
+    display: block;
+    flex: 0 0 auto;
     height: 5px;
-    margin-right: 0.45rem;
-    vertical-align: 0.08rem;
     width: 5px;
 }
 
@@ -418,11 +414,13 @@ hr {
 
 .scene-sweep {
     border: 1px solid transparent;
-    border-top-color: #8EC7DD;
     border-radius: 50%;
+    border-top-color: rgba(142, 199, 221, 0.82);
     inset: 17%;
-    opacity: 0.7;
+    opacity: 0.75;
+    pointer-events: none;
     position: absolute;
+    z-index: 1;
 }
 
 .scene-flow {
@@ -439,7 +437,7 @@ hr {
 }
 
 .scene-flow-base {
-    stroke: rgba(191, 218, 231, 0.15);
+    stroke: rgba(191, 218, 231, 0.2);
     stroke-width: 1;
 }
 
@@ -453,7 +451,7 @@ hr {
 
 .scene-caption {
     bottom: 1rem;
-    color: #7893A2;
+    color: #8AA3B1;
     font-family: "IBM Plex Mono", Consolas, monospace;
     font-size: 0.55rem;
     left: 1rem;
@@ -487,6 +485,7 @@ hr {
     padding: 0.42rem;
     overflow-x: auto;
     position: relative;
+    scroll-snap-type: x proximity;
     z-index: 5;
 }
 
@@ -502,19 +501,19 @@ hr {
     overflow: hidden;
     padding: 0.78rem 1rem;
     position: relative;
-    transition: background-color 180ms ease, color 180ms ease, transform 180ms ease;
+    scroll-snap-align: start;
+    transition: background-color 150ms ease, color 150ms ease;
     white-space: nowrap;
 }
 
 .stTabs [data-baseweb="tab"]:hover {
     background: #EDF4F7 !important;
     color: var(--atlantic) !important;
-    transform: translateY(-1px);
 }
 
 .stTabs [aria-selected="true"] {
     background: var(--ink) !important;
-    box-shadow: 0 6px 16px rgba(16, 42, 67, 0.18);
+    box-shadow: 0 4px 12px rgba(16, 42, 67, 0.14);
     color: var(--ink) !important;
 }
 
@@ -525,11 +524,11 @@ hr {
 .stTabs [data-baseweb="tab-highlight"] {
     background: linear-gradient(90deg, #68D5B3, #4EA2C6) !important;
     border-radius: 999px;
-    height: 3px !important;
+    height: 2px !important;
     transition:
-        transform 340ms cubic-bezier(0.22, 1, 0.36, 1),
-        right 340ms cubic-bezier(0.22, 1, 0.36, 1),
-        width 340ms cubic-bezier(0.22, 1, 0.36, 1) !important;
+        transform 240ms cubic-bezier(0, 0, 0.38, 0.9),
+        right 240ms cubic-bezier(0, 0, 0.38, 0.9),
+        width 240ms cubic-bezier(0, 0, 0.38, 0.9) !important;
     z-index: 7;
 }
 
@@ -625,7 +624,7 @@ hr {
     overflow: hidden;
     padding: 1.35rem 1.35rem 1.2rem;
     position: relative;
-    transition: border-color 220ms ease, box-shadow 220ms ease, transform 220ms ease;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
 }
 
 .feature-panel::after {
@@ -642,14 +641,11 @@ hr {
 
 .feature-panel:hover {
     border-color: #AFC4D0;
-    box-shadow: var(--shadow-lift);
-    transform: translateY(-4px);
+    box-shadow: 0 16px 36px rgba(16, 42, 67, 0.09);
 }
 
 .feature-panel:hover::after {
     border-color: var(--atlantic);
-    height: 24px;
-    width: 24px;
 }
 
 .feature-index {
@@ -764,8 +760,8 @@ hr {
 .story-map {
     align-self: start;
     background:
-        radial-gradient(circle at 68% 40%, rgba(78, 162, 198, 0.17), transparent 18rem),
-        var(--deep-ocean);
+        radial-gradient(ellipse 72% 54% at 72% 62%, rgba(78, 162, 198, 0.16), transparent 72%),
+        linear-gradient(160deg, #071827 0%, #0B2132 100%);
     border-radius: 18px;
     box-shadow: 0 20px 45px rgba(7, 24, 39, 0.18);
     min-height: 620px;
@@ -773,19 +769,6 @@ hr {
     padding: 1.5rem;
     position: sticky;
     top: 5.5rem;
-}
-
-.story-map::before {
-    background-image:
-        linear-gradient(rgba(207, 231, 241, 0.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(207, 231, 241, 0.05) 1px, transparent 1px);
-    background-size: 30px 30px;
-    content: "";
-    inset: 0;
-    mask-image: linear-gradient(to bottom, black, transparent 92%);
-    -webkit-mask-image: linear-gradient(to bottom, black, transparent 92%);
-    pointer-events: none;
-    position: absolute;
 }
 
 .story-map-copy {
@@ -831,7 +814,6 @@ hr {
 
 .story-track {
     stroke: rgba(191, 218, 231, 0.28);
-    stroke-dasharray: 4 8;
     stroke-width: 1.5;
 }
 
@@ -862,8 +844,8 @@ hr {
 
 .story-steps {
     display: grid;
-    gap: 16vh;
-    padding: 8vh 0 12vh;
+    gap: clamp(2rem, 7vh, 4.5rem);
+    padding: clamp(2rem, 6vh, 4.5rem) 0;
     position: relative;
 }
 
@@ -1023,17 +1005,6 @@ hr {
     position: relative;
 }
 
-.policy-ledger::after {
-    animation: ledgerBeam 6.5s ease-in-out infinite;
-    background: linear-gradient(90deg, transparent, rgba(104, 213, 179, 0.9), transparent);
-    content: "";
-    height: 1px;
-    left: -22%;
-    position: absolute;
-    top: 0;
-    width: 22%;
-}
-
 .policy-ledger::before {
     background: var(--approval);
     content: "";
@@ -1151,15 +1122,6 @@ hr {
     transition: box-shadow 180ms ease, transform 180ms ease, background-color 180ms ease;
 }
 
-.stButton > button::after {
-    background: linear-gradient(105deg, transparent 28%, rgba(255, 255, 255, 0.28) 48%, transparent 68%);
-    content: "";
-    inset: 0;
-    pointer-events: none;
-    position: absolute;
-    transform: translateX(-125%);
-}
-
 .stButton > button[kind="primary"] {
     background: var(--atlantic) !important;
     border: 1px solid var(--atlantic) !important;
@@ -1172,10 +1134,6 @@ hr {
     border-color: var(--ink) !important;
     box-shadow: 0 14px 30px rgba(16, 42, 67, 0.25) !important;
     transform: translateY(-2px);
-}
-
-.stButton > button[kind="primary"]:hover::after {
-    animation: buttonSheen 720ms ease-out;
 }
 
 .stButton > button:active {
@@ -1263,14 +1221,13 @@ button:focus-visible {
 
 .stPlotlyChart {
     background: rgba(248, 251, 250, 0.72);
-    transition: border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
 }
 
 @media (hover: hover) {
     .stPlotlyChart:hover {
         border-color: rgba(36, 91, 120, 0.38);
-        box-shadow: 0 16px 38px rgba(16, 42, 67, 0.1);
-        transform: translateY(-2px);
+        box-shadow: 0 14px 32px rgba(16, 42, 67, 0.08);
     }
 }
 
@@ -1289,17 +1246,11 @@ button:focus-visible {
 @keyframes heroRise {
     from {
         opacity: 0;
-        transform: translateY(18px);
+        transform: translateY(10px);
     }
     to {
         opacity: 1;
         transform: translateY(0);
-    }
-}
-
-@keyframes sceneOrbit {
-    to {
-        transform: rotate(360deg);
     }
 }
 
@@ -1309,23 +1260,20 @@ button:focus-visible {
     }
 }
 
-@keyframes ledgerBeam {
-    0%, 18% {
-        left: -22%;
-        opacity: 0;
-    }
-    35% {
-        opacity: 1;
-    }
-    62%, 100% {
-        left: 104%;
-        opacity: 0;
+@keyframes sceneOrbit {
+    to {
+        transform: rotate(360deg);
     }
 }
 
-@keyframes buttonSheen {
-    to {
-        transform: translateX(125%);
+@keyframes coreSignal {
+    0%, 100% {
+        border-color: rgba(142, 199, 221, 0.48);
+        box-shadow: 0 0 0 13px rgba(78, 162, 198, 0.045), 0 0 32px rgba(78, 162, 198, 0.12);
+    }
+    50% {
+        border-color: rgba(142, 199, 221, 0.7);
+        box-shadow: 0 0 0 17px rgba(78, 162, 198, 0.075), 0 0 44px rgba(78, 162, 198, 0.19);
     }
 }
 
@@ -1349,42 +1297,20 @@ button:focus-visible {
     }
 }
 
-@keyframes signalPulse {
-    0%, 100% {
-        opacity: 0.55;
-        transform: scale(0.98);
-    }
-    50% {
-        opacity: 1;
-        transform: scale(1.03);
-    }
-}
-
-@keyframes viewReveal {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
 .hero-copy > * {
-    animation: heroRise 680ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    animation: heroRise 420ms cubic-bezier(0, 0, 0.38, 0.9) both;
 }
 
 .hero-copy h1 {
-    animation-delay: 90ms;
+    animation-delay: 60ms;
 }
 
 .hero-copy p {
-    animation-delay: 170ms;
+    animation-delay: 110ms;
 }
 
 .hero-facts {
-    animation-delay: 250ms;
+    animation-delay: 170ms;
 }
 
 .scene-sweep {
@@ -1392,24 +1318,10 @@ button:focus-visible {
 }
 
 .scene-core {
-    animation: signalPulse 4.5s ease-in-out infinite;
+    animation: coreSignal 4.5s ease-in-out infinite;
 }
 
 @supports (animation-timeline: view()) {
-    .stat-band,
-    .feature-panel,
-    .risk-panel,
-    .policy-ledger,
-    [data-testid="stAlertContainer"],
-    [data-testid="stExpander"],
-    .stPlotlyChart,
-    [data-testid="stDataFrame"],
-    [data-testid="stImage"] {
-        animation: viewReveal linear both;
-        animation-range: entry 5% cover 24%;
-        animation-timeline: view();
-    }
-
     .story-progress {
         animation: drawStory linear both;
         animation-range: entry 8% exit 82%;
@@ -1522,6 +1434,129 @@ button:focus-visible {
     }
 }
 
+@media (min-width: 681px) and (max-width: 900px) {
+    .page-masthead {
+        grid-template-columns: minmax(0, 1.18fr) minmax(245px, 0.82fr);
+        min-height: 430px;
+    }
+
+    .hero-copy {
+        padding: 2.75rem 1rem 2.75rem 2.25rem;
+    }
+
+    .page-masthead h1 {
+        font-size: clamp(2.25rem, 5.2vw, 2.6rem);
+        letter-spacing: -0.045em;
+        line-height: 1.02;
+    }
+
+    .page-masthead p {
+        font-size: 0.9rem;
+        line-height: 1.6;
+    }
+
+    .hero-facts {
+        margin-top: 1.4rem;
+        padding-top: 0.9rem;
+    }
+
+    .hero-fact {
+        padding-right: 0.55rem;
+    }
+
+    .hero-fact + .hero-fact {
+        padding-left: 0.55rem;
+    }
+
+    .hero-fact strong {
+        font-size: 0.82rem;
+    }
+
+    .hero-fact span {
+        font-size: 0.62rem;
+    }
+
+    .hero-scene {
+        min-height: 360px;
+        padding: 0.6rem;
+    }
+
+    .scene-frame {
+        max-width: 315px;
+        transform: rotate(-2deg);
+    }
+
+    .scene-core {
+        height: 110px;
+        width: 110px;
+    }
+
+    .scene-core small {
+        font-size: 0.5rem;
+    }
+
+    .scene-core strong {
+        font-size: 0.84rem;
+    }
+
+    .scene-node {
+        font-size: 0.54rem;
+        letter-spacing: 0.05em;
+        padding: 0.5rem 0.55rem;
+    }
+
+    .scene-caption {
+        bottom: 0.7rem;
+        font-size: 0.49rem;
+        left: 0.75rem;
+    }
+
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 0.1rem;
+        margin-left: 0.8rem;
+        margin-right: 0.8rem;
+        padding: 0.32rem;
+    }
+
+    .stTabs [data-baseweb="tab"] {
+        font-size: 0.72rem;
+        padding: 0.64rem 0.62rem;
+    }
+}
+
+@media (min-width: 681px) and (max-width: 740px) {
+    .scene-core {
+        height: 90px;
+        width: 90px;
+    }
+
+    .scene-core small {
+        font-size: 0.43rem;
+    }
+
+    .scene-core strong {
+        font-size: 0.72rem;
+    }
+
+    .scene-node {
+        font-size: 0.46rem;
+        gap: 0.35rem;
+        letter-spacing: 0.03em;
+        padding: 0.42rem 0.44rem;
+    }
+
+    .scene-node::before {
+        height: 4px;
+        width: 4px;
+    }
+
+    .scene-caption {
+        bottom: 0.6rem;
+        font-size: 0.43rem;
+        left: 0.65rem;
+    }
+}
+
 @media (max-width: 600px) {
     .page-masthead {
         border-radius: 18px;
@@ -1529,10 +1564,6 @@ button:focus-visible {
 
     .hero-copy {
         padding: 2.4rem 1.35rem 1rem;
-    }
-
-    .page-masthead h1 {
-        font-size: clamp(2.35rem, 12vw, 3.15rem);
     }
 
     .hero-facts {
@@ -1555,7 +1586,8 @@ button:focus-visible {
     }
 
     .scene-frame {
-        max-width: 280px;
+        max-width: min(270px, calc(100% - 0.75rem));
+        transform: none;
     }
 
     .scene-core {
@@ -1565,7 +1597,14 @@ button:focus-visible {
 
     .scene-node {
         font-size: 0.5rem;
-        padding: 0.52rem 0.58rem;
+        letter-spacing: 0.04em;
+        padding: 0.48rem 0.5rem;
+    }
+
+    .scene-caption {
+        bottom: 0.65rem;
+        font-size: 0.48rem;
+        left: 0.7rem;
     }
 
     .stTabs [data-baseweb="tab-list"] {
@@ -1594,6 +1633,13 @@ button:focus-visible {
         animation-iteration-count: 1 !important;
         scroll-behavior: auto !important;
         transition-duration: 0.001ms !important;
+    }
+
+    .hero-copy > *,
+    .scene-core,
+    .scene-flow-signal,
+    .scene-sweep {
+        animation: none !important;
     }
 }
 </style>
@@ -1882,8 +1928,8 @@ st.markdown(
       <div class="hero-copy">
         <div class="hero-kicker">Irish retail banking model</div>
         <h1>
-          <span>Know who may leave.</span>
-          <span class="hero-accent">Decide with care.</span>
+          <span>Know who may leave</span>
+          <span class="hero-accent">Decide with care</span>
         </h1>
         <p>A working prototype that connects customer risk, model evidence, and a governed response in one review.</p>
         <div class="hero-facts">
@@ -1901,7 +1947,7 @@ st.markdown(
           </div>
         </div>
       </div>
-      <div class="hero-scene" aria-label="A visual map from customer signals to a governed retention decision">
+      <div class="hero-scene" role="img" aria-label="A visual map from customer signals to a governed retention decision">
         <div class="scene-frame">
           <svg class="scene-flow" viewBox="0 0 410 410" aria-hidden="true">
             <path class="scene-flow-base" d="M78 92 C142 58 268 64 333 104 C305 147 258 170 205 205 C158 237 111 264 80 322 C147 357 260 358 332 326 C295 270 259 232 205 205"></path>
@@ -2084,19 +2130,23 @@ with tab1:
     with exp_col1:
         with st.expander("EU AI Act, Article 86"):
             st.markdown(
-                "From 2 August 2026, Article 86 provides a right to an explanation for decisions based on the output "
-                "of specified Annex III high risk AI systems, except systems listed in point 2, when the decision "
-                "produces legal effects or similarly significantly affects a person in a way they consider adverse "
-                "to their health, safety, or fundamental rights. "
-                "This prototype makes no claim that it falls within that scope. SHAP and DiCE show how model evidence "
-                "can be made reviewable. "
-                "[Read Article 86 on EUR Lex]"
-                "(https://eur-lex.europa.eu/eli/reg/2024/1689/oj#art_86)."
+                "Article 86 sets out a right to a clear and meaningful explanation for some decisions based on the "
+                "output of an AI system listed in Annex III and classified as high risk. The right only applies when "
+                "the other conditions in the Article are met. "
+                "The AI Act has a general application date of 2 August 2026. Regulation (EU) 2026/1744 entered into "
+                "force on 27 July 2026 and moved the application date for Sections 1 to 3 of Chapter III, except "
+                "Article 6(5), for systems classified as high risk under Article 6(2) and Annex III to "
+                "2 December 2027. This prototype does not claim to fall within Article 86. SHAP and DiCE are model "
+                "inspection tools, not evidence of legal compliance. "
+                "[Read Article 86]"
+                "(https://eur-lex.europa.eu/eli/reg/2024/1689/oj#art_86) and "
+                "[read the updated timetable]"
+                "(https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32026R1744)."
             )
     with exp_col2:
         with st.expander("EBA guidelines on internal governance"):
             st.markdown(
-                "The EBA's in-force Guidelines on internal governance under CRD apply to institutions within their "
+                "The EBA Guidelines on internal governance under CRD currently apply to institutions within their "
                 "stated scope and address responsibilities, risk management, and internal controls. They do not "
                 "prescribe this retention workflow. The checks in this application are engineering choices and have "
                 "not been assessed as evidence of regulatory compliance. "
@@ -2386,10 +2436,12 @@ The next three inputs are direct debits, tenure, and a savings goal. Their posit
 
     st.markdown("<br>", unsafe_allow_html=True)
     st.info(
-        "Article 86 is due to apply from 2 August 2026. This prototype makes no claim that it falls within the "
-        "Article's scope. Where its conditions are met, an affected person can obtain a clear and meaningful "
-        "explanation of the AI system's role and the main elements of the decision. The SHAP views here demonstrate "
-        "model evidence that a reviewer could inspect."
+        "Article 86 sets out a right to a clear and meaningful explanation for some decisions based on an AI system "
+        "listed in Annex III and classified as high risk. "
+        "The AI Act has a general application date of 2 August 2026, while the updated timetable moves Sections 1 "
+        "to 3 of Chapter III, except Article 6(5), for systems classified as high risk under Article 6(2) and "
+        "Annex III to 2 December 2027. This prototype does not claim to fall within "
+        "Article 86. The SHAP views provide model evidence for inspection and do not demonstrate legal compliance."
     )
 
 
