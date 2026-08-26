@@ -7,7 +7,7 @@
 [![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![XGBoost](https://img.shields.io/badge/XGBoost-Gradient%20Boosted-FF6600?style=for-the-badge&logo=xgboost&logoColor=white)](https://xgboost.readthedocs.io)
 [![Groq](https://img.shields.io/badge/Groq-Tool%20Calling-F55036?style=for-the-badge&logo=groq&logoColor=white)](https://console.groq.com/docs/tool-use)
-[![Case Study](https://img.shields.io/badge/Case%20Study-Static%20Export-071827?style=for-the-badge&logo=nextdotjs&logoColor=white)](./web)
+[![Case Study](https://img.shields.io/badge/Case%20Study-Live%20on%20Vercel-071827?style=for-the-badge&logo=vercel&logoColor=white)](https://irish-banking-churn.vercel.app/)
 [![Interactive Lab](https://img.shields.io/badge/Interactive%20Lab-Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://abinashprasana-irish-banking-churn-app-aidovf.streamlit.app/)
 [![ROC--AUC](https://img.shields.io/badge/ROC--AUC-0.959-2ea44f?style=for-the-badge)](.)
 [![Tests](https://img.shields.io/badge/Tests-72%2F72%20passing-2ea44f?style=for-the-badge)](.)
@@ -34,8 +34,8 @@ Underneath both experiences, an XGBoost classifier estimates churn probability, 
 
 ## Product Surfaces
 
-- **Atlantic Ledger case study (`web/`)** — the deploy-ready evidence narrative, model comparison, governed decision replay, and limitations. Set `NEXT_PUBLIC_SITE_URL` to the final Vercel or custom-domain URL when deploying.
-- **[Open the interactive lab](https://abinashprasana-irish-banking-churn-app-aidovf.streamlit.app/)** — run synthetic case reviews, inspect SHAP/DiCE output, explore model evidence, and use recorded or configured live decision-gate mode.
+- **[Open the case study](https://irish-banking-churn.vercel.app/)** (source in `web/`) · the evidence narrative, model comparison, governed decision replay, and limitations, statically exported to Vercel.
+- **[Open the interactive lab](https://abinashprasana-irish-banking-churn-app-aidovf.streamlit.app/)** · run synthetic case reviews, inspect SHAP/DiCE output, explore model evidence, and use recorded or configured live decision-gate mode.
 
 The Streamlit lab opens directly in the browser. The case-study replay is explicitly recorded and makes zero provider requests.
 
@@ -494,15 +494,16 @@ The application reads Streamlit secrets first and the process environment second
 
 ## Deployment
 
-### Atlantic Ledger case study — Vercel
+### Atlantic Ledger case study · Vercel
 
 - Import this repository and set **Root Directory** to `web`.
 - Use **Node.js 24.x** and the checked-in pnpm lockfile.
 - Install with `pnpm install --frozen-lockfile` and build with `pnpm build`; the Next.js configuration produces a static `out/` export.
 - Set `NEXT_PUBLIC_SITE_URL` to the production case-study URL and `NEXT_PUBLIC_LAB_URL` to the Streamlit lab URL.
 - No Python service, model artifact, Groq key, database, or public inference endpoint is required by this deployment.
+- Live at [irish-banking-churn.vercel.app](https://irish-banking-churn.vercel.app/).
 
-### Interactive lab — Streamlit Community Cloud
+### Interactive lab · Streamlit Community Cloud
 
 - Deploy the repository-root `app.py`; dependencies are read from the root `requirements.txt`.
 - The tracked dataset, XGBoost artifact, recorded traces, and SHAP assets support the complete recorded lab without external services.
