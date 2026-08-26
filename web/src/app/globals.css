@@ -1807,6 +1807,7 @@ code {
 }
 
 .limits-heading {
+  grid-row: 1 / span 2;
   align-self: start;
 }
 

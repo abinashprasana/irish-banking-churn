@@ -1,19 +1,20 @@
 <div align="center">
 
-# 🏦 Irish Banking Customer Churn & Retention Agent
+# Atlantic Ledger
 
-**An explainable machine learning system and a governed AI agent built around Ireland's 2022 and 2023 account migration.**
+**Irish banking churn and governed retention intelligence.**
 
 [![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![XGBoost](https://img.shields.io/badge/XGBoost-Gradient%20Boosted-FF6600?style=for-the-badge&logo=xgboost&logoColor=white)](https://xgboost.readthedocs.io)
 [![Groq](https://img.shields.io/badge/Groq-Tool%20Calling-F55036?style=for-the-badge&logo=groq&logoColor=white)](https://console.groq.com/docs/tool-use)
-[![Streamlit](https://img.shields.io/badge/Live%20Demo-Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://abinashprasana-irish-banking-churn-app-aidovf.streamlit.app/)
+[![Case Study](https://img.shields.io/badge/Case%20Study-Static%20Export-071827?style=for-the-badge&logo=nextdotjs&logoColor=white)](./web)
+[![Interactive Lab](https://img.shields.io/badge/Interactive%20Lab-Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://abinashprasana-irish-banking-churn-app-aidovf.streamlit.app/)
 [![ROC--AUC](https://img.shields.io/badge/ROC--AUC-0.959-2ea44f?style=for-the-badge)](.)
-[![Tests](https://img.shields.io/badge/Tests-20%2F20%20passing-2ea44f?style=for-the-badge)](.)
+[![Tests](https://img.shields.io/badge/Tests-72%2F72%20passing-2ea44f?style=for-the-badge)](.)
 
 <br/>
 
-*Account migration after the KBC Bank Ireland and Ulster Bank exit announcements · 1.17M accounts closed by June 2023 · SMOTEENN · SHAP · DiCE · Live Phase 1 scoring · Governed retention recommendations*
+*Know who may leave. Decide with care. · Synthetic Irish banking data · SMOTEENN · XGBoost · SHAP · DiCE · Deterministic policy controls*
 
 </div>
 
@@ -25,15 +26,18 @@ KBC Bank Ireland and Ulster Bank announced their intentions to leave the Irish m
 
 That disruption gives the project a clear Irish setting, but it does not prove that the same customers remain at unusually high churn risk today. The dataset is synthetic and uses migration related fields to examine that question. It is not presented as a measurement of current customer behaviour at any bank.
 
-The result is an XGBoost classifier that estimates churn probability, SHAP values that show how the model reached a score, and DiCE counterfactuals that explore candidate changes to selected inputs. The whole system runs in a six-tab Streamlit dashboard. Prediction and explanation still leave a practical gap: a relationship manager must decide whether any response is suitable, whether it passes local controls, and whether advisor review is required. The sixth tab demonstrates that workflow with an AI retention agent. It investigates a synthetic case using four deterministic tools and returns either a policy-checked recommendation or a structured refusal.
+The result is **Atlantic Ledger**, a two-surface product. A statically generated Next.js case-study shell explains the banking context, model evidence, recorded decision walkthroughs, governance boundary, and limitations. A linked Streamlit interactive lab provides four task-oriented workspaces: **Case review**, **Decision gate**, **Model evidence**, and **Data & limits**.
+
+Underneath both experiences, an XGBoost classifier estimates churn probability, SHAP explains the fitted model, and DiCE explores candidate counterfactual inputs. Prediction alone does not decide what should happen next. The governed agent uses four deterministic tools and a fail-closed policy gate to return either a policy-checked recommendation or a structured refusal. The public case study reads a generated, sanitized evidence bundle; it does not expose a public inference API or an LLM secret.
 
 ---
 
-## 🎬 Live Demo
+## Product Surfaces
 
-[![Open in Streamlit](https://img.shields.io/badge/Open%20in%20Streamlit-Live%20App-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://abinashprasana-irish-banking-churn-app-aidovf.streamlit.app/)
+- **Atlantic Ledger case study (`web/`)** — the deploy-ready evidence narrative, model comparison, governed decision replay, and limitations. Set `NEXT_PUBLIC_SITE_URL` to the final Vercel or custom-domain URL when deploying.
+- **[Open the interactive lab](https://abinashprasana-irish-banking-churn-app-aidovf.streamlit.app/)** — run synthetic case reviews, inspect SHAP/DiCE output, explore model evidence, and use recorded or configured live decision-gate mode.
 
-No setup needed, runs directly in the browser.
+The Streamlit lab opens directly in the browser. The case-study replay is explicitly recorded and makes zero provider requests.
 
 ---
 
@@ -73,13 +77,17 @@ flowchart TD
     E["📊 Model Comparison\nAccuracy · Precision · Recall\nF1 · ROC-AUC · Average precision"]
     F1["🔍 SHAP TreeExplainer\nGlobal beeswarm & bar plots\nLocal waterfall chart"]
     F2["🎲 DiCE Counterfactuals\nXGBoostClassifierWrapper guard\nUp to 3 candidate scenarios\nLocked: age · switching history"]
-    G["🏦 Streamlit Dashboard\nTab 1 Overview  ·  Tab 2 Data Explorer\nTab 3 Model Performance\nTab 4 SHAP Explainability  ·  Tab 5 Risk Predictor\nTab 6 Retention Agent"]
+    H["📦 Sanitized evidence bundle\nDataset · metrics · policy rules\n4 recorded verified scenarios"]
+    G["Atlantic Ledger case study\nNext.js static export · Vercel\nNarrative evidence + recorded decision replay"]
+    I["Interactive lab\nStreamlit · four workspaces\nCase review · Decision gate · Model evidence · Data & limits"]
 
     A --> B --> C
     C --> D1 & D2 & D3
     D1 & D2 & D3 --> E
     D3 --> F1 & F2
-    E & F1 & F2 --> G
+    E & F1 & F2 --> H
+    H --> G
+    E & F1 & F2 --> I
 
     style A fill:#1f4e79,color:#ffffff,stroke:#1f4e79
     style B fill:#2e75b6,color:#ffffff,stroke:#2e75b6
@@ -90,7 +98,9 @@ flowchart TD
     style E fill:#375623,color:#ffffff,stroke:#375623
     style F1 fill:#7030a0,color:#ffffff,stroke:#7030a0
     style F2 fill:#7030a0,color:#ffffff,stroke:#7030a0
-    style G fill:#c00000,color:#ffffff,stroke:#c00000
+    style H fill:#1f4e79,color:#ffffff,stroke:#1f4e79
+    style G fill:#071827,color:#ffffff,stroke:#071827
+    style I fill:#245b78,color:#ffffff,stroke:#245b78
 ```
 
 ---
@@ -149,7 +159,7 @@ The tree SHAP values shown here explain the model's raw output. Their magnitudes
 
 For a customer above the 50% churn threshold, the Risk Predictor asks DiCE for up to three candidate counterfactuals below the threshold. The random search may return fewer candidates and does not guarantee the smallest possible change. The results are exploratory prompts for an advisor, not prescribed customer actions.
 
-The dashboard reports the original value and each candidate input returned by the current DiCE run. It does not claim that changing a real customer circumstance would prevent churn. The values vary with the profile and random search, so no fixed counterfactual result is presented here as a reproducible benchmark.
+The interactive lab reports the original value and each candidate input returned by the current DiCE run. It does not claim that changing a real customer circumstance would prevent churn. The values vary with the profile and random search, so no fixed counterfactual result is presented here as a reproducible benchmark.
 
 ---
 
@@ -164,7 +174,7 @@ That's what the retention agent handles. It takes the Phase 1 output for a flagg
 ```mermaid
 flowchart LR
     A["⚡ Phase 1 output\nLive predict_proba call\nprofile + churn probability"]
-    B["🤖 Groq tool loop\nLlama 3.3 70B · max 6 turns\n1,024 completion tokens / call"]
+    B["🤖 Groq tool loop\nQwen 3.6 27B · max 6 turns\n1,024 completion tokens / call"]
     C["🔧 Four deterministic tools\nproduct_lookup · segment_comparison\nregulatory_constraint_checker\nrecommendation_formatter"]
     D["🔒 Policy gate\nARR-001 · HOLD-002 · HUM-003 · VUL-004\nDeterministic Python · no LLM override"]
     E["✅ Governed recommendation\naction · justification · agent confidence\nregulatory_flags · checker_verdict"]
@@ -201,11 +211,11 @@ The policy gate is deterministic Python code. It evaluates all four rules on eve
 
 The `confidence` field is supplied by the agent to satisfy the output schema. It is not a calibrated probability, a Phase 1 churn score, or a regulatory assessment.
 
-The live LLM backend is currently configured for Groq using `llama-3.3-70b-versatile`. This is a deliberate cost-safety choice for a public demonstration intended to stay within Groq's Free Plan. Live tool calling is available only when the deployment owner supplies a key that Groq accepts for the configured model. A local format check cannot prove that the key or model access is valid. Without a key, the app displays recorded governed traces and makes no provider request. Those fallback files preserve the shape of a completed run, but they do not rerun the reasoning loop, tools, or policy gate when viewed. The bounded live path still uses the four tools and deterministic gate.
+The live LLM backend is configured for Groq using `qwen/qwen3.6-27b`. This is a cost-safety choice for a public demonstration intended to stay within Groq's Free Plan. Live tool calling is available only when the deployment owner supplies a key that Groq accepts for the configured model. A local format check cannot prove that the key or model access is valid. Without a key, the app displays recorded governed traces and makes no provider request. Those fallback files preserve the shape of a completed run, but they do not rerun the reasoning loop, tools, or policy gate when viewed. The bounded live path still uses the four tools and deterministic gate.
 
 The live loop follows Groq's [local tool-calling guide](https://console.groq.com/docs/tool-use). The application adds process-local guards of 30 requests per minute, a 950-request daily safety cap, and five live runs per browser session. These are application safeguards, not a reading of provider account usage. They do not count requests from another running instance or protect against token limits. Groq's [rate-limit reference](https://console.groq.com/docs/rate-limits), account Limits page, and response headers remain the source of truth.
 
-As of 27 July 2026, Groq lists `llama-3.3-70b-versatile` for shutdown on 16 August 2026 and recommends `openai/gpt-oss-120b` or `qwen/qwen3.6-27b` as replacements. The configured model therefore needs a live tool-calling migration test before that date. The model ID has not been changed here without that verification. See Groq's [deprecation notice](https://console.groq.com/docs/deprecations).
+Groq listed the previous runtime for shutdown on 16 August 2026 and recommended `qwen/qwen3.6-27b` as one replacement. The configured model ID was migrated on 15 August 2026. Request serialization, tool trajectories, retries, and the deterministic policy gate are covered offline, but a protected live single-scenario smoke test is still required before treating Qwen-specific sequencing quality as verified. See Groq's [deprecation notice](https://console.groq.com/docs/deprecations).
 
 ---
 
@@ -215,7 +225,7 @@ As of 27 July 2026, Groq lists `llama-3.3-70b-versatile` for shutdown on 16 Augu
 
 | Check | Result |
 |:---|:---:|
-| Tests passing (0 skipped) | **20 / 20** |
+| Tests passing (0 skipped) | **72 / 72** |
 | Eval scenarios passing (dry-run) | **4 / 4** |
 | Blocked outcomes in eval | **2 / 4** (minimum required: 2) |
 | Groq API requests in dry-run | **0** |
@@ -230,7 +240,7 @@ The dry-run eval does something worth explaining: for each of the four recorded 
 
 ## 🗂️ Sample Agent Traces
 
-The samples below are recorded, zero request scripted replays. Their Phase 1 probabilities were captured from the local trained model and are rechecked by the dry run evaluation. The reasoning text is not a Groq response, and viewing a sample does not execute the tools or policy gate again.
+The samples below are recorded, zero request scripted replays. Their Phase 1 probabilities were captured from the local trained model and are rechecked by the dry run evaluation. The reasoning text is an explicit `scripted_fixture`, not output captured from Qwen or any other hosted model, and viewing a sample does not execute the tools or policy gate again.
 
 <details>
 <summary>✅ Local gate passed: fee waiver with advisor review required (IRLBANK_01136, 99.76% churn risk)</summary>
@@ -364,9 +374,16 @@ Final output:
 
 ```
 irish-banking-churn/
-├── 📄 app.py                         Streamlit six-tab dashboard
+├── 📄 app.py                         Streamlit interactive lab · four task workspaces
 ├── 📋 requirements.txt               Project dependencies
 ├── 📄 model_card.md                  Model card (metrics, limitations, regulatory context)
+│
+├── 📂 web/                           Atlantic Ledger static case-study shell
+│   ├── src/app/                      Next.js App Router page, metadata, sitemap, social artwork
+│   ├── src/components/               Decision narrative, recorded replay, navigation, brand mark
+│   ├── src/data/                     Generated sanitized evidence bundle
+│   ├── package.json                  Node 24 · pnpm 10 · build, lint, and typecheck scripts
+│   └── next.config.ts                Static export for Vercel
 │
 ├── 📂 agent/
 │   ├── loop.py                       Groq Chat Completions tool loop · bounded while · mock default
@@ -377,7 +394,7 @@ irish-banking-churn/
 │
 ├── 📂 data/
 │   ├── generate_data.py              Synthetic dataset generator (10,000 records)
-│   └── irish_banking_churn.csv       Generated dataset [git-ignored]
+│   └── irish_banking_churn.csv       Generated synthetic dataset used by the application
 │
 ├── 📂 demo_traces/                   Four complete zero-request offline runs; 2 of 4 are refusals
 │   ├── 01_allowed_fee_waiver.json    Local checks passed: fee relief · HUM-003 advisor review required
@@ -392,86 +409,105 @@ irish-banking-churn/
 │
 ├── 📂 scripts/
 │   ├── eval_agent.py                 Recorded dry-run eval (zero requests) and optional live Groq eval
+│   ├── export_case_study.py          Deterministic public evidence export and drift check
 │   └── record_demo_runs.py           Owner-only script to refresh demo traces via live Groq calls
 │
-├── 📂 tests/                         20 deterministic tests · sockets blocked · no API key required
+├── 📂 tests/                         22 deterministic tests · sockets blocked · no API key required
 │   ├── conftest.py                   Removes GROQ_API_KEY and blocks socket connections for every test
 │   ├── test_agent.py                 Loop trajectory · rate limits · Groq SDK wire contract
+│   ├── test_case_study_evidence.py   Public schema · sanitization · generated-file drift
 │   ├── test_phase1_integration.py    Live predict_proba · cache · schema mismatch failures
 │   ├── test_policy.py                All four rules · immutable decisions · formatter bypass resistance
 │   └── test_foundation.py           Document assertions: README content and integration boundary
 │
 └── 📂 assets/
-    ├── shap_summary_plot.png         Global SHAP beeswarm plot [git-ignored]
-    └── shap_bar_plot.png             Global SHAP bar plot [git-ignored]
+    ├── shap_summary_plot.png         Global SHAP beeswarm plot
+    └── shap_bar_plot.png             Global SHAP bar plot
 ```
 
 ---
 
-## ⚙️ How to Run
+## Local Development
 
-**1. Clone the repository**
+Prerequisites: Python 3.12 or newer, Node.js 24, and pnpm 10.15.1.
+
 ```bash
 git clone https://github.com/abinashprasana/irish-banking-churn.git
 cd irish-banking-churn
-```
 
-**2. Create a virtual environment and install dependencies**
-```bash
 python -m venv venv
-
-# Windows
-.\venv\Scripts\activate
-
-# macOS / Linux
-source venv/bin/activate
-
+# Activate venv with .\venv\Scripts\activate on Windows
+# or source venv/bin/activate on macOS/Linux
 pip install -r requirements.txt
 ```
 
-**3. Generate the synthetic dataset**
-```bash
-python data/generate_data.py
-```
-This creates `data/irish_banking_churn.csv` with 10,000 records at a ~21% churn rate.
+Run the four-workspace interactive lab:
 
-**4. Train the model**
-```bash
-python models/train_model.py
-```
-Trains all three classifiers, prints the comparison table, saves the XGBoost model to `models/xgboost_churn_model.pkl`, and exports both SHAP plots to `assets/`.
-
-**5. Run the test suite**
-```bash
-python -m pytest -q
-```
-20 deterministic tests. Sockets are blocked and `GROQ_API_KEY` is removed for every test, so an accidental network call fails immediately. Expected output: `20 passed`.
-
-**6. Configure the Groq free-tier backend (optional, for live agent runs)**
-
-The Retention Agent tab works without a key, replaying the four recorded zero-request demo traces. To enable live agent calls, set `GROQ_API_KEY` to a [Groq free-tier key](https://console.groq.com/keys):
-
-```bash
-# Windows
-$env:GROQ_API_KEY = "your-free-tier-key"
-
-# macOS / Linux
-export GROQ_API_KEY="your-free-tier-key"
-```
-
-For Streamlit Community Cloud, add `GROQ_API_KEY = "..."` under **App settings → Secrets**. The app reads `st.secrets` first and falls back to the process environment. The key is never hardcoded, logged, or visible to visitors.
-
-**7. Launch the dashboard**
 ```bash
 streamlit run app.py
 ```
-Opens at `http://localhost:8501`. Tabs 1–5 cover the Phase 1 model. Tab 6 is the Retention Agent: select a scenario, click **Run live governed recommendation** (if a key is configured), and step through the full tool-calling trace.
 
-**8. Validate the recorded traces and run the dry-run eval**
+It opens at `http://localhost:8501`. **Case review** scores and explains a synthetic profile; **Decision gate** runs recorded or configured live governed recommendations; **Model evidence** presents holdout and SHAP evidence; **Data & limits** documents the synthetic population and constraints. No Groq key is required for the four recorded zero-request replays.
+
+Run the Atlantic Ledger case-study shell in another terminal:
+
 ```bash
-python scripts/eval_agent.py --dry-run
+cd web
+pnpm install --frozen-lockfile
+pnpm dev
 ```
-Replays all four recorded scenarios, verifies tool-call/result ID matching, validates the Pydantic recommendation schema, re-runs `model.predict_proba` to confirm the stored probabilities are real, and checks that at least two of four scenarios result in a blocked outcome. Makes zero Groq API requests. Expected output: `4/4 PASS`.
+
+It opens at `http://localhost:3000`. `NEXT_PUBLIC_LAB_URL` and `NEXT_PUBLIC_SITE_URL` are optional locally; the checked-in defaults target the published lab and the intended case-study deployment URL.
+
+Before publishing, run the complete local verification from the repository root:
+
+```bash
+python -m pytest -q
+python scripts/eval_agent.py --dry-run
+python scripts/export_case_study.py --check
+cd web
+pnpm typecheck
+pnpm lint
+pnpm build
+```
+
+The verified baseline is 72/72 executed pytest cases (53/53 deterministic test definitions in the exported evidence bundle) and 4/4 recorded scenarios, including two blocked outcomes and zero provider requests. If a canonical data, model-card, policy, trace, runtime-model, or test source changes, regenerate `web/src/data/evidence.generated.json` with `python scripts/export_case_study.py --write`, review the diff, then rerun `--check`.
+
+`.github/workflows/verify.yml` runs the same Python evidence checks and the web lint, type-check, and static build on pushes and pull requests.
+
+To rebuild the tracked synthetic data and model artifacts deliberately:
+
+```bash
+python data/generate_data.py
+python models/train_model.py
+```
+
+### Optional live agent mode
+
+The Decision gate works without a key. For an owner-controlled live smoke test, set a server-side `GROQ_API_KEY` from [Groq](https://console.groq.com/keys), then run one bounded scenario:
+
+```bash
+python scripts/eval_agent.py --live --scenario 01_allowed_fee_waiver
+```
+
+The application reads Streamlit secrets first and the process environment second. Never expose this key through a `NEXT_PUBLIC_*` variable or commit it to the repository.
+
+## Deployment
+
+### Atlantic Ledger case study — Vercel
+
+- Import this repository and set **Root Directory** to `web`.
+- Use **Node.js 24.x** and the checked-in pnpm lockfile.
+- Install with `pnpm install --frozen-lockfile` and build with `pnpm build`; the Next.js configuration produces a static `out/` export.
+- Set `NEXT_PUBLIC_SITE_URL` to the production case-study URL and `NEXT_PUBLIC_LAB_URL` to the Streamlit lab URL.
+- No Python service, model artifact, Groq key, database, or public inference endpoint is required by this deployment.
+
+### Interactive lab — Streamlit Community Cloud
+
+- Deploy the repository-root `app.py`; dependencies are read from the root `requirements.txt`.
+- The tracked dataset, XGBoost artifact, recorded traces, and SHAP assets support the complete recorded lab without external services.
+- Add `GROQ_API_KEY = "..."` under **App settings → Secrets** only after the protected live Qwen smoke test passes. Without it, the lab remains in zero-request recorded mode.
+- Keep the case study’s `NEXT_PUBLIC_LAB_URL` aligned with the deployed lab URL.
 
 ---
 
@@ -505,7 +541,7 @@ The Retention Agent is deliberately narrow. The catalogue, governance overlays, 
 
 [Article 86 of the EU AI Act](https://eur-lex.europa.eu/eli/reg/2024/1689/oj#art_86) sets out a right to a clear and meaningful explanation for some decisions based on the output of an AI system listed in Annex III and classified as high risk. The right only applies when the other conditions in the Article are met. The Act has a general application date of **2 August 2026**. [Regulation (EU) 2026/1744](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32026R1744) entered into force on **27 July 2026** and moved the application date for Sections 1 to 3 of Chapter III, except Article 6(5), for systems classified as high risk under Article 6(2) and Annex III to **2 December 2027**. This prototype does not claim to fall within Article 86. SHAP and DiCE are model inspection tools, not evidence of legal compliance.
 
-The **[EBA Guidelines on internal governance under CRD](https://www.eba.europa.eu/activities/single-rulebook/regulatory-activities/internal-governance/guidelines-internal-governance-under-crd)** are in force for institutions within their stated scope and address responsibilities, risk management, and internal controls. They do not prescribe this retention workflow. Advisor review and the deterministic policy gate are engineering choices in this application and have not been assessed as evidence of regulatory compliance. The dashboard never takes action on a customer account.
+The **[EBA Guidelines on internal governance under CRD](https://www.eba.europa.eu/activities/single-rulebook/regulatory-activities/internal-governance/guidelines-internal-governance-under-crd)** are in force for institutions within their stated scope and address responsibilities, risk management, and internal controls. They do not prescribe this retention workflow. Advisor review and the deterministic policy gate are engineering choices in this application and have not been assessed as evidence of regulatory compliance. Atlantic Ledger never takes action on a customer account.
 
 Every live recommendation produced by the retention agent passes through a deterministic Python policy gate. The LLM cannot approve an action that the gate blocks, and the gate evaluates every project rule on each run. Above the configured 75% risk threshold, `HUM-003` requires the proposed action's `requires_human_review` flag to be true before the gate can pass it. That flag records a review requirement, not proof that a person completed a review. This is an application safeguard. It is not a statement that the four project rules form a complete regulatory control framework.
 
