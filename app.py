@@ -2284,7 +2284,7 @@ button:focus-visible {
 
 .lab-masthead {
     grid-template-columns: minmax(0, 1.25fr) minmax(270px, 0.75fr);
-    min-height: 196px;
+    min-height: 268px;
 }
 
 .lab-masthead .hero-copy {
@@ -2335,7 +2335,7 @@ button:focus-visible {
 }
 
 .lab-masthead .hero-scene {
-    min-height: 196px;
+    min-height: 268px;
     padding: 0;
     perspective: 900px;
     transform: none;
@@ -2344,7 +2344,7 @@ button:focus-visible {
 .lab-masthead .scene-frame,
 .lab-masthead .scene-frame:hover {
     max-width: 370px;
-    transform: scale(0.5) rotateX(3deg) rotateY(-3deg) rotateZ(-3deg);
+    transform: scale(0.72) rotateX(3deg) rotateY(-3deg) rotateZ(-3deg);
     transition-duration: 220ms;
 }
 
@@ -2454,7 +2454,7 @@ button:focus-visible {
 @media (max-width: 900px) {
     .lab-masthead {
         grid-template-columns: minmax(0, 1.25fr) minmax(210px, 0.75fr);
-        min-height: 188px;
+        min-height: 240px;
     }
 
     .lab-masthead .hero-copy {
@@ -2462,14 +2462,14 @@ button:focus-visible {
     }
 
     .lab-masthead .hero-scene {
-        min-height: 188px;
+        min-height: 240px;
         padding: 0;
     }
 
     .lab-masthead .scene-frame,
     .lab-masthead .scene-frame:hover {
         max-width: 330px;
-        transform: scale(0.48) rotateX(2deg) rotateY(-2deg) rotateZ(-2deg);
+        transform: scale(0.68) rotateX(2deg) rotateY(-2deg) rotateZ(-2deg);
     }
 
     .stTabs [data-baseweb="tab-list"] {
