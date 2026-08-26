@@ -173,23 +173,23 @@ That's what the retention agent handles. It takes the Phase 1 output for a flagg
 
 ```mermaid
 flowchart LR
-    A["⚡ Phase 1 output\nLive predict_proba call\nprofile + churn probability"]
-    B["🤖 Groq tool loop\nQwen 3.6 27B · max 6 turns\n1,024 completion tokens / call"]
-    C["🔧 Four deterministic tools\nproduct_lookup · segment_comparison\nregulatory_constraint_checker\nrecommendation_formatter"]
-    D["🔒 Policy gate\nARR-001 · HOLD-002 · HUM-003 · VUL-004\nDeterministic Python · no LLM override"]
-    E["✅ Governed recommendation\naction · justification · agent confidence\nregulatory_flags · checker_verdict"]
-    F["🚫 Structured refusal\nno_recommendation\nfailed_rule_ids returned"]
+    AGA["⚡ Phase 1 output\nLive predict_proba call\nprofile + churn probability"]
+    AGB["🤖 Groq tool loop\nQwen 3.6 27B · max 6 turns\n1,024 completion tokens / call"]
+    AGC["🔧 Four deterministic tools\nproduct_lookup · segment_comparison\nregulatory_constraint_checker\nrecommendation_formatter"]
+    AGD["🔒 Policy gate\nARR-001 · HOLD-002 · HUM-003 · VUL-004\nDeterministic Python · no LLM override"]
+    AGE["✅ Governed recommendation\naction · justification · agent confidence\nregulatory_flags · checker_verdict"]
+    AGF["🚫 Structured refusal\nno_recommendation\nfailed_rule_ids returned"]
 
-    A --> B --> C --> D
-    D -->|all rules pass| E
-    D -->|any rule fails| F
+    AGA --> AGB --> AGC --> AGD
+    AGD -->|all rules pass| AGE
+    AGD -->|any rule fails| AGF
 
-    style A fill:#375623,color:#ffffff,stroke:#375623
-    style B fill:#1f4e79,color:#ffffff,stroke:#1f4e79
-    style C fill:#7030a0,color:#ffffff,stroke:#7030a0
-    style D fill:#c00000,color:#ffffff,stroke:#c00000
-    style E fill:#375623,color:#ffffff,stroke:#375623
-    style F fill:#c55a11,color:#ffffff,stroke:#c55a11
+    style AGA fill:#375623,color:#ffffff,stroke:#375623
+    style AGB fill:#1f4e79,color:#ffffff,stroke:#1f4e79
+    style AGC fill:#7030a0,color:#ffffff,stroke:#7030a0
+    style AGD fill:#c00000,color:#ffffff,stroke:#c00000
+    style AGE fill:#375623,color:#ffffff,stroke:#375623
+    style AGF fill:#c55a11,color:#ffffff,stroke:#c55a11
 ```
 
 The churn probability in the agent prompt is not taken from a stored value. `run_retention_agent` calls `model.predict_proba` again at entry and overwrites whatever was passed in. The LLM sees the live model output.
