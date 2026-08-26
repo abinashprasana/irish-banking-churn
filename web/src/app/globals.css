@@ -691,7 +691,7 @@ code {
   padding-block: 2rem;
   border-bottom: 1px solid var(--line);
   display: grid;
-  grid-template-columns: 12.5rem 1fr;
+  grid-template-columns: 17rem minmax(0, 1fr);
   gap: 0.65rem 2rem;
 }
 
