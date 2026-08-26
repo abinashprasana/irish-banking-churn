@@ -506,9 +506,10 @@ def test_recorded_demos_and_phase2_wiring_remain_valid():
             "trace",
             "recommendation",
         }
-        assert isinstance(demo["recording"]["real_api_calls"], int)
-        assert demo["recording"]["real_api_calls"] >= 0
+        assert demo["recording"]["real_api_calls"] == 0
         assert demo["recording"]["model"] == MODEL_NAME
+        assert demo["recording"]["model_output_captured"] is False
+        assert demo["recording"]["reasoning_source"] == "scripted_fixture"
         trace = demo["trace"]
         assert [event["step"] for event in trace] == list(range(1, len(trace) + 1))
         assert all(
@@ -535,7 +536,8 @@ def test_recorded_demos_and_phase2_wiring_remain_valid():
 
     app_source = (PROJECT_ROOT / "app.py").read_text(encoding="utf-8")
     ast.parse(app_source)
-    assert '"Retention agent"' in app_source
+    assert "Review the governed response" in app_source
+    assert "if decision_gate.open:" in app_source
     assert "Bring your own" not in app_source
     assert "GROQ_API_KEY" in app_source
     assert "SESSION_RUN_CAP" in app_source

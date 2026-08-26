@@ -1,0 +1,7 @@
+<!-- Generated from atlantic-ledger-brand.json; sha256:dcde5eb20b123b897ca32cd482213a38e889b42b417a320538bcf49784ffaa48 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Atlantic Ledger logo" focusable="false">
+  <title>Atlantic Ledger logo</title>
+  <path class="ledger-gate-part ledger-gate-diagonal" data-brand-part="diagonal" d="M24 4 H40 L20 60 H4 Z" fill="var(--atlantic-ledger-diagonal, #F4F1E8)"/>
+  <path class="ledger-gate-part ledger-gate-body" data-brand-part="gate-body" d="M36 4 H48 V28 H40 V44 H48 V48 H60 V60 H36 Z" fill="var(--atlantic-ledger-gate-body, #F4F1E8)"/>
+  <path class="ledger-gate-part ledger-gate-crossbar" data-brand-part="crossbar" d="M14 28 H40 V40 H14 Z" fill="var(--atlantic-ledger-crossbar, #F4F1E8)"/>
+</svg>

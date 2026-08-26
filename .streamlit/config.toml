@@ -1,10 +1,45 @@
+[[theme.fontFaces]]
+family = "IBM Plex Sans"
+url = "app/static/fonts/ibm-plex-sans-latin.woff2"
+weight = "100 700"
+style = "normal"
+
+[[theme.fontFaces]]
+family = "Source Serif 4"
+url = "app/static/fonts/source-serif-4-latin.woff2"
+weight = "200 900"
+style = "normal"
+
+[[theme.fontFaces]]
+family = "IBM Plex Mono"
+url = "app/static/fonts/ibm-plex-mono-500-latin.woff2"
+weight = "500"
+style = "normal"
+
 [theme]
 base = "light"
 primaryColor = "#245B78"
-backgroundColor = "#E4ECEE"
-secondaryBackgroundColor = "#F8FBFA"
-textColor = "#102A43"
-font = "sans serif"
+backgroundColor = "#F4F1E8"
+secondaryBackgroundColor = "#FBFAF5"
+textColor = "#071827"
+linkColor = "#19445C"
+redColor = "#A33A32"
+orangeColor = "#A66F20"
+greenColor = "#147D64"
+blueColor = "#245B78"
+font = "'IBM Plex Sans', sans-serif"
+headingFont = "'Source Serif 4', serif"
+codeFont = "'IBM Plex Mono', monospace"
+baseRadius = "0.5rem"
+buttonRadius = "0.25rem"
+borderColor = "#BDC7C9"
+dataframeBorderColor = "#BDC7C9"
+dataframeHeaderBackgroundColor = "#EAE6DB"
+showWidgetBorder = true
+chartCategoricalColors = ["#245B78", "#147D64", "#A66F20", "#A33A32", "#8EC7DD", "#82949C"]
+
+[server]
+enableStaticServing = true
 
 [client]
 toolbarMode = "minimal"

@@ -1,0 +1,863 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-08-15",
+  "generatedFrom": [
+    "data/irish_banking_churn.csv",
+    "models/xgboost_churn_model.pkl",
+    "model_card.md",
+    "agent/loop.py",
+    "agent/policy_rules.py",
+    "demo_traces/*.json",
+    "tests/test_*.py"
+  ],
+  "evidence": {
+    "project": {
+      "name": "Atlantic Ledger",
+      "descriptor": "Irish banking churn and governed retention intelligence",
+      "repositoryUrl": "https://github.com/abinashprasana/irish-banking-churn",
+      "labUrl": "https://abinashprasana-irish-banking-churn-app-aidovf.streamlit.app/"
+    },
+    "dataset": {
+      "recordCount": 10000,
+      "featureCount": 19,
+      "featureNames": [
+        "age",
+        "tenure_months",
+        "account_type",
+        "monthly_balance_eur",
+        "num_products",
+        "monthly_transaction_count",
+        "monthly_transaction_amount_eur",
+        "has_direct_debits",
+        "direct_debit_count",
+        "uses_digital_bank_secondary",
+        "was_kbc_ulster_customer",
+        "months_since_switching",
+        "experienced_switching_difficulty",
+        "branch_visits_monthly",
+        "customer_service_calls_6months",
+        "has_complaint_history",
+        "credit_score_band",
+        "has_mortgage",
+        "has_savings_goal"
+      ],
+      "churnRate": 0.21,
+      "trainCount": 8000,
+      "testCount": 2000,
+      "synthetic": true,
+      "sources": [
+        {
+          "name": "Central Bank of Ireland account migration statistics",
+          "url": "https://www.centralbank.ie/statistics/data-and-analysis/credit-and-banking-statistics/account-migration-statistics",
+          "usage": "Historical context for KBC Bank Ireland and Ulster Bank account closures."
+        },
+        {
+          "name": "CCPC switching research (phase 2)",
+          "url": "https://www.ccpc.ie/about-us/advocacy-and-research/research/publication-details/ccpc-switching-research-%28phase-2%29",
+          "usage": "A published switching-difficulty figure used as one synthetic-data assumption."
+        }
+      ],
+      "disclaimer": "All customer records and labels are synthetic. Published Irish sources provide context and one modelling assumption; they do not validate the generated population or model."
+    },
+    "model": {
+      "selectedModel": "XGBoost binary classifier",
+      "artifact": "xgboost_churn_model.pkl",
+      "predictionMethod": "model.predict_proba(feature_vector)[0, 1]",
+      "threshold": 0.5,
+      "metrics": [
+        {
+          "id": "accuracy",
+          "label": "Accuracy",
+          "value": 0.899
+        },
+        {
+          "id": "precision",
+          "label": "Precision",
+          "value": 0.708
+        },
+        {
+          "id": "recall",
+          "label": "Recall",
+          "value": 0.8833
+        },
+        {
+          "id": "f1",
+          "label": "F1 score",
+          "value": 0.786
+        },
+        {
+          "id": "rocAuc",
+          "label": "ROC-AUC",
+          "value": 0.9593
+        },
+        {
+          "id": "averagePrecision",
+          "label": "Average precision",
+          "value": 0.842
+        }
+      ],
+      "benchmarks": [
+        {
+          "model": "XGBoost (Selected)",
+          "selected": true,
+          "metrics": [
+            {
+              "id": "accuracy",
+              "label": "Accuracy",
+              "value": 0.899
+            },
+            {
+              "id": "precision",
+              "label": "Precision",
+              "value": 0.708
+            },
+            {
+              "id": "recall",
+              "label": "Recall",
+              "value": 0.8833
+            },
+            {
+              "id": "f1",
+              "label": "F1 score",
+              "value": 0.786
+            },
+            {
+              "id": "rocAuc",
+              "label": "ROC-AUC",
+              "value": 0.9593
+            },
+            {
+              "id": "averagePrecision",
+              "label": "Average precision",
+              "value": 0.842
+            }
+          ]
+        },
+        {
+          "model": "Random Forest",
+          "selected": false,
+          "metrics": [
+            {
+              "id": "accuracy",
+              "label": "Accuracy",
+              "value": 0.879
+            },
+            {
+              "id": "precision",
+              "label": "Precision",
+              "value": 0.666
+            },
+            {
+              "id": "recall",
+              "label": "Recall",
+              "value": 0.85
+            },
+            {
+              "id": "f1",
+              "label": "F1 score",
+              "value": 0.7469
+            },
+            {
+              "id": "rocAuc",
+              "label": "ROC-AUC",
+              "value": 0.9438
+            },
+            {
+              "id": "averagePrecision",
+              "label": "Average precision",
+              "value": 0.7708
+            }
+          ]
+        },
+        {
+          "model": "Logistic Regression",
+          "selected": false,
+          "metrics": [
+            {
+              "id": "accuracy",
+              "label": "Accuracy",
+              "value": 0.8385
+            },
+            {
+              "id": "precision",
+              "label": "Precision",
+              "value": 0.5883
+            },
+            {
+              "id": "recall",
+              "label": "Recall",
+              "value": 0.769
+            },
+            {
+              "id": "f1",
+              "label": "F1 score",
+              "value": 0.6667
+            },
+            {
+              "id": "rocAuc",
+              "label": "ROC-AUC",
+              "value": 0.9011
+            },
+            {
+              "id": "averagePrecision",
+              "label": "Average precision",
+              "value": 0.7403
+            }
+          ]
+        }
+      ],
+      "topFeatures": [
+        {
+          "rank": 1,
+          "name": "num_products",
+          "meanAbsoluteShap": 2.841
+        },
+        {
+          "rank": 2,
+          "name": "months_since_switching",
+          "meanAbsoluteShap": 1.028
+        },
+        {
+          "rank": 3,
+          "name": "has_direct_debits",
+          "meanAbsoluteShap": 0.883
+        },
+        {
+          "rank": 4,
+          "name": "tenure_months",
+          "meanAbsoluteShap": 0.838
+        },
+        {
+          "rank": 5,
+          "name": "has_savings_goal",
+          "meanAbsoluteShap": 0.529
+        }
+      ],
+      "explanationCaveat": "SHAP values explain the fitted model's raw output on synthetic data. They are neither causal effects nor probability-point changes."
+    },
+    "agent": {
+      "modelId": "qwen/qwen3.6-27b",
+      "tools": [
+        "product_lookup",
+        "recommendation_formatter",
+        "regulatory_constraint_checker",
+        "segment_comparison"
+      ],
+      "recordedMode": "zero_request_scripted_replay",
+      "recordedReasoningSource": "scripted_fixture",
+      "liveSmokeTest": "required_before_enabling_live_mode"
+    },
+    "governance": {
+      "humanReviewThreshold": 0.75,
+      "rules": [
+        {
+          "id": "ARR-001",
+          "description": "Prototype policy rule: block credit-related retention offers when the synthetic arrears flag is set."
+        },
+        {
+          "id": "HOLD-002",
+          "description": "Prototype policy rule: do not propose a product the synthetic customer already holds."
+        },
+        {
+          "id": "HUM-003",
+          "description": "Prototype policy rule: above the configured 75 percent churn threshold, an action cannot pass unless it is marked as requiring advisor review."
+        },
+        {
+          "id": "VUL-004",
+          "description": "Prototype policy rule: when the synthetic vulnerability flag is set, permit only service or fee-relief actions."
+        }
+      ],
+      "claimScope": "These are deterministic prototype controls over synthetic cases, not legal determinations or evidence of bank-policy compliance."
+    },
+    "verification": {
+      "testsPassed": 53,
+      "testsTotal": 53,
+      "scenariosPassed": 4,
+      "scenariosTotal": 4,
+      "blockedOutcomes": 2,
+      "apiRequests": 0,
+      "method": "Deterministic local tests and zero-request recorded-trace evaluation."
+    }
+  },
+  "scenarios": [
+    {
+      "id": "01_allowed_fee_waiver",
+      "title": "Fee waiver passed local checks with advisor review required",
+      "mode": "recorded",
+      "recording": {
+        "apiRequests": 0,
+        "runtimeModelId": "qwen/qwen3.6-27b",
+        "modelOutputCaptured": false,
+        "reasoningSource": "scripted_fixture",
+        "label": "Recorded and verified replay · 0 API requests"
+      },
+      "customer": {
+        "id": "IRLBANK_01136",
+        "profile": {
+          "age": 43,
+          "tenure_months": 114,
+          "account_type": "Current Account",
+          "monthly_balance_eur": 2584.72,
+          "num_products": 1,
+          "monthly_transaction_count": 16,
+          "monthly_transaction_amount_eur": 671.1,
+          "has_direct_debits": false,
+          "direct_debit_count": 0,
+          "uses_digital_bank_secondary": true,
+          "was_kbc_ulster_customer": true,
+          "months_since_switching": 3,
+          "experienced_switching_difficulty": true,
+          "branch_visits_monthly": 0,
+          "customer_service_calls_6months": 1,
+          "has_complaint_history": false,
+          "credit_score_band": "Low",
+          "has_mortgage": false,
+          "has_savings_goal": true
+        },
+        "churnProbability": 0.9976446032524109,
+        "drivers": [
+          {
+            "feature": "months_since_switching",
+            "value": 3,
+            "shap_value": 2.040278434753418,
+            "direction": "increases_churn"
+          },
+          {
+            "feature": "num_products",
+            "value": 1,
+            "shap_value": 1.564110279083252,
+            "direction": "increases_churn"
+          },
+          {
+            "feature": "has_direct_debits",
+            "value": false,
+            "shap_value": 1.197852373123169,
+            "direction": "increases_churn"
+          },
+          {
+            "feature": "uses_digital_bank_secondary",
+            "value": true,
+            "shap_value": 0.7927223443984985,
+            "direction": "increases_churn"
+          },
+          {
+            "feature": "monthly_transaction_count",
+            "value": 16,
+            "shap_value": 0.7102899551391602,
+            "direction": "increases_churn"
+          }
+        ],
+        "heldProducts": [
+          "current_account"
+        ],
+        "governance": {
+          "in_arrears": false,
+          "vulnerable_customer": false
+        }
+      },
+      "toolSteps": [
+        {
+          "kind": "tool",
+          "name": "product_lookup",
+          "status": "complete",
+          "summary": "Found 1 synthetic catalogue option."
+        },
+        {
+          "kind": "tool",
+          "name": "segment_comparison",
+          "status": "complete",
+          "summary": "Compared with a synthetic cohort of 182 customers at a 69.8% churn rate."
+        },
+        {
+          "kind": "tool",
+          "name": "regulatory_constraint_checker",
+          "status": "complete",
+          "summary": "All four prototype policy rules passed."
+        },
+        {
+          "kind": "tool",
+          "name": "recommendation_formatter",
+          "status": "complete",
+          "summary": "Structured the final approved decision."
+        }
+      ],
+      "policy": {
+        "actionId": "fee_waiver_6m",
+        "verdict": "approved",
+        "failedRuleIds": [],
+        "rules": [
+          {
+            "id": "ARR-001",
+            "description": "Prototype policy rule: block credit-related retention offers when the synthetic arrears flag is set.",
+            "passed": true,
+            "reason": "Passed the prototype rule: the proposed action is not blocked by the synthetic arrears flag."
+          },
+          {
+            "id": "HOLD-002",
+            "description": "Prototype policy rule: do not propose a product the synthetic customer already holds.",
+            "passed": true,
+            "reason": "Passed the prototype rule: the action does not duplicate a product listed in the synthetic customer's holdings."
+          },
+          {
+            "id": "HUM-003",
+            "description": "Prototype policy rule: above the configured 75 percent churn threshold, an action cannot pass unless it is marked as requiring advisor review.",
+            "passed": true,
+            "reason": "Passed the prototype rule: the proposed action is marked as requiring advisor review, or the condition was not triggered."
+          },
+          {
+            "id": "VUL-004",
+            "description": "Prototype policy rule: when the synthetic vulnerability flag is set, permit only service or fee-relief actions.",
+            "passed": true,
+            "reason": "Passed the prototype rule: the condition tied to the synthetic vulnerability flag is satisfied or not triggered."
+          }
+        ]
+      },
+      "finalDecision": {
+        "status": "review_required",
+        "action": "fee_waiver_6m",
+        "justification": "Six months of current-account fee relief matches a non-credit catalogue option and does not add another product; a relationship manager must review eligibility and account terms before contact.",
+        "confidence": 0.94,
+        "flags": [
+          "HUM-003:human_review_required"
+        ],
+        "verdict": "approved"
+      }
+    },
+    {
+      "id": "02_allowed_service_review",
+      "title": "Service review passed local checks",
+      "mode": "recorded",
+      "recording": {
+        "apiRequests": 0,
+        "runtimeModelId": "qwen/qwen3.6-27b",
+        "modelOutputCaptured": false,
+        "reasoningSource": "scripted_fixture",
+        "label": "Recorded and verified replay · 0 API requests"
+      },
+      "customer": {
+        "id": "IRLBANK_03890",
+        "profile": {
+          "age": 39,
+          "tenure_months": 13,
+          "account_type": "Current + Savings",
+          "monthly_balance_eur": 5728.99,
+          "num_products": 2,
+          "monthly_transaction_count": 135,
+          "monthly_transaction_amount_eur": 4849.23,
+          "has_direct_debits": true,
+          "direct_debit_count": 6,
+          "uses_digital_bank_secondary": false,
+          "was_kbc_ulster_customer": true,
+          "months_since_switching": 6,
+          "experienced_switching_difficulty": true,
+          "branch_visits_monthly": 0,
+          "customer_service_calls_6months": 3,
+          "has_complaint_history": true,
+          "credit_score_band": "Medium",
+          "has_mortgage": false,
+          "has_savings_goal": false
+        },
+        "churnProbability": 0.9980600476264954,
+        "drivers": [
+          {
+            "feature": "months_since_switching",
+            "value": 6,
+            "shap_value": 2.786297082901001,
+            "direction": "increases_churn"
+          },
+          {
+            "feature": "has_complaint_history",
+            "value": true,
+            "shap_value": 1.6752890348434448,
+            "direction": "increases_churn"
+          },
+          {
+            "feature": "tenure_months",
+            "value": 13,
+            "shap_value": 1.0539250373840332,
+            "direction": "increases_churn"
+          },
+          {
+            "feature": "num_products",
+            "value": 2,
+            "shap_value": -1.0531370639801025,
+            "direction": "decreases_churn"
+          },
+          {
+            "feature": "experienced_switching_difficulty",
+            "value": true,
+            "shap_value": 0.6646860241889954,
+            "direction": "increases_churn"
+          }
+        ],
+        "heldProducts": [
+          "current_account",
+          "savings_account"
+        ],
+        "governance": {
+          "in_arrears": false,
+          "vulnerable_customer": false
+        }
+      },
+      "toolSteps": [
+        {
+          "kind": "tool",
+          "name": "product_lookup",
+          "status": "complete",
+          "summary": "Found 2 synthetic catalogue options."
+        },
+        {
+          "kind": "tool",
+          "name": "segment_comparison",
+          "status": "complete",
+          "summary": "Compared with a synthetic cohort of 167 customers at a 36.5% churn rate."
+        },
+        {
+          "kind": "tool",
+          "name": "regulatory_constraint_checker",
+          "status": "complete",
+          "summary": "All four prototype policy rules passed."
+        },
+        {
+          "kind": "tool",
+          "name": "recommendation_formatter",
+          "status": "complete",
+          "summary": "Structured the final approved decision."
+        }
+      ],
+      "policy": {
+        "actionId": "dedicated_service_review",
+        "verdict": "approved",
+        "failedRuleIds": [],
+        "rules": [
+          {
+            "id": "ARR-001",
+            "description": "Prototype policy rule: block credit-related retention offers when the synthetic arrears flag is set.",
+            "passed": true,
+            "reason": "Passed the prototype rule: the proposed action is not blocked by the synthetic arrears flag."
+          },
+          {
+            "id": "HOLD-002",
+            "description": "Prototype policy rule: do not propose a product the synthetic customer already holds.",
+            "passed": true,
+            "reason": "Passed the prototype rule: the action does not duplicate a product listed in the synthetic customer's holdings."
+          },
+          {
+            "id": "HUM-003",
+            "description": "Prototype policy rule: above the configured 75 percent churn threshold, an action cannot pass unless it is marked as requiring advisor review.",
+            "passed": true,
+            "reason": "Passed the prototype rule: the proposed action is marked as requiring advisor review, or the condition was not triggered."
+          },
+          {
+            "id": "VUL-004",
+            "description": "Prototype policy rule: when the synthetic vulnerability flag is set, permit only service or fee-relief actions.",
+            "passed": true,
+            "reason": "Passed the prototype rule: the condition tied to the synthetic vulnerability flag is satisfied or not triggered."
+          }
+        ]
+      },
+      "finalDecision": {
+        "status": "review_required",
+        "action": "dedicated_service_review",
+        "justification": "The synthetic profile has a high Phase 1 churn score, recent switching difficulty, and complaint history. A dedicated review is a non-sales service option and does not duplicate either held product. An advisor would still decide whether any action is suitable.",
+        "confidence": 0.94,
+        "flags": [
+          "HUM-003:human_review_required"
+        ],
+        "verdict": "approved"
+      }
+    },
+    {
+      "id": "03_blocked_arrears_credit",
+      "title": "Local arrears rule blocks a credit-related mortgage action",
+      "mode": "recorded",
+      "recording": {
+        "apiRequests": 0,
+        "runtimeModelId": "qwen/qwen3.6-27b",
+        "modelOutputCaptured": false,
+        "reasoningSource": "scripted_fixture",
+        "label": "Recorded and verified replay · 0 API requests"
+      },
+      "customer": {
+        "id": "IRLBANK_01255",
+        "profile": {
+          "age": 37,
+          "tenure_months": 60,
+          "account_type": "Savings Account",
+          "monthly_balance_eur": 303.65,
+          "num_products": 1,
+          "monthly_transaction_count": 12,
+          "monthly_transaction_amount_eur": 530.66,
+          "has_direct_debits": false,
+          "direct_debit_count": 0,
+          "uses_digital_bank_secondary": true,
+          "was_kbc_ulster_customer": false,
+          "months_since_switching": 0,
+          "experienced_switching_difficulty": false,
+          "branch_visits_monthly": 1,
+          "customer_service_calls_6months": 2,
+          "has_complaint_history": false,
+          "credit_score_band": "Low",
+          "has_mortgage": false,
+          "has_savings_goal": false
+        },
+        "churnProbability": 0.9997139573097229,
+        "drivers": [
+          {
+            "feature": "monthly_transaction_count",
+            "value": 12,
+            "shap_value": 2.614771604537964,
+            "direction": "increases_churn"
+          },
+          {
+            "feature": "num_products",
+            "value": 1,
+            "shap_value": 1.8990488052368164,
+            "direction": "increases_churn"
+          },
+          {
+            "feature": "has_direct_debits",
+            "value": false,
+            "shap_value": 1.3193674087524414,
+            "direction": "increases_churn"
+          },
+          {
+            "feature": "uses_digital_bank_secondary",
+            "value": true,
+            "shap_value": 0.8460268974304199,
+            "direction": "increases_churn"
+          },
+          {
+            "feature": "monthly_balance_eur",
+            "value": 303.65,
+            "shap_value": 0.7517135143280029,
+            "direction": "increases_churn"
+          }
+        ],
+        "heldProducts": [
+          "savings_account"
+        ],
+        "governance": {
+          "in_arrears": true,
+          "vulnerable_customer": false
+        }
+      },
+      "toolSteps": [
+        {
+          "kind": "tool",
+          "name": "product_lookup",
+          "status": "complete",
+          "summary": "Found 1 synthetic catalogue option."
+        },
+        {
+          "kind": "tool",
+          "name": "segment_comparison",
+          "status": "complete",
+          "summary": "Compared with a synthetic cohort of 329 customers at a 69.6% churn rate."
+        },
+        {
+          "kind": "tool",
+          "name": "regulatory_constraint_checker",
+          "status": "complete",
+          "summary": "Blocked by ARR-001."
+        },
+        {
+          "kind": "tool",
+          "name": "recommendation_formatter",
+          "status": "complete",
+          "summary": "Structured the final blocked decision."
+        }
+      ],
+      "policy": {
+        "actionId": "mortgage_fixed_rate_review",
+        "verdict": "blocked",
+        "failedRuleIds": [
+          "ARR-001"
+        ],
+        "rules": [
+          {
+            "id": "ARR-001",
+            "description": "Prototype policy rule: block credit-related retention offers when the synthetic arrears flag is set.",
+            "passed": false,
+            "reason": "Blocked by the prototype rule: the synthetic arrears flag is set and the proposed action is credit-related."
+          },
+          {
+            "id": "HOLD-002",
+            "description": "Prototype policy rule: do not propose a product the synthetic customer already holds.",
+            "passed": true,
+            "reason": "Passed the prototype rule: the action does not duplicate a product listed in the synthetic customer's holdings."
+          },
+          {
+            "id": "HUM-003",
+            "description": "Prototype policy rule: above the configured 75 percent churn threshold, an action cannot pass unless it is marked as requiring advisor review.",
+            "passed": true,
+            "reason": "Passed the prototype rule: the proposed action is marked as requiring advisor review, or the condition was not triggered."
+          },
+          {
+            "id": "VUL-004",
+            "description": "Prototype policy rule: when the synthetic vulnerability flag is set, permit only service or fee-relief actions.",
+            "passed": true,
+            "reason": "Passed the prototype rule: the condition tied to the synthetic vulnerability flag is satisfied or not triggered."
+          }
+        ]
+      },
+      "finalDecision": {
+        "status": "blocked",
+        "action": "no_recommendation",
+        "justification": "The proposed mortgage action is credit-related and is blocked because this synthetic customer is flagged as in arrears.",
+        "confidence": 1.0,
+        "flags": [
+          "ARR-001"
+        ],
+        "verdict": "blocked"
+      }
+    },
+    {
+      "id": "04_blocked_vulnerable_upsell",
+      "title": "Local vulnerability and existing-holding rules block an upsell",
+      "mode": "recorded",
+      "recording": {
+        "apiRequests": 0,
+        "runtimeModelId": "qwen/qwen3.6-27b",
+        "modelOutputCaptured": false,
+        "reasoningSource": "scripted_fixture",
+        "label": "Recorded and verified replay · 0 API requests"
+      },
+      "customer": {
+        "id": "IRLBANK_06848",
+        "profile": {
+          "age": 43,
+          "tenure_months": 37,
+          "account_type": "Savings Account",
+          "monthly_balance_eur": 185.17,
+          "num_products": 1,
+          "monthly_transaction_count": 12,
+          "monthly_transaction_amount_eur": 530.66,
+          "has_direct_debits": false,
+          "direct_debit_count": 0,
+          "uses_digital_bank_secondary": false,
+          "was_kbc_ulster_customer": false,
+          "months_since_switching": 0,
+          "experienced_switching_difficulty": false,
+          "branch_visits_monthly": 0,
+          "customer_service_calls_6months": 0,
+          "has_complaint_history": true,
+          "credit_score_band": "Medium",
+          "has_mortgage": false,
+          "has_savings_goal": false
+        },
+        "churnProbability": 0.9996590614318848,
+        "drivers": [
+          {
+            "feature": "monthly_transaction_count",
+            "value": 12,
+            "shap_value": 2.3477673530578613,
+            "direction": "increases_churn"
+          },
+          {
+            "feature": "num_products",
+            "value": 1,
+            "shap_value": 1.4196147918701172,
+            "direction": "increases_churn"
+          },
+          {
+            "feature": "has_direct_debits",
+            "value": false,
+            "shap_value": 1.395481824874878,
+            "direction": "increases_churn"
+          },
+          {
+            "feature": "has_complaint_history",
+            "value": true,
+            "shap_value": 1.3042575120925903,
+            "direction": "increases_churn"
+          },
+          {
+            "feature": "monthly_balance_eur",
+            "value": 185.17,
+            "shap_value": 0.6779745817184448,
+            "direction": "increases_churn"
+          }
+        ],
+        "heldProducts": [
+          "savings_account"
+        ],
+        "governance": {
+          "in_arrears": false,
+          "vulnerable_customer": true
+        }
+      },
+      "toolSteps": [
+        {
+          "kind": "tool",
+          "name": "product_lookup",
+          "status": "complete",
+          "summary": "Found 1 synthetic catalogue option."
+        },
+        {
+          "kind": "tool",
+          "name": "segment_comparison",
+          "status": "complete",
+          "summary": "Compared with a synthetic cohort of 329 customers at a 69.6% churn rate."
+        },
+        {
+          "kind": "tool",
+          "name": "regulatory_constraint_checker",
+          "status": "complete",
+          "summary": "Blocked by HOLD-002, VUL-004."
+        },
+        {
+          "kind": "tool",
+          "name": "recommendation_formatter",
+          "status": "complete",
+          "summary": "Structured the final blocked decision."
+        }
+      ],
+      "policy": {
+        "actionId": "savings_rate_bonus_6m",
+        "verdict": "blocked",
+        "failedRuleIds": [
+          "HOLD-002",
+          "VUL-004"
+        ],
+        "rules": [
+          {
+            "id": "ARR-001",
+            "description": "Prototype policy rule: block credit-related retention offers when the synthetic arrears flag is set.",
+            "passed": true,
+            "reason": "Passed the prototype rule: the proposed action is not blocked by the synthetic arrears flag."
+          },
+          {
+            "id": "HOLD-002",
+            "description": "Prototype policy rule: do not propose a product the synthetic customer already holds.",
+            "passed": false,
+            "reason": "Blocked by the prototype rule: the synthetic customer already holds savings_account."
+          },
+          {
+            "id": "HUM-003",
+            "description": "Prototype policy rule: above the configured 75 percent churn threshold, an action cannot pass unless it is marked as requiring advisor review.",
+            "passed": true,
+            "reason": "Passed the prototype rule: the proposed action is marked as requiring advisor review, or the condition was not triggered."
+          },
+          {
+            "id": "VUL-004",
+            "description": "Prototype policy rule: when the synthetic vulnerability flag is set, permit only service or fee-relief actions.",
+            "passed": false,
+            "reason": "Blocked by the prototype rule: the synthetic vulnerability flag permits only non-upsell service or fee-relief actions."
+          }
+        ]
+      },
+      "finalDecision": {
+        "status": "blocked",
+        "action": "no_recommendation",
+        "justification": "The proposed savings upsell duplicates an existing holding and is blocked by the synthetic vulnerable-customer safeguard.",
+        "confidence": 1.0,
+        "flags": [
+          "HOLD-002",
+          "VUL-004"
+        ],
+        "verdict": "blocked"
+      }
+    }
+  ]
+}

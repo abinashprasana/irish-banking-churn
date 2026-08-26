@@ -49,6 +49,8 @@ def main() -> None:
             "mode": "owner_recorded_live_groq",
             "real_api_calls": client.chat.completions.request_count,
             "model": MODEL_NAME,
+            "model_output_captured": True,
+            "reasoning_source": "live_groq",
             "max_tokens_per_call": MAX_TOKENS,
             "call_cap": MAX_LIVE_API_CALLS,
             "phase1_runtime_capture": True,

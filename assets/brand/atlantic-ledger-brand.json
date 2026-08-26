@@ -1,0 +1,70 @@
+{
+  "brand": {
+    "name": "Atlantic Ledger",
+    "markName": "Ledger Gate",
+    "label": "Atlantic Ledger logo"
+  },
+  "viewBox": "0 0 64 64",
+  "clearSpace": 10,
+  "colors": {
+    "atlanticInk": "#071827",
+    "ledgerPaper": "#F4F1E8",
+    "atlanticBlue": "#245B78"
+  },
+  "marks": {
+    "standard": {
+      "minSize": 24,
+      "paths": {
+        "diagonal": "M24 6 H39 L20 58 H6 Z",
+        "gateBody": "M36 6 H46 V29 H40 V41 H46 V48 H58 V58 H36 Z",
+        "crossbar": "M15 30 H40 V40 H15 Z"
+      }
+    },
+    "micro": {
+      "minSize": 16,
+      "maxSize": 23,
+      "paths": {
+        "diagonal": "M24 4 H40 L20 60 H4 Z",
+        "gateBody": "M36 4 H48 V28 H40 V44 H48 V48 H60 V60 H36 Z",
+        "crossbar": "M14 28 H40 V40 H14 Z"
+      }
+    }
+  },
+  "tones": {
+    "ink": {
+      "minSize": 16,
+      "diagonal": "#071827",
+      "gateBody": "#071827",
+      "crossbar": "#071827"
+    },
+    "reverse": {
+      "minSize": 16,
+      "diagonal": "#F4F1E8",
+      "gateBody": "#F4F1E8",
+      "crossbar": "#F4F1E8"
+    },
+    "blue": {
+      "minSize": 24,
+      "diagonal": "#245B78",
+      "gateBody": "#245B78",
+      "crossbar": "#245B78"
+    },
+    "duotone": {
+      "minSize": 32,
+      "diagonal": "#245B78",
+      "gateBody": "#071827",
+      "crossbar": "#245B78"
+    }
+  },
+  "exports": {
+    "standardSvg": "assets/brand/atlantic-ledger-mark.svg",
+    "microSvg": "assets/brand/atlantic-ledger-mark-micro.svg",
+    "monoSvg": "assets/brand/atlantic-ledger-mark-mono.svg",
+    "favicon128": "assets/brand/atlantic-ledger-favicon-128.png",
+    "comparison1x": "assets/brand/atlantic-ledger-size-comparison-1x.svg",
+    "comparison2x": "assets/brand/atlantic-ledger-size-comparison-2x.svg",
+    "nextIcon": "web/src/app/icon.svg",
+    "appleIcon180": "web/src/app/apple-icon.png",
+    "typescript": "web/src/components/brand-geometry.generated.ts"
+  }
+}

@@ -5,13 +5,15 @@
   "recording": {
     "mode": "recorded_phase1_runtime_with_scripted_agent_trace",
     "real_api_calls": 0,
-    "model": "llama-3.3-70b-versatile",
+    "model": "qwen/qwen3.6-27b",
+    "model_output_captured": false,
+    "reasoning_source": "scripted_fixture",
     "synthetic_data": true,
     "synthetic_governance": true,
     "phase1_runtime_capture": true,
     "phase1_model_artifact": "xgboost_churn_model.pkl",
     "phase1_prediction_method": "model.predict_proba(feature_vector)[0, 1]",
-    "note": "The Phase 1 probability and encoded feature evidence were captured from a real local model call; the Groq reasoning trace remains a zero-request scripted replay."
+    "note": "The Phase 1 probability and encoded feature evidence were captured from a real local model call. The reasoning text is a zero-request scripted fixture, not output captured from Qwen or any other hosted model."
   },
   "customer": {
     "customer_id": "IRLBANK_03890",

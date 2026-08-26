@@ -1,0 +1,176 @@
+<!-- Generated from atlantic-ledger-brand.json; sha256:dcde5eb20b123b897ca32cd482213a38e889b42b417a320538bcf49784ffaa48 -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1400" viewBox="0 0 1080 1400" shape-rendering="geometricPrecision">
+  <rect width="1080" height="1400" fill="#E8E5DC"/>
+  <text x="42" y="38" fill="#071827" font-family="serif" font-size="22" font-weight="700">Atlantic Ledger / Ledger Gate size proof</text>
+  <text x="42" y="59" fill="#245B78" font-family="monospace" font-size="10" letter-spacing="1.4">CANONICAL 64×64 GEOMETRY · MICRO MASTER AT 16–23PX</text>
+  <g>
+  <rect x="34" y="70" width="1012" height="630" fill="#F4F1E8" stroke="#BDC7C9" stroke-width="1"/>
+  <text x="59" y="98" fill="#071827" font-family="monospace" font-size="12" font-weight="700" letter-spacing="1.6">LEDGER PAPER / INK + DUOTONE</text>
+  <g>
+  <line x1="51" y1="324" x2="361" y2="324" stroke="#BDC7C9" stroke-width="1"/>
+  <text x="59" y="156" fill="#071827" font-family="monospace" font-size="11" letter-spacing="1.1">16PX / MICRO / INK</text>
+  <g transform="translate(206 230) scale(0.25)">
+    <path d="M24 4 H40 L20 60 H4 Z" fill="#071827"/>
+    <path d="M36 4 H48 V28 H40 V44 H48 V48 H60 V60 H36 Z" fill="#071827"/>
+    <path d="M14 28 H40 V40 H14 Z" fill="#071827"/>
+  </g>
+</g>
+<g>
+  <line x1="377" y1="324" x2="687" y2="324" stroke="#BDC7C9" stroke-width="1"/>
+  <text x="385" y="156" fill="#071827" font-family="monospace" font-size="11" letter-spacing="1.1">20PX / MICRO / INK</text>
+  <g transform="translate(530 228) scale(0.3125)">
+    <path d="M24 4 H40 L20 60 H4 Z" fill="#071827"/>
+    <path d="M36 4 H48 V28 H40 V44 H48 V48 H60 V60 H36 Z" fill="#071827"/>
+    <path d="M14 28 H40 V40 H14 Z" fill="#071827"/>
+  </g>
+</g>
+<g>
+  <line x1="703" y1="324" x2="1013" y2="324" stroke="#BDC7C9" stroke-width="1"/>
+  <text x="711" y="156" fill="#071827" font-family="monospace" font-size="11" letter-spacing="1.1">24PX / STANDARD / INK</text>
+  <g transform="translate(854 226) scale(0.375)">
+    <path d="M24 6 H39 L20 58 H6 Z" fill="#071827"/>
+    <path d="M36 6 H46 V29 H40 V41 H46 V48 H58 V58 H36 Z" fill="#071827"/>
+    <path d="M15 30 H40 V40 H15 Z" fill="#071827"/>
+  </g>
+</g>
+<g>
+  <line x1="51" y1="514" x2="361" y2="514" stroke="#BDC7C9" stroke-width="1"/>
+  <text x="59" y="346" fill="#071827" font-family="monospace" font-size="11" letter-spacing="1.1">32PX / STANDARD / DUOTONE</text>
+  <g transform="translate(198 412) scale(0.5)">
+    <path d="M24 6 H39 L20 58 H6 Z" fill="#245B78"/>
+    <path d="M36 6 H46 V29 H40 V41 H46 V48 H58 V58 H36 Z" fill="#071827"/>
+    <path d="M15 30 H40 V40 H15 Z" fill="#245B78"/>
+  </g>
+</g>
+<g>
+  <line x1="377" y1="514" x2="687" y2="514" stroke="#BDC7C9" stroke-width="1"/>
+  <text x="385" y="346" fill="#071827" font-family="monospace" font-size="11" letter-spacing="1.1">38PX / STANDARD / DUOTONE</text>
+  <g transform="translate(521 409) scale(0.59375)">
+    <path d="M24 6 H39 L20 58 H6 Z" fill="#245B78"/>
+    <path d="M36 6 H46 V29 H40 V41 H46 V48 H58 V58 H36 Z" fill="#071827"/>
+    <path d="M15 30 H40 V40 H15 Z" fill="#245B78"/>
+  </g>
+</g>
+<g>
+  <line x1="703" y1="514" x2="1013" y2="514" stroke="#BDC7C9" stroke-width="1"/>
+  <text x="711" y="346" fill="#071827" font-family="monospace" font-size="11" letter-spacing="1.1">44PX / STANDARD / DUOTONE</text>
+  <g transform="translate(844 406) scale(0.6875)">
+    <path d="M24 6 H39 L20 58 H6 Z" fill="#245B78"/>
+    <path d="M36 6 H46 V29 H40 V41 H46 V48 H58 V58 H36 Z" fill="#071827"/>
+    <path d="M15 30 H40 V40 H15 Z" fill="#245B78"/>
+  </g>
+</g>
+<g>
+  <line x1="51" y1="704" x2="361" y2="704" stroke="#BDC7C9" stroke-width="1"/>
+  <text x="59" y="536" fill="#071827" font-family="monospace" font-size="11" letter-spacing="1.1">64PX / STANDARD / DUOTONE</text>
+  <g transform="translate(182 586) scale(1)">
+    <path d="M24 6 H39 L20 58 H6 Z" fill="#245B78"/>
+    <path d="M36 6 H46 V29 H40 V41 H46 V48 H58 V58 H36 Z" fill="#071827"/>
+    <path d="M15 30 H40 V40 H15 Z" fill="#245B78"/>
+  </g>
+</g>
+<g>
+  <line x1="377" y1="704" x2="687" y2="704" stroke="#BDC7C9" stroke-width="1"/>
+  <text x="385" y="536" fill="#071827" font-family="monospace" font-size="11" letter-spacing="1.1">96PX / STANDARD / DUOTONE</text>
+  <g transform="translate(492 570) scale(1.5)">
+    <path d="M24 6 H39 L20 58 H6 Z" fill="#245B78"/>
+    <path d="M36 6 H46 V29 H40 V41 H46 V48 H58 V58 H36 Z" fill="#071827"/>
+    <path d="M15 30 H40 V40 H15 Z" fill="#245B78"/>
+  </g>
+</g>
+<g>
+  <line x1="703" y1="704" x2="1013" y2="704" stroke="#BDC7C9" stroke-width="1"/>
+  <text x="711" y="536" fill="#071827" font-family="monospace" font-size="11" letter-spacing="1.1">128PX / STANDARD / DUOTONE</text>
+  <g transform="translate(802 554) scale(2)">
+    <path d="M24 6 H39 L20 58 H6 Z" fill="#245B78"/>
+    <path d="M36 6 H46 V29 H40 V41 H46 V48 H58 V58 H36 Z" fill="#071827"/>
+    <path d="M15 30 H40 V40 H15 Z" fill="#245B78"/>
+  </g>
+</g>
+</g>
+<g>
+  <rect x="34" y="728" width="1012" height="630" fill="#071827" stroke="#245B78" stroke-width="1"/>
+  <text x="59" y="756" fill="#F4F1E8" font-family="monospace" font-size="12" font-weight="700" letter-spacing="1.6">ATLANTIC INK / REVERSE</text>
+  <g>
+  <line x1="51" y1="982" x2="361" y2="982" stroke="#245B78" stroke-width="1"/>
+  <text x="59" y="814" fill="#F4F1E8" font-family="monospace" font-size="11" letter-spacing="1.1">16PX / MICRO / REVERSE</text>
+  <g transform="translate(206 888) scale(0.25)">
+    <path d="M24 4 H40 L20 60 H4 Z" fill="#F4F1E8"/>
+    <path d="M36 4 H48 V28 H40 V44 H48 V48 H60 V60 H36 Z" fill="#F4F1E8"/>
+    <path d="M14 28 H40 V40 H14 Z" fill="#F4F1E8"/>
+  </g>
+</g>
+<g>
+  <line x1="377" y1="982" x2="687" y2="982" stroke="#245B78" stroke-width="1"/>
+  <text x="385" y="814" fill="#F4F1E8" font-family="monospace" font-size="11" letter-spacing="1.1">20PX / MICRO / REVERSE</text>
+  <g transform="translate(530 886) scale(0.3125)">
+    <path d="M24 4 H40 L20 60 H4 Z" fill="#F4F1E8"/>
+    <path d="M36 4 H48 V28 H40 V44 H48 V48 H60 V60 H36 Z" fill="#F4F1E8"/>
+    <path d="M14 28 H40 V40 H14 Z" fill="#F4F1E8"/>
+  </g>
+</g>
+<g>
+  <line x1="703" y1="982" x2="1013" y2="982" stroke="#245B78" stroke-width="1"/>
+  <text x="711" y="814" fill="#F4F1E8" font-family="monospace" font-size="11" letter-spacing="1.1">24PX / STANDARD / REVERSE</text>
+  <g transform="translate(854 884) scale(0.375)">
+    <path d="M24 6 H39 L20 58 H6 Z" fill="#F4F1E8"/>
+    <path d="M36 6 H46 V29 H40 V41 H46 V48 H58 V58 H36 Z" fill="#F4F1E8"/>
+    <path d="M15 30 H40 V40 H15 Z" fill="#F4F1E8"/>
+  </g>
+</g>
+<g>
+  <line x1="51" y1="1172" x2="361" y2="1172" stroke="#245B78" stroke-width="1"/>
+  <text x="59" y="1004" fill="#F4F1E8" font-family="monospace" font-size="11" letter-spacing="1.1">32PX / STANDARD / REVERSE</text>
+  <g transform="translate(198 1070) scale(0.5)">
+    <path d="M24 6 H39 L20 58 H6 Z" fill="#F4F1E8"/>
+    <path d="M36 6 H46 V29 H40 V41 H46 V48 H58 V58 H36 Z" fill="#F4F1E8"/>
+    <path d="M15 30 H40 V40 H15 Z" fill="#F4F1E8"/>
+  </g>
+</g>
+<g>
+  <line x1="377" y1="1172" x2="687" y2="1172" stroke="#245B78" stroke-width="1"/>
+  <text x="385" y="1004" fill="#F4F1E8" font-family="monospace" font-size="11" letter-spacing="1.1">38PX / STANDARD / REVERSE</text>
+  <g transform="translate(521 1067) scale(0.59375)">
+    <path d="M24 6 H39 L20 58 H6 Z" fill="#F4F1E8"/>
+    <path d="M36 6 H46 V29 H40 V41 H46 V48 H58 V58 H36 Z" fill="#F4F1E8"/>
+    <path d="M15 30 H40 V40 H15 Z" fill="#F4F1E8"/>
+  </g>
+</g>
+<g>
+  <line x1="703" y1="1172" x2="1013" y2="1172" stroke="#245B78" stroke-width="1"/>
+  <text x="711" y="1004" fill="#F4F1E8" font-family="monospace" font-size="11" letter-spacing="1.1">44PX / STANDARD / REVERSE</text>
+  <g transform="translate(844 1064) scale(0.6875)">
+    <path d="M24 6 H39 L20 58 H6 Z" fill="#F4F1E8"/>
+    <path d="M36 6 H46 V29 H40 V41 H46 V48 H58 V58 H36 Z" fill="#F4F1E8"/>
+    <path d="M15 30 H40 V40 H15 Z" fill="#F4F1E8"/>
+  </g>
+</g>
+<g>
+  <line x1="51" y1="1362" x2="361" y2="1362" stroke="#245B78" stroke-width="1"/>
+  <text x="59" y="1194" fill="#F4F1E8" font-family="monospace" font-size="11" letter-spacing="1.1">64PX / STANDARD / REVERSE</text>
+  <g transform="translate(182 1244) scale(1)">
+    <path d="M24 6 H39 L20 58 H6 Z" fill="#F4F1E8"/>
+    <path d="M36 6 H46 V29 H40 V41 H46 V48 H58 V58 H36 Z" fill="#F4F1E8"/>
+    <path d="M15 30 H40 V40 H15 Z" fill="#F4F1E8"/>
+  </g>
+</g>
+<g>
+  <line x1="377" y1="1362" x2="687" y2="1362" stroke="#245B78" stroke-width="1"/>
+  <text x="385" y="1194" fill="#F4F1E8" font-family="monospace" font-size="11" letter-spacing="1.1">96PX / STANDARD / REVERSE</text>
+  <g transform="translate(492 1228) scale(1.5)">
+    <path d="M24 6 H39 L20 58 H6 Z" fill="#F4F1E8"/>
+    <path d="M36 6 H46 V29 H40 V41 H46 V48 H58 V58 H36 Z" fill="#F4F1E8"/>
+    <path d="M15 30 H40 V40 H15 Z" fill="#F4F1E8"/>
+  </g>
+</g>
+<g>
+  <line x1="703" y1="1362" x2="1013" y2="1362" stroke="#245B78" stroke-width="1"/>
+  <text x="711" y="1194" fill="#F4F1E8" font-family="monospace" font-size="11" letter-spacing="1.1">128PX / STANDARD / REVERSE</text>
+  <g transform="translate(802 1212) scale(2)">
+    <path d="M24 6 H39 L20 58 H6 Z" fill="#F4F1E8"/>
+    <path d="M36 6 H46 V29 H40 V41 H46 V48 H58 V58 H36 Z" fill="#F4F1E8"/>
+    <path d="M15 30 H40 V40 H15 Z" fill="#F4F1E8"/>
+  </g>
+</g>
+</g>
+</svg>

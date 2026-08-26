@@ -1,0 +1,33 @@
+{
+  "name": "atlantic-ledger-case-study",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "pnpm@10.15.1",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "pnpm brand:check && next build",
+    "brand:build": "node scripts/build-brand.mjs",
+    "brand:check": "node scripts/build-brand.mjs --check",
+    "start": "next start",
+    "typecheck": "next typegen && tsc --noEmit",
+    "lint": "eslint src --max-warnings=0"
+  },
+  "dependencies": {
+    "motion": "^12.23.24",
+    "next": "16.2.11",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.30",
+    "@types/react": "^19.1.10",
+    "@types/react-dom": "^19.1.7",
+    "eslint": "^9.34.0",
+    "eslint-config-next": "16.2.11",
+    "sharp": "^0.34.5",
+    "typescript": "^5.9.2"
+  }
+}

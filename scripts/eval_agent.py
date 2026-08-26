@@ -6,7 +6,7 @@ Dry run (default or ``--dry-run``):
 
 Live (``--live``):
     Runs selected recorded customer scenarios through Groq's free-tier
-    ``llama-3.3-70b-versatile`` endpoint. It requires ``GROQ_API_KEY`` and is
+    ``qwen/qwen3.6-27b`` endpoint. It requires ``GROQ_API_KEY`` and is
     protected by the same in-memory daily/request limits as the application.
 """
 
@@ -253,6 +253,8 @@ def live_run(scenario: str | None = None) -> int:
                     "mode": "eval_live_groq",
                     "real_api_calls": client.chat.completions.request_count,
                     "model": MODEL_NAME,
+                    "model_output_captured": True,
+                    "reasoning_source": "live_groq",
                     "max_tokens_per_call": MAX_TOKENS,
                     "call_cap": MAX_LIVE_API_CALLS,
                     "phase1_runtime_capture": True,
