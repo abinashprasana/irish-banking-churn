@@ -4,7 +4,7 @@
 
 **Irish banking churn and governed retention intelligence.**
 
-[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![Python](https://img.shields.io/badge/Python-3.12+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![XGBoost](https://img.shields.io/badge/XGBoost-Gradient%20Boosted-FF6600?style=for-the-badge&logo=xgboost&logoColor=white)](https://xgboost.readthedocs.io)
 [![Groq](https://img.shields.io/badge/Groq-Tool%20Calling-F55036?style=for-the-badge&logo=groq&logoColor=white)](https://console.groq.com/docs/tool-use)
 [![Case Study](https://img.shields.io/badge/Case%20Study-Live%20on%20Vercel-071827?style=for-the-badge&logo=vercel&logoColor=white)](https://irish-banking-churn.vercel.app/)
@@ -240,7 +240,9 @@ The dry-run eval does something worth explaining: for each of the four recorded 
 
 ## 🗂️ Sample Agent Traces
 
-The samples below are recorded, zero request scripted replays. Their Phase 1 probabilities were captured from the local trained model and are rechecked by the dry run evaluation. The reasoning text is an explicit `scripted_fixture`, not output captured from Qwen or any other hosted model, and viewing a sample does not execute the tools or policy gate again.
+The samples below are recorded, zero request scripted replays. Their Phase 1 probabilities, cohort figures, and final outputs were captured from the local trained model and are rechecked by the dry run evaluation. The reasoning text is an explicit `scripted_fixture`, not output captured from Qwen or any other hosted model, and viewing a sample does not execute the tools or policy gate again.
+
+These excerpts are condensed for reading. Step numbers and thought wording are presentation labels, not a verbatim reproduction of the stored events; the complete traces are in `demo_traces/`.
 
 <details>
 <summary>✅ Local gate passed: fee waiver with advisor review required (IRLBANK_01136, 99.76% churn risk)</summary>
@@ -375,8 +377,19 @@ Final output:
 ```
 irish-banking-churn/
 ├── 📄 app.py                         Streamlit interactive lab · four task workspaces
+├── 📄 lab_workspaces.py              Presentation-only workspace renderers for the lab
+├── 📄 case_review.py                 Deterministic case-review state and normalization helpers
+├── 📄 decision_gate_ui.py            Presentation helpers that map a recommendation to UI state
 ├── 📋 requirements.txt               Project dependencies
 ├── 📄 model_card.md                  Model card (metrics, limitations, regulatory context)
+│
+├── 📂 lab_ui/                        Custom Streamlit decision instrument
+│   ├── decision_instrument.py        Deployment-safe wrapper; reads the prebuilt bundle, no Node at runtime
+│   ├── assets/                       Committed production bundle and stylesheet
+│   └── component/                    TypeScript/React source and build script
+│
+├── 📂 .streamlit/                    Lab theme, self-hosted font faces, static serving
+├── 📂 static/                        Self-hosted IBM Plex and Source Serif 4 woff2 files
 │
 ├── 📂 web/                           Atlantic Ledger static case-study shell
 │   ├── src/app/                      Next.js App Router page, metadata, sitemap, social artwork
@@ -394,7 +407,8 @@ irish-banking-churn/
 │
 ├── 📂 data/
 │   ├── generate_data.py              Synthetic dataset generator (10,000 records)
-│   └── irish_banking_churn.csv       Generated synthetic dataset used by the application
+│   ├── irish_banking_churn.csv       Generated synthetic dataset used by the application
+│   └── retention_products.json       Synthetic retention-offer catalogue read by product_lookup
 │
 ├── 📂 demo_traces/                   Four complete zero-request offline runs; 2 of 4 are refusals
 │   ├── 01_allowed_fee_waiver.json    Local checks passed: fee relief · HUM-003 advisor review required
@@ -412,17 +426,24 @@ irish-banking-churn/
 │   ├── export_case_study.py          Deterministic public evidence export and drift check
 │   └── record_demo_runs.py           Owner-only script to refresh demo traces via live Groq calls
 │
-├── 📂 tests/                         22 deterministic tests · sockets blocked · no API key required
+├── 📂 tests/                         53 test definitions (72 executed cases) · sockets blocked · no API key required
 │   ├── conftest.py                   Removes GROQ_API_KEY and blocks socket connections for every test
 │   ├── test_agent.py                 Loop trajectory · rate limits · Groq SDK wire contract
-│   ├── test_case_study_evidence.py   Public schema · sanitization · generated-file drift
-│   ├── test_phase1_integration.py    Live predict_proba · cache · schema mismatch failures
 │   ├── test_policy.py                All four rules · immutable decisions · formatter bypass resistance
-│   └── test_foundation.py           Document assertions: README content and integration boundary
+│   ├── test_phase1_integration.py    Live predict_proba · cache · schema mismatch failures
+│   ├── test_case_study_evidence.py   Public schema · sanitization · generated-file drift
+│   ├── test_case_review.py           Case-review state machine and staleness rules
+│   ├── test_decision_gate_ui.py      Decision-gate presentation states
+│   ├── test_decision_instrument.py   Custom component contract and bundle presence
+│   ├── test_brand_system.py          Brand geometry, tokens, and generated-asset drift
+│   ├── test_streamlit_premium_integration.py  Workspace rendering and lab integration
+│   └── test_foundation.py            Source assertions: runtime model ID, policy flags, model-card claims
 │
 └── 📂 assets/
     ├── shap_summary_plot.png         Global SHAP beeswarm plot
-    └── shap_bar_plot.png             Global SHAP bar plot
+    ├── shap_bar_plot.png             Global SHAP bar plot
+    ├── lab-premium.css               Streamlit lab stylesheet
+    └── brand/                        Atlantic Ledger marks, favicon, and brand token source
 ```
 
 ---
