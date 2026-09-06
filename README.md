@@ -7,7 +7,7 @@
 [![Python](https://img.shields.io/badge/Python-3.12+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![XGBoost](https://img.shields.io/badge/XGBoost-Gradient%20Boosted-FF6600?style=for-the-badge&logo=xgboost&logoColor=white)](https://xgboost.readthedocs.io)
 [![Groq](https://img.shields.io/badge/Groq-Tool%20Calling-F55036?style=for-the-badge&logo=groq&logoColor=white)](https://console.groq.com/docs/tool-use)
-[![Case Study](https://img.shields.io/badge/Case%20Study-Live%20on%20Vercel-071827?style=for-the-badge&logo=vercel&logoColor=white)](https://payments-analytics-kappa.vercel.app/)
+[![Case Study](https://img.shields.io/badge/Case%20Study-Live%20on%20Vercel-071827?style=for-the-badge&logo=vercel&logoColor=white)](https://irish-banking-churn.vercel.app/)
 [![Interactive Lab](https://img.shields.io/badge/Interactive%20Lab-Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://abinashprasana-irish-banking-churn-app-aidovf.streamlit.app/)
 [![ROC--AUC](https://img.shields.io/badge/ROC--AUC-0.959-2ea44f?style=for-the-badge)](.)
 [![Tests](https://img.shields.io/badge/Tests-72%2F72%20passing-2ea44f?style=for-the-badge)](.)
@@ -22,22 +22,22 @@
 
 ## 📖 What This Project Is
 
-KBC Bank Ireland and Ulster Bank announced their exit from the Irish market in 2021. The [Central Bank of Ireland](https://www.centralbank.ie/statistics/data-and-analysis/credit-and-banking-statistics/account-migration-statistics) recorded 1,167,219 current and deposit account closures at the two banks between the start of 2022 and the end of June 2023. Separate [CCPC research](https://www.ccpc.ie/about-us/advocacy-and-research/research/publication-details/ccpc-switching-research-%28phase-2%29) found that 60% of respondents who had an open KBC or Ulster current account, or had closed one within the previous six months, experienced switching challenges.
+KBC Bank Ireland and Ulster Bank announced their intentions to leave the Irish market in 2021. The [Central Bank of Ireland](https://www.centralbank.ie/statistics/data-and-analysis/credit-and-banking-statistics/account-migration-statistics) recorded 1,167,219 current and deposit account closures at the two banks between the start of 2022 and the end of June 2023. Separate [CCPC research](https://www.ccpc.ie/about-us/advocacy-and-research/research/publication-details/ccpc-switching-research-%28phase-2%29) found that 60% of respondents experienced switching challenges. The respondents had an open KBC or Ulster current account, or had closed one within the previous six months.
 
-That gives the project a real Irish setting, but it doesn't prove those same customers still carry unusually high churn risk today. The dataset here is synthetic, built with migration-related fields to explore that question, not to measure how any bank's actual customers behave right now.
+That disruption gives the project a clear Irish setting, but it does not prove that the same customers remain at unusually high churn risk today. The dataset is synthetic and uses migration related fields to examine that question. It is not presented as a measurement of current customer behaviour at any bank.
 
-The result is **Atlantic Ledger**, built as two surfaces. A statically generated Next.js case-study shell walks through the banking context, model evidence, recorded decision replays, the governance boundary, and the limitations. A linked Streamlit lab sits alongside it with four task-oriented workspaces: **Case review**, **Decision gate**, **Model evidence**, and **Data & limits**.
+The result is **Atlantic Ledger**, a two-surface product. A statically generated Next.js case-study shell explains the banking context, model evidence, recorded decision walkthroughs, governance boundary, and limitations. A linked Streamlit interactive lab provides four task-oriented workspaces: **Case review**, **Decision gate**, **Model evidence**, and **Data & limits**.
 
-Underneath both, an XGBoost classifier estimates churn probability, SHAP explains what the fitted model is doing, and DiCE searches for candidate counterfactual inputs. None of that decides what happens next on its own. The governed agent takes it from there: four deterministic tools and a fail-closed policy gate return either a policy-checked recommendation or a structured refusal. The public case study only reads a generated, sanitized evidence bundle. It doesn't expose a public inference API or an LLM secret.
+Underneath both experiences, an XGBoost classifier estimates churn probability, SHAP explains the fitted model, and DiCE explores candidate counterfactual inputs. Prediction alone does not decide what should happen next. The governed agent uses four deterministic tools and a fail-closed policy gate to return either a policy-checked recommendation or a structured refusal. The public case study reads a generated, sanitized evidence bundle; it does not expose a public inference API or an LLM secret.
 
 ---
 
-## 🖥️ Product Surfaces
+## Product Surfaces
 
-- **[Open the case study](https://payments-analytics-kappa.vercel.app/)** (source in `web/`) · the evidence narrative, model comparison, governed decision replay, and limitations, statically exported to Vercel.
+- **[Open the case study](https://irish-banking-churn.vercel.app/)** (source in `web/`) · the evidence narrative, model comparison, governed decision replay, and limitations, statically exported to Vercel.
 - **[Open the interactive lab](https://abinashprasana-irish-banking-churn-app-aidovf.streamlit.app/)** · run synthetic case reviews, inspect SHAP/DiCE output, explore model evidence, and use recorded or configured live decision-gate mode.
 
-The Streamlit lab opens directly in the browser. The case-study replay is recorded and makes zero provider requests.
+The Streamlit lab opens directly in the browser. The case-study replay is explicitly recorded and makes zero provider requests.
 
 ---
 
@@ -58,9 +58,9 @@ The Streamlit lab opens directly in the browser. The case-study replay is record
 
 </div>
 
-All records are synthetic. No real customer data was used anywhere in building it. The generator borrows the CCPC's 60 percent figure and applies it as the switching-difficulty probability for migration-flagged synthetic records, which is a modelling assumption on my part, not a subgroup estimate the CCPC itself reported. Central Bank data supplies the historical account-migration context. The 15 percent migration flag, the 21 percent churn target, the other distributions, and the churn label rule are constructed assumptions too. Read the dataset as a scenario built to study a question, not as a measurement of the real market.
+All records are synthetic. No real customer data was used. The generator borrows the cited CCPC figure of 60 percent as the switching difficulty probability for migration flagged synthetic records. Applying the survey figure to that synthetic subgroup is a modelling assumption, not a subgroup estimate reported by the CCPC. Central Bank data supplies the historical account migration context. The 15 percent migration flag, 21 percent churn target, other distributions, and churn label rule are also constructed assumptions. The dataset should not be read as a measurement of the real market.
 
-Irish migration context runs through four fields: `was_kbc_ulster_customer`, `months_since_switching`, `experienced_switching_difficulty`, and `uses_digital_bank_secondary`. They let the synthetic study look at a migration-shaped scenario that a generic churn dataset simply wouldn't contain.
+The dataset includes Irish migration context through `was_kbc_ulster_customer`, `months_since_switching`, `experienced_switching_difficulty`, and `uses_digital_bank_secondary`. Those fields let the synthetic study examine a migration related scenario that a generic churn dataset would not contain.
 
 ---
 
@@ -107,7 +107,7 @@ flowchart TD
 
 ## 📊 Model Performance
 
-I trained three classifiers and compared them on the original, imbalanced test set. XGBoost won on every metric.
+I trained three classifiers and compared them on the original imbalanced test set. XGBoost came out clearly ahead on every metric.
 
 <div align="center">
 
@@ -119,7 +119,7 @@ I trained three classifiers and compared them on the original, imbalanced test s
 
 </div>
 
-I lean on average precision rather than accuracy because the test set is imbalanced. A model that labels every customer as retained would still hit 79% accuracy while missing every single churner, so accuracy alone would be misleading here. Average precision captures the precision/recall tradeoff instead. XGBoost reaches **0.842**, **0.102 above** Logistic Regression on this holdout sample.
+I used average precision as the main comparison rather than accuracy because the test set is imbalanced. A model that labels every customer as retained would still reach 79% accuracy while missing every churner. Average precision summarises the precision and recall tradeoff. XGBoost reaches **0.842**, which is **0.102 above** Logistic Regression on this holdout sample.
 
 <div align="center">
 
@@ -135,7 +135,7 @@ I lean on average precision rather than accuracy because the test set is imbalan
 
 ## 🔍 Feature Importance (SHAP)
 
-I computed SHAP values with `TreeExplainer` on the full 2,000-record test set. The five features driving predictions across that holdout sample:
+SHAP Shapley values were computed using `TreeExplainer` on the full 2,000-record test set. The top 5 features driving predictions across that holdout sample are:
 
 <div align="center">
 
@@ -149,25 +149,25 @@ I computed SHAP values with `TreeExplainer` on the full 2,000-record test set. T
 
 </div>
 
-`num_products` and `months_since_switching` are the two largest average SHAP effects in this fitted model, but that's a fact about the generated data and its label rule, not proof that either field causes churn in the real Irish market.
+`num_products` and `months_since_switching` are the two largest average SHAP effects in this fitted model. That result reflects the generated data and its label rule. It should not be interpreted as proof that either field causes churn in the current Irish market.
 
-One more thing worth being precise about: these are tree SHAP values explaining the model's raw output. A SHAP value of 2.841 is not "2.841 percentage points of churn probability."
+The tree SHAP values shown here explain the model's raw output. Their magnitudes are not changes in probability percentage points.
 
 ---
 
 ## ⚡ Sample Counterfactual Explanations (DiCE)
 
-For a customer above the 50% churn threshold, the Risk Predictor asks DiCE for up to three candidate counterfactuals below that line. The random search can return fewer than three, and it doesn't guarantee the smallest possible change, so treat the results as exploratory prompts for an advisor rather than prescribed customer actions.
+For a customer above the 50% churn threshold, the Risk Predictor asks DiCE for up to three candidate counterfactuals below the threshold. The random search may return fewer candidates and does not guarantee the smallest possible change. The results are exploratory prompts for an advisor, not prescribed customer actions.
 
-The lab shows the original value against each candidate input from the current DiCE run. It's not claiming that changing a real customer's circumstance would prevent churn. Because the values shift with the profile and the random search, I haven't hardcoded a fixed counterfactual result here as a benchmark.
+The interactive lab reports the original value and each candidate input returned by the current DiCE run. It does not claim that changing a real customer circumstance would prevent churn. The values vary with the profile and random search, so no fixed counterfactual result is presented here as a reproducible benchmark.
 
 ---
 
 ## 🤖 Phase 2: AI Retention Agent
 
-Phase 1 estimates churn risk, SHAP makes the model's reasoning inspectable, and DiCE explores candidate scenarios. None of that decides what should happen next, though. A relationship manager still has to weigh whether a response is suitable, whether it clears the project's rules, and whether the advisor-review condition kicks in.
+Phase 1 estimates churn risk, SHAP makes the model evidence inspectable, and DiCE explores candidate model scenarios. None of those outputs decides what should happen next. A relationship manager still has to consider whether a response is suitable, whether it passes the local project rules, and whether the configured advisor review condition applies.
 
-That's the retention agent's job. It takes the Phase 1 output for a flagged customer, calls four deterministic tools to check what's available and what the customer's cohort looks like, proposes a retention action, then runs that proposal through a deterministic policy gate before it can become a recommendation. If the gate blocks the action, the output is a structured refusal, not an exception or a silent warning. The relationship manager sees exactly which rule failed and why.
+That's what the retention agent handles. It takes the Phase 1 output for a flagged customer, uses four deterministic tools to look up what's available and what the customer's cohort looks like, proposes a retention action, and then runs it through a deterministic policy gate before it can become a recommendation. If the gate blocks the action, the output is a structured refusal, not an exception or a warning. The relationship manager sees exactly which rule failed and why.
 
 ### Agent Architecture
 
@@ -192,7 +192,7 @@ flowchart LR
     style AGF fill:#c55a11,color:#ffffff,stroke:#c55a11
 ```
 
-The churn probability in the agent prompt is never a stored value someone could stuff. `run_retention_agent` calls `model.predict_proba` again at entry and overwrites whatever was passed in, so the LLM only ever sees the live model output.
+The churn probability in the agent prompt is not taken from a stored value. `run_retention_agent` calls `model.predict_proba` again at entry and overwrites whatever was passed in. The LLM sees the live model output.
 
 ### The Four Tools
 
@@ -207,15 +207,15 @@ The churn probability in the agent prompt is never a stored value someone could 
 
 </div>
 
-The policy gate itself is plain deterministic Python. It checks all four rules on every run without short-circuiting, and the LLM has no way to override the verdict. Once the gate blocks an action, the only possible output is a structured `no_recommendation` refusal. It can't be reformatted into an approved recommendation afterward.
+The policy gate is deterministic Python code. It evaluates all four rules on every run without short-circuiting, and the LLM has no mechanism to override its verdict. An action the gate blocks can only produce a structured `no_recommendation` refusal; it cannot be formatted as an approved recommendation.
 
-The `confidence` field is something the agent fills in to satisfy the output schema. It's not a calibrated probability, not a Phase 1 churn score, and not a regulatory assessment.
+The `confidence` field is supplied by the agent to satisfy the output schema. It is not a calibrated probability, a Phase 1 churn score, or a regulatory assessment.
 
-The live backend runs on Groq with `qwen/qwen3.6-27b`, chosen for cost safety so a public demo stays within Groq's free plan. Live tool calling only works when the deployment owner supplies a key Groq accepts for that model, and a local format check can't prove the key or model access is actually valid. Without a key, the app falls back to recorded governed traces and makes no provider request at all. Those files preserve the shape of a completed run, but viewing one doesn't rerun the reasoning loop, the tools, or the policy gate. The live path, when it's on, still uses the same four tools and the same deterministic gate.
+The live LLM backend is configured for Groq using `qwen/qwen3.6-27b`. This is a cost-safety choice for a public demonstration intended to stay within Groq's Free Plan. Live tool calling is available only when the deployment owner supplies a key that Groq accepts for the configured model. A local format check cannot prove that the key or model access is valid. Without a key, the app displays recorded governed traces and makes no provider request. Those fallback files preserve the shape of a completed run, but they do not rerun the reasoning loop, tools, or policy gate when viewed. The bounded live path still uses the four tools and deterministic gate.
 
-The live loop follows Groq's [tool-calling guide](https://console.groq.com/docs/tool-use). On top of that, the app adds its own guards: 30 requests per minute, a 950-request daily safety cap, and five live runs per browser session. These are application-side safeguards, not a read on the provider account's actual usage, and they can't see requests from another running instance or protect against token limits. For the real numbers, check Groq's [rate-limit reference](https://console.groq.com/docs/rate-limits), the account Limits page, and the response headers.
+The live loop follows Groq's [local tool-calling guide](https://console.groq.com/docs/tool-use). The application adds process-local guards of 30 requests per minute, a 950-request daily safety cap, and five live runs per browser session. These are application safeguards, not a reading of provider account usage. They do not count requests from another running instance or protect against token limits. Groq's [rate-limit reference](https://console.groq.com/docs/rate-limits), account Limits page, and response headers remain the source of truth.
 
-Groq listed the previous runtime for shutdown on 16 August 2026 and pointed to `qwen/qwen3.6-27b` as one replacement, so I migrated the configured model ID on 15 August 2026. Request serialization, tool trajectories, retries, and the policy gate are all covered offline, but a live single-scenario smoke test is still on the list before I'd call Qwen's sequencing quality verified. See Groq's [deprecation notice](https://console.groq.com/docs/deprecations).
+Groq listed the previous runtime for shutdown on 16 August 2026 and recommended `qwen/qwen3.6-27b` as one replacement. The configured model ID was migrated on 15 August 2026. Request serialization, tool trajectories, retries, and the deterministic policy gate are covered offline, but a protected live single-scenario smoke test is still required before treating Qwen-specific sequencing quality as verified. See Groq's [deprecation notice](https://console.groq.com/docs/deprecations).
 
 ---
 
@@ -232,17 +232,17 @@ Groq listed the previous runtime for shutdown on 16 August 2026 and pointed to `
 
 </div>
 
-The suite covers the full tool-calling trajectory, individual `role: "tool"` results with matching call IDs, the deterministic policy rules, rate-limit counters (30 RPM, 950 requests/day, 5 session runs), the Groq SDK wire contract via fake transport, schema validation, and two Phase 1 integration tests proving that different customer profiles produce different churn probabilities. Every test runs with sockets blocked and `GROQ_API_KEY` removed, so a stray network call fails the test immediately instead of slipping through.
+The test suite covers the full tool-calling trajectory, individual `role: "tool"` results with matching call IDs, the deterministic policy rules, rate-limit counters (30 RPM, 950 requests/day, 5 session runs), the Groq SDK wire contract via fake transport, schema validation, and the two Phase 1 integration tests that prove different customer profiles produce different churn probabilities. Every test runs with sockets blocked and `GROQ_API_KEY` removed, so an accidental network call fails the test immediately rather than silently passing.
 
-The dry-run eval is worth explaining because it's doing real work, not just replaying a fixture: for each of the four recorded demo scenarios, it re-runs `model.predict_proba` against the trained XGBoost artifact and checks the stored churn probability against the live model output to a tolerance of 1e-12. That's what proves the numbers in the demo traces are real model outputs and not fabricated. Each trace also carries a `phase1_runtime_capture: true` marker, the model artifact name, and the prediction method string (`model.predict_proba(feature_vector)[0, 1]`), so the provenance is right there if you go looking.
+The dry-run eval does something worth explaining: for each of the four recorded demo scenarios, it re-runs `model.predict_proba` against the trained XGBoost artifact and checks that the stored churn probability matches the live model output within a tolerance of 1e-12. That check proves the numbers in the demo traces are real model outputs, not fabricated values. The traces also carry a `phase1_runtime_capture: true` marker, the model artifact name, and the prediction method string (`model.predict_proba(feature_vector)[0, 1]`) to make the provenance explicit.
 
 ---
 
 ## 🗂️ Sample Agent Traces
 
-The samples below are recorded, zero-request scripted replays. Their Phase 1 probabilities, cohort figures, and final outputs came from the local trained model and get rechecked by the dry-run evaluation. The reasoning text is an explicit `scripted_fixture`, not output captured from Qwen or any other hosted model, and opening a sample doesn't run the tools or the policy gate again.
+The samples below are recorded, zero request scripted replays. Their Phase 1 probabilities, cohort figures, and final outputs were captured from the local trained model and are rechecked by the dry run evaluation. The reasoning text is an explicit `scripted_fixture`, not output captured from Qwen or any other hosted model, and viewing a sample does not execute the tools or policy gate again.
 
-These excerpts are condensed for reading. Step numbers and thought wording are presentation labels, not a verbatim copy of the stored events. The full traces live in `demo_traces/`.
+These excerpts are condensed for reading. Step numbers and thought wording are presentation labels, not a verbatim reproduction of the stored events; the complete traces are in `demo_traces/`.
 
 <details>
 <summary>✅ Local gate passed: fee waiver with advisor review required (IRLBANK_01136, 99.76% churn risk)</summary>
@@ -448,7 +448,7 @@ irish-banking-churn/
 
 ---
 
-## 🛠️ Local Development
+## Local Development
 
 Prerequisites: Python 3.12 or newer, Node.js 24, and pnpm 10.15.1.
 
@@ -468,7 +468,7 @@ Run the four-workspace interactive lab:
 streamlit run app.py
 ```
 
-It opens at `http://localhost:8501`. **Case review** scores and explains a synthetic profile. **Decision gate** runs recorded or configured live governed recommendations. **Model evidence** presents holdout and SHAP evidence. **Data & limits** documents the synthetic population and its constraints. No Groq key is needed for the four recorded, zero-request replays.
+It opens at `http://localhost:8501`. **Case review** scores and explains a synthetic profile; **Decision gate** runs recorded or configured live governed recommendations; **Model evidence** presents holdout and SHAP evidence; **Data & limits** documents the synthetic population and constraints. No Groq key is required for the four recorded zero-request replays.
 
 Run the Atlantic Ledger case-study shell in another terminal:
 
@@ -478,9 +478,9 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-It opens at `http://localhost:3000`. `NEXT_PUBLIC_LAB_URL` and `NEXT_PUBLIC_SITE_URL` are optional locally. The checked-in defaults already point at the published lab and the intended case-study URL.
+It opens at `http://localhost:3000`. `NEXT_PUBLIC_LAB_URL` and `NEXT_PUBLIC_SITE_URL` are optional locally; the checked-in defaults target the published lab and the intended case-study deployment URL.
 
-Before publishing, run the full local verification from the repository root:
+Before publishing, run the complete local verification from the repository root:
 
 ```bash
 python -m pytest -q
@@ -492,9 +492,9 @@ pnpm lint
 pnpm build
 ```
 
-The baseline I hold this to: 72/72 executed pytest cases (53/53 deterministic test definitions in the exported evidence bundle) and 4/4 recorded scenarios, two of them blocked outcomes, zero provider requests. If a canonical data, model-card, policy, trace, runtime-model, or test source changes, regenerate `web/src/data/evidence.generated.json` with `python scripts/export_case_study.py --write`, review the diff, then rerun `--check`.
+The verified baseline is 72/72 executed pytest cases (53/53 deterministic test definitions in the exported evidence bundle) and 4/4 recorded scenarios, including two blocked outcomes and zero provider requests. If a canonical data, model-card, policy, trace, runtime-model, or test source changes, regenerate `web/src/data/evidence.generated.json` with `python scripts/export_case_study.py --write`, review the diff, then rerun `--check`.
 
-`.github/workflows/verify.yml` runs the same Python evidence checks plus the web lint, type-check, and static build on every push and pull request.
+`.github/workflows/verify.yml` runs the same Python evidence checks and the web lint, type-check, and static build on pushes and pull requests.
 
 To rebuild the tracked synthetic data and model artifacts deliberately:
 
@@ -505,15 +505,15 @@ python models/train_model.py
 
 ### Optional live agent mode
 
-The Decision gate works fine without a key. For an owner-controlled live smoke test, set a server-side `GROQ_API_KEY` from [Groq](https://console.groq.com/keys) and run one bounded scenario:
+The Decision gate works without a key. For an owner-controlled live smoke test, set a server-side `GROQ_API_KEY` from [Groq](https://console.groq.com/keys), then run one bounded scenario:
 
 ```bash
 python scripts/eval_agent.py --live --scenario 01_allowed_fee_waiver
 ```
 
-The application checks Streamlit secrets first, then the process environment. Never expose this key through a `NEXT_PUBLIC_*` variable or commit it to the repository.
+The application reads Streamlit secrets first and the process environment second. Never expose this key through a `NEXT_PUBLIC_*` variable or commit it to the repository.
 
-## 🚀 Deployment
+## Deployment
 
 ### Atlantic Ledger case study · Vercel
 
@@ -521,13 +521,13 @@ The application checks Streamlit secrets first, then the process environment. Ne
 - Use **Node.js 24.x** and the checked-in pnpm lockfile.
 - Install with `pnpm install --frozen-lockfile` and build with `pnpm build`; the Next.js configuration produces a static `out/` export.
 - Set `NEXT_PUBLIC_SITE_URL` to the production case-study URL and `NEXT_PUBLIC_LAB_URL` to the Streamlit lab URL.
-- This deployment needs no Python service, no model artifact, no Groq key, no database, and no public inference endpoint.
-- Live at [payments-analytics-kappa.vercel.app](https://payments-analytics-kappa.vercel.app/).
+- No Python service, model artifact, Groq key, database, or public inference endpoint is required by this deployment.
+- Live at [irish-banking-churn.vercel.app](https://irish-banking-churn.vercel.app/).
 
 ### Interactive lab · Streamlit Community Cloud
 
 - Deploy the repository-root `app.py`; dependencies are read from the root `requirements.txt`.
-- The tracked dataset, XGBoost artifact, recorded traces, and SHAP assets run the whole recorded lab without any external services.
+- The tracked dataset, XGBoost artifact, recorded traces, and SHAP assets support the complete recorded lab without external services.
 - Add `GROQ_API_KEY = "..."` under **App settings → Secrets** only after the protected live Qwen smoke test passes. Without it, the lab remains in zero-request recorded mode.
 - Keep the case study’s `NEXT_PUBLIC_LAB_URL` aligned with the deployed lab URL.
 
@@ -535,13 +535,13 @@ The application checks Streamlit secrets first, then the process environment. Ne
 
 ## ⚠️ Limitations
 
-The data is synthetic. Some parameters draw on published statistics, but many of the distributions and the churn label rule itself were constructed for this study. Production use would need representative bank data, external validation, and a proper governance review.
+The data is synthetic. Selected parameters use published statistics, while many distributions and the churn label rule were constructed for this study. Production use would require representative bank data, external validation, and the relevant governance review.
 
-The model leaves out interest rates, housing-market conditions, and inflation, all of which could matter in real customer behaviour and would need testing against observed data.
+The model does not include interest rates, housing market conditions, or inflation. Those factors may matter in real customer behaviour and would need to be tested with observed data.
 
-I can't assume `was_kbc_ulster_customer` and `months_since_switching` stay predictive forever. If this model were ever adapted to live data, their relevance would need monitoring and recalibration.
+The continuing value of `was_kbc_ulster_customer` and `months_since_switching` cannot be assumed. Their relevance would need to be monitored and recalibrated if the model were adapted to live data.
 
-The Retention Agent is deliberately narrow. Its catalogue, governance overlays, four policy rules, and recorded traces are all synthetic. `in_arrears` and `vulnerable_customer` are explicit scenario metadata, not Phase 1 model features, and the agent never infers them from the churn score. The policy gate demonstrates a fail-closed engineering pattern, but nobody has assessed it against the EBA Guidelines or any bank's actual policy. Four rules over a synthetic catalogue don't add up to a complete conduct-risk framework, an eligibility engine, or a production banking control. A live endpoint check still needs to happen before relying on the provider path.
+The Retention Agent is deliberately narrow. The catalogue, governance overlays, four project policy rules, and recorded traces are all synthetic. The `in_arrears` and `vulnerable_customer` flags are explicit scenario metadata rather than Phase 1 model features. The agent never infers them from the churn score. The policy gate demonstrates a fail-closed engineering pattern, but it has not been assessed against the EBA Guidelines or any bank policy. Four rules applied to a synthetic catalogue are not a complete conduct-risk framework, eligibility engine, or production banking control. A live endpoint check should be completed before relying on the provider path.
 
 <div align="center">
 
@@ -561,11 +561,11 @@ The Retention Agent is deliberately narrow. Its catalogue, governance overlays, 
 
 ## 🏛️ Regulatory Context
 
-[Article 86 of the EU AI Act](https://eur-lex.europa.eu/eli/reg/2024/1689/oj#art_86) grants a right to a clear, meaningful explanation for some decisions made by a high-risk AI system listed under Annex III, and only when the Article's other conditions are met. The Act's general application date is **2 August 2026**. [Regulation (EU) 2026/1744](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32026R1744), in force since **27 July 2026**, pushed the application date for Chapter III Sections 1 to 3 (except Article 6(5)), for systems classified high-risk under Article 6(2) and Annex III, out to **2 December 2027**. This prototype makes no claim to fall within Article 86. SHAP and DiCE are inspection tools here, not evidence of legal compliance.
+[Article 86 of the EU AI Act](https://eur-lex.europa.eu/eli/reg/2024/1689/oj#art_86) sets out a right to a clear and meaningful explanation for some decisions based on the output of an AI system listed in Annex III and classified as high risk. The right only applies when the other conditions in the Article are met. The Act has a general application date of **2 August 2026**. [Regulation (EU) 2026/1744](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32026R1744) entered into force on **27 July 2026** and moved the application date for Sections 1 to 3 of Chapter III, except Article 6(5), for systems classified as high risk under Article 6(2) and Annex III to **2 December 2027**. This prototype does not claim to fall within Article 86. SHAP and DiCE are model inspection tools, not evidence of legal compliance.
 
-The **[EBA Guidelines on internal governance under CRD](https://www.eba.europa.eu/activities/single-rulebook/regulatory-activities/internal-governance/guidelines-internal-governance-under-crd)** are binding for institutions within their stated scope and cover responsibilities, risk management, and internal controls, but they don't prescribe this retention workflow. Advisor review and the deterministic policy gate are engineering choices I made in this application, not evidence of regulatory compliance. Atlantic Ledger never takes action on a customer account.
+The **[EBA Guidelines on internal governance under CRD](https://www.eba.europa.eu/activities/single-rulebook/regulatory-activities/internal-governance/guidelines-internal-governance-under-crd)** are in force for institutions within their stated scope and address responsibilities, risk management, and internal controls. They do not prescribe this retention workflow. Advisor review and the deterministic policy gate are engineering choices in this application and have not been assessed as evidence of regulatory compliance. Atlantic Ledger never takes action on a customer account.
 
-Every live recommendation from the retention agent passes through a deterministic Python policy gate. The LLM can't approve an action the gate blocks, and the gate checks every rule on every run. Above the configured 75% risk threshold, `HUM-003` requires the proposed action's `requires_human_review` flag to be true before the gate will pass it, and that flag records a review requirement, not proof a person actually reviewed anything. It's an application safeguard, not a claim that these four rules add up to a complete regulatory control framework.
+Every live recommendation produced by the retention agent passes through a deterministic Python policy gate. The LLM cannot approve an action that the gate blocks, and the gate evaluates every project rule on each run. Above the configured 75% risk threshold, `HUM-003` requires the proposed action's `requires_human_review` flag to be true before the gate can pass it. That flag records a review requirement, not proof that a person completed a review. This is an application safeguard. It is not a statement that the four project rules form a complete regulatory control framework.
 
 Full details on the model, its validation, and ethical considerations are in [model_card.md](model_card.md).
 
