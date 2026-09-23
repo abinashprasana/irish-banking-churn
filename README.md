@@ -251,9 +251,7 @@ The dry-run eval is worth explaining because it's doing real work, not just repl
 
 ## 🗂️ Sample Agent Traces
 
-The samples below are recorded, zero-request scripted replays. Their Phase 1 probabilities, cohort figures, and final outputs came from the local trained model and get rechecked by the dry-run evaluation. The reasoning text is an explicit `scripted_fixture`, not output captured from Qwen or any other hosted model, and opening a sample doesn't run the tools or the policy gate again.
-
-These excerpts are condensed for reading. Step numbers and thought wording are presentation labels, not a verbatim copy of the stored events. The full traces live in `demo_traces/`.
+The samples below are recorded, zero request scripted replays. Their Phase 1 probabilities were captured from the local trained model and are rechecked by the dry run evaluation. The reasoning text is an explicit `scripted_fixture`, not output captured from Qwen or any other hosted model, and viewing a sample does not execute the tools or policy gate again.
 
 <details>
 <summary>✅ Local gate passed: fee waiver with advisor review required (IRLBANK_01136, 99.76% churn risk)</summary>
