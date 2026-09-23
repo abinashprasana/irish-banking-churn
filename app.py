@@ -3383,7 +3383,7 @@ def _render_case_assessment(assessment, current_fingerprint):
     if is_stale:
         st.session_state.pop("phase1_selected_customer", None)
         st.warning(
-            "Profile changed — recalculate before this case can enter the Decision gate. "
+            "Profile changed. Recalculate before this case can enter the Decision gate. "
             "The previous evidence remains visible for comparison."
         )
     else:
@@ -3424,7 +3424,7 @@ def _render_case_assessment(assessment, current_fingerprint):
                 "id": "policy",
                 "label": "Policy",
                 "summary": (
-                    "Profile changed — recalculate before handoff."
+                    "Profile changed. Recalculate before handoff."
                     if is_stale
                     else "Current assessment is eligible for the Decision gate."
                 ),
@@ -3903,7 +3903,7 @@ st.markdown(
       </div>
     </section>
     <div class="lab-synthetic-notice" role="note">
-      <strong>Synthetic research environment.</strong> Customer profiles, scores, governance flags, offers, and recommendations are demonstrations—not real banking records or decisions.
+      <strong>Synthetic research environment.</strong> Customer profiles, scores, governance flags, offers, and recommendations are demonstrations, not real banking records or decisions.
     </div>
     """,
     unsafe_allow_html=True,

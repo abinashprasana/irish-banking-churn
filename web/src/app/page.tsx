@@ -44,7 +44,7 @@ export default function Home() {
               <span>Synthetic data</span>
               <span>Ireland</span>
             </p>
-            <h1 id="hero-heading" aria-label="Know who may leave — decide with care">
+            <h1 id="hero-heading" aria-label="Know who may leave, decide with care">
               <span className="hero-heading-line">Know who may leave</span>
               <em className="hero-heading-line">Decide with care</em>
             </h1>
@@ -108,6 +108,9 @@ export default function Home() {
             <p>
               Published evidence informs the historical story and one generation assumption. The customer population, labels, migration share, and behaviour remain constructed.
             </p>
+            <p>
+              The practical problem starts after the score. A retention team can see that a customer looks likely to leave, but the number says nothing about which offer is suitable, or whether one should be made at all. This study is written for the people in that gap: the analyst acting on the score and the reviewer who later has to explain the call.
+            </p>
           </div>
 
           <div className="context-ledger">
@@ -137,7 +140,7 @@ export default function Home() {
                 <h2 id="system-heading">Prediction is the opening signal, not the final decision</h2>
               </div>
               <p>
-                The project closes the gap between identifying a high-risk synthetic case and deciding whether any response is suitable enough to reach advisor review.
+                The model&apos;s job ends at a probability. Anything proposed after that has to clear four deterministic rules, and the language model can&apos;t overrule them. That split is the core idea of the project.
               </p>
             </div>
 
@@ -333,7 +336,7 @@ export default function Home() {
             <div className="section-heading-row">
               <div>
                 <p className="eyebrow">Governance by construction</p>
-                <h2 id="governance-heading">The agent can propose — the gate decides what may proceed</h2>
+                <h2 id="governance-heading">The agent can propose, the gate decides what may proceed</h2>
               </div>
               <p>
                 Each rule runs in deterministic Python against the exact synthetic customer-action pair. A blocked action cannot be formatted as approved, and all rule results remain visible.
@@ -414,7 +417,7 @@ export default function Home() {
               <p className="eyebrow">Project record</p>
               <h2 id="artifacts-heading">Built to be inspected, not merely presented</h2>
               <p>
-                Designed and developed by {site.author}: synthetic-data generation, model comparison, explanation, counterfactual exploration, a bounded tool loop, deterministic controls, recorded evaluations, and this product case study.
+                Designed and built by {site.author}. The choices that shaped it are written down so they can be checked: average precision over accuracy for an imbalanced problem, policy rules kept outside the language model, and blocked outcomes published next to passing ones.
               </p>
               <div className="verification-stamp">
                 <span className="mono-label">LAST VERIFIED / {evidenceManifest.generatedAt}</span>

@@ -355,7 +355,7 @@ def test_streamlit_and_next_consumers_use_the_new_accessible_brand_contract() ->
     assert display_headings
     assert not [heading for heading in display_headings if heading.rstrip().endswith(".")]
     assert "What most shaped this fitted model?" in static_next_headings
-    assert "The agent can propose — the gate decides what may proceed" in static_next_headings
+    assert "The agent can propose, the gate decides what may proceed" in static_next_headings
     assert "brand-geometry.generated" in og_source
     assert "source-serif-4-semibold.ttf" in og_source
     assert "ibm-plex-mono-medium.ttf" in og_source
