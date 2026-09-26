@@ -20,3 +20,9 @@ venv/
 
 # Downloaded third party datasets (not redistributed)
 data/external/
+
+# Red team: keep docs, ignore raw runs and local quota state
+!redteam/**/*.md
+!redteam/*.md
+redteam/runs/
+.redteam_quota.json
