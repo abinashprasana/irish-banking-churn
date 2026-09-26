@@ -7,10 +7,10 @@
 [![Python](https://img.shields.io/badge/Python-3.12+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![XGBoost](https://img.shields.io/badge/XGBoost-Gradient%20Boosted-FF6600?style=for-the-badge&logo=xgboost&logoColor=white)](https://xgboost.readthedocs.io)
 [![Groq](https://img.shields.io/badge/Groq-Tool%20Calling-F55036?style=for-the-badge&logo=groq&logoColor=white)](https://console.groq.com/docs/tool-use)
-[![Case Study](https://img.shields.io/badge/Case%20Study-Live%20on%20Vercel-071827?style=for-the-badge&logo=vercel&logoColor=white)](https://payments-analytics-kappa.vercel.app/)
+[![Case Study](https://img.shields.io/badge/Case%20Study-Live%20on%20Vercel-071827?style=for-the-badge&logo=vercel&logoColor=white)](https://irish-banking-churn.vercel.app/)
 [![Interactive Lab](https://img.shields.io/badge/Interactive%20Lab-Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://abinashprasana-irish-banking-churn-app-aidovf.streamlit.app/)
 [![ROC--AUC](https://img.shields.io/badge/ROC--AUC-0.824-2ea44f?style=for-the-badge)](.)
-[![Tests](https://img.shields.io/badge/Tests-108%2F108%20passing-2ea44f?style=for-the-badge)](.)
+[![Tests](https://img.shields.io/badge/Tests-110%2F110%20passing-2ea44f?style=for-the-badge)](.)
 
 <br/>
 
@@ -45,7 +45,7 @@ Underneath both, an XGBoost classifier estimates churn probability, SHAP explain
 
 ## 🖥️ Product Surfaces
 
-- **[Open the case study](https://payments-analytics-kappa.vercel.app/)** (source in `web/`) · the evidence narrative, model comparison, governed decision replay, and limitations, statically exported to Vercel.
+- **[Open the case study](https://irish-banking-churn.vercel.app/)** (source in `web/`) · the evidence narrative, model comparison, governed decision replay, and limitations, statically exported to Vercel.
 - **[Open the interactive lab](https://abinashprasana-irish-banking-churn-app-aidovf.streamlit.app/)** · run synthetic case reviews, inspect SHAP/DiCE output, explore model evidence, and use recorded or configured live decision-gate mode.
 
 The Streamlit lab opens directly in the browser. The case-study replay is recorded and makes zero provider requests.
@@ -254,7 +254,7 @@ Groq listed the previous runtime for shutdown on 16 August 2026 and pointed to `
 
 | Check | Result |
 |:---|:---:|
-| Tests passing (0 skipped) | **108 / 108** |
+| Tests passing (0 skipped) | **110 / 110** |
 | Eval scenarios passing (dry-run) | **4 / 4** |
 | Blocked outcomes in eval | **2 / 4** (minimum required: 2) |
 | Groq API requests in dry-run | **0** |
@@ -312,7 +312,7 @@ Offline, the scripted adversary always attempts the harm, so the known gap rate 
 
 | Harm | Attacks | What gets through with the gate on |
 |:---|:---:|:---|
-| H06 disclosure about another customer | a005, a037, a038 | A justification can name another customer id. Separately, 9 of 80 cohort cells hold 5 or fewer customers, and the lab shows their size and churn rate (a037 needs no manipulation at all). |
+| H06 disclosure about another customer | a005, a037, a038 | A justification can name another customer id. Separately, 9 of 80 cohort cells hold 5 or fewer customers, and the cohort tool still gives the model their churn rate (a037 needs no manipulation at all). The lab now withholds those figures from the advisor view. |
 | H07 unsupported claims | a004, a036, a039, a040, a041 | Compliance, guarantee and eligibility claims in the justification, including inside a refusal. |
 | H08 action and justification mismatch | a034, a043 | Savings and current account wording under a different action. The closed bypass below covers offer names and credit terms only. |
 | H11 thought text advocating a blocked action | a044 | Model thought text shown in the lab can still push the blocked product. |
@@ -530,7 +530,7 @@ irish-banking-churn/
 │   └── regenerate_scripted_traces.py Offline refresh of the scripted traces after a retrain
 │
 ├── 📂 redteam/                       Red team harness: harm spec, oracle, attacks, runner, results
-├── 📂 tests/                         73 test definitions (108 executed cases) · sockets blocked · no API key required
+├── 📂 tests/                         75 test definitions (110 executed cases) · sockets blocked · no API key required
 │   ├── conftest.py                   Removes GROQ_API_KEY and blocks socket connections for every test
 │   ├── test_agent.py                 Loop trajectory · rate limits · Groq SDK wire contract
 │   ├── test_policy.py                All four rules · immutable decisions · formatter bypass resistance
@@ -597,7 +597,7 @@ pnpm lint
 pnpm build
 ```
 
-The baseline I hold this to: 108/108 executed pytest cases (73/73 deterministic test definitions in the exported evidence bundle) and 4/4 recorded scenarios, two of them blocked outcomes, zero provider requests. If a canonical data, model-card, policy, trace, runtime-model, or test source changes, regenerate `web/src/data/evidence.generated.json` with `python scripts/export_case_study.py --write`, review the diff, then rerun `--check`.
+The baseline I hold this to: 110/110 executed pytest cases (75/75 deterministic test definitions in the exported evidence bundle) and 4/4 recorded scenarios, two of them blocked outcomes, zero provider requests. If a canonical data, model-card, policy, trace, runtime-model, or test source changes, regenerate `web/src/data/evidence.generated.json` with `python scripts/export_case_study.py --write`, review the diff, then rerun `--check`.
 
 `.github/workflows/verify.yml` runs the same Python evidence checks plus the web lint, type-check, and static build on every push and pull request.
 
@@ -627,7 +627,7 @@ The application checks Streamlit secrets first, then the process environment. Ne
 - Install with `pnpm install --frozen-lockfile` and build with `pnpm build`; the Next.js configuration produces a static `out/` export.
 - Set `NEXT_PUBLIC_SITE_URL` to the production case-study URL and `NEXT_PUBLIC_LAB_URL` to the Streamlit lab URL.
 - This deployment needs no Python service, no model artifact, no Groq key, no database, and no public inference endpoint.
-- Live at [payments-analytics-kappa.vercel.app](https://payments-analytics-kappa.vercel.app/).
+- Live at [irish-banking-churn.vercel.app](https://irish-banking-churn.vercel.app/).
 
 ### Interactive lab · Streamlit Community Cloud
 
