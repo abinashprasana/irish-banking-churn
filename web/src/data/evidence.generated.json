@@ -270,8 +270,8 @@
       "claimScope": "These are deterministic prototype controls over synthetic cases, not legal determinations or evidence of bank-policy compliance."
     },
     "verification": {
-      "testsPassed": 63,
-      "testsTotal": 63,
+      "testsPassed": 70,
+      "testsTotal": 70,
       "scenariosPassed": 4,
       "scenariosTotal": 4,
       "blockedOutcomes": 2,
