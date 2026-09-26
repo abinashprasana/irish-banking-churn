@@ -30,8 +30,13 @@ AGE_BETA_B = 4.0  # Constructed age distribution parameter.
 MAX_SAVINGS_BALANCE = 50000.0
 BALANCE_EXP_SCALE = 8000.0
 PRODUCT_LIMIT = 5
+MAX_TENURE_MONTHS = 180
+MAX_MONTHS_SINCE_SWITCH = 36
 
-NOISE_STD_DEV = 0.5
+NOISE_STD_DEV = 1.2
+# Share of labels swapped at random, in equal numbers per class, so the
+# constructed rule is not perfectly recoverable. The churn rate is unchanged.
+LABEL_SWAP_RATE = 0.03
 BASELINE_BIAS = -1.5
 
 
@@ -108,7 +113,16 @@ def generate_digital_secondary(ages):
     return np.array(result)
 
 
-def generate_switching_status(num_records):
+def generate_tenure(ages):
+    # A customer cannot have banked longer than their adult life.
+    tenure = []
+    for age in ages:
+        max_tenure = int(np.clip((age - AGE_MIN) * 12, 1, MAX_TENURE_MONTHS))
+        tenure.append(np.random.randint(1, max_tenure + 1))
+    return np.array(tenure)
+
+
+def generate_switching_status(num_records, tenure_months):
     was_kbc_ulster = np.random.choice(
         [True, False],
         size=num_records,
@@ -118,9 +132,12 @@ def generate_switching_status(num_records):
     months_since_switch = []
     experienced_difficulty = []
 
-    for wk in was_kbc_ulster:
+    for wk, tenure in zip(was_kbc_ulster, tenure_months):
         if wk:
-            months_since_switch.append(np.random.randint(1, 37))
+            # The switch into this bank happened inside the current relationship.
+            months_since_switch.append(
+                np.random.randint(1, min(MAX_MONTHS_SINCE_SWITCH, tenure) + 1)
+            )
             experienced_difficulty.append(
                 np.random.choice([True, False], p=[SWITCHING_DIFFICULTY_PROB, 1 - SWITCHING_DIFFICULTY_PROB])
             )
@@ -177,7 +194,7 @@ def compute_churn_labels(df):
     score += np.where((df['branch_visits_monthly'] == 0) & (df['age'] > 50), 0.8, 0.0)
 
     # Constructed negative score contributions.
-    score += np.where(df['has_mortgage'], -2.5, 0.0)
+    score += np.where(df['has_mortgage'], -1.2, 0.0)
     score += np.where(df['tenure_months'] > 60, -1.0, 0.0)
     score += np.where(df['num_products'] >= 3, -0.8, 0.0)
     score += np.where(df['has_savings_goal'], -0.6, 0.0)
@@ -189,6 +206,13 @@ def compute_churn_labels(df):
     # percentile threshold locks churn rate to TARGET_CHURN_RATE regardless of score distribution
     threshold = np.percentile(probabilities, 100.0 - TARGET_CHURN_RATE * 100.0)
     churn_labels = np.where(probabilities >= threshold, 1, 0)
+
+    # Swap an equal number of labels in each class so the target rate holds.
+    n_swap = int(round(LABEL_SWAP_RATE * len(df) / 2))
+    positives = np.flatnonzero(churn_labels == 1)
+    negatives = np.flatnonzero(churn_labels == 0)
+    churn_labels[np.random.choice(positives, n_swap, replace=False)] = 0
+    churn_labels[np.random.choice(negatives, n_swap, replace=False)] = 1
 
     return churn_labels
 
@@ -202,10 +226,10 @@ def main():
 
     uses_digital_sec = generate_digital_secondary(ages)
 
-    was_kbc_ulster, months_since_switch, experienced_difficulty = generate_switching_status(NUM_RECORDS)
+    tenure_months = generate_tenure(ages)
+    was_kbc_ulster, months_since_switch, experienced_difficulty = generate_switching_status(NUM_RECORDS, tenure_months)
     branch_visits, service_calls, has_complaint, credit_bands, has_savings_goal = generate_service_complaints_credit(NUM_RECORDS, ages)
 
-    tenure_months = np.random.randint(1, 181, size=NUM_RECORDS)
     has_mortgage = (account_types == 'Current + Mortgage')
 
     df = pd.DataFrame({

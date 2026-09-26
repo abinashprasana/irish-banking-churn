@@ -36,37 +36,37 @@
       "has_mortgage": false,
       "has_savings_goal": false
     },
-    "churn_probability": 0.9996590614318848,
+    "churn_probability": 0.9933611154556274,
     "churn_drivers": [
       {
         "feature": "monthly_transaction_count",
         "value": 12,
-        "shap_value": 2.3477673530578613,
+        "shap_value": 2.4788758754730225,
         "direction": "increases_churn"
       },
       {
         "feature": "num_products",
         "value": 1,
-        "shap_value": 1.4196147918701172,
+        "shap_value": 1.3730781078338623,
         "direction": "increases_churn"
       },
       {
         "feature": "has_direct_debits",
         "value": false,
-        "shap_value": 1.395481824874878,
+        "shap_value": 0.8161575794219971,
         "direction": "increases_churn"
       },
       {
         "feature": "has_complaint_history",
         "value": true,
-        "shap_value": 1.3042575120925903,
+        "shap_value": 0.6628158092498779,
         "direction": "increases_churn"
       },
       {
-        "feature": "monthly_balance_eur",
-        "value": 185.17,
-        "shap_value": 0.6779745817184448,
-        "direction": "increases_churn"
+        "feature": "months_since_switching",
+        "value": 0,
+        "shap_value": -0.3557526767253876,
+        "direction": "decreases_churn"
       }
     ],
     "held_products": [
@@ -83,7 +83,7 @@
       "step": 1,
       "type": "model_thought",
       "content": {
-        "text": "Churn probability: 99.97%. Checking available offers and cohort risk."
+        "text": "Churn probability: 99.34%. Checking available offers and cohort risk."
       },
       "timestamp": "2026-07-13T12:04:00Z"
     },
@@ -144,25 +144,9 @@
         "name": "segment_comparison",
         "is_error": false,
         "result": {
-          "cohort_definition": {
-            "migration_segment": "other",
-            "age_band": "30-44",
-            "account_type": "Savings Account",
-            "num_products": 1
-          },
-          "cohort_size": 329,
-          "retained_count": 100,
-          "churned_count": 229,
-          "churn_rate": 0.696,
-          "most_common_products_among_retained": [
-            {
-              "product": "savings_account",
-              "retained_customers": 100
-            }
-          ],
           "target_phase1_prediction": {
             "customer_id": "IRLBANK_06848",
-            "churn_probability": 0.9996590614318848,
+            "churn_probability": 0.9933611154556274,
             "feature_columns": [
               "age",
               "tenure_months",
@@ -208,7 +192,23 @@
             "model_artifact": "xgboost_churn_model.pkl",
             "prediction_method": "model.predict_proba(feature_vector)[0, 1]"
           },
-          "data_note": "Aggregates use the local synthetic Phase 1 dataset only; target risk is a captured local Phase 1 model prediction."
+          "cohort_definition": {
+            "migration_segment": "other",
+            "age_band": "30-44",
+            "account_type": "Savings Account",
+            "num_products": 1
+          },
+          "cohort_size": 335,
+          "retained_count": 155,
+          "churned_count": 180,
+          "churn_rate": 0.5373,
+          "most_common_products_among_retained": [
+            {
+              "product": "savings_account",
+              "retained_customers": 155
+            }
+          ],
+          "data_note": "Aggregates use the local synthetic Phase 1 dataset only."
         }
       },
       "timestamp": "2026-07-13T12:04:04Z"
@@ -245,7 +245,7 @@
           "HOLD-002",
           "VUL-004"
         ],
-        "customer_fingerprint": "569461ee5565e180a6ca6192354b57303c09ce8ba3ef2f386c325c814533b22e",
+        "customer_fingerprint": "448f57927d25b2dad22599aeaa1ed6be9608af69342c3f874cdff57268d126ee",
         "action_fingerprint": "b61fa085fe734aeef3d7f1b9b3569f01e0662c700de0f7e21dcc4f1f4c6ff485",
         "rule_results": [
           {
@@ -291,7 +291,7 @@
             "HOLD-002",
             "VUL-004"
           ],
-          "customer_fingerprint": "569461ee5565e180a6ca6192354b57303c09ce8ba3ef2f386c325c814533b22e",
+          "customer_fingerprint": "448f57927d25b2dad22599aeaa1ed6be9608af69342c3f874cdff57268d126ee",
           "action_fingerprint": "b61fa085fe734aeef3d7f1b9b3569f01e0662c700de0f7e21dcc4f1f4c6ff485",
           "rule_results": [
             {

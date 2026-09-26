@@ -38,36 +38,36 @@
       "has_mortgage": false,
       "has_savings_goal": false
     },
-    "churn_probability": 0.9980600476264954,
+    "churn_probability": 0.9887535572052002,
     "churn_drivers": [
       {
         "feature": "months_since_switching",
         "value": 6,
-        "shap_value": 2.786297082901001,
+        "shap_value": 1.6302982568740845,
         "direction": "increases_churn"
       },
       {
         "feature": "has_complaint_history",
         "value": true,
-        "shap_value": 1.6752890348434448,
-        "direction": "increases_churn"
-      },
-      {
-        "feature": "tenure_months",
-        "value": 13,
-        "shap_value": 1.0539250373840332,
+        "shap_value": 1.5754425525665283,
         "direction": "increases_churn"
       },
       {
         "feature": "num_products",
         "value": 2,
-        "shap_value": -1.0531370639801025,
+        "shap_value": -0.9101480841636658,
         "direction": "decreases_churn"
+      },
+      {
+        "feature": "account_type",
+        "value": "Current + Savings",
+        "shap_value": 0.6387701034545898,
+        "direction": "increases_churn"
       },
       {
         "feature": "experienced_switching_difficulty",
         "value": true,
-        "shap_value": 0.6646860241889954,
+        "shap_value": 0.5768309235572815,
         "direction": "increases_churn"
       }
     ],
@@ -86,7 +86,7 @@
       "step": 1,
       "type": "model_thought",
       "content": {
-        "text": "Churn probability: 99.81%. Complaint history and recent switching difficulty present. Checking non-sales service options."
+        "text": "Churn probability: 98.88%. Complaint history and recent switching difficulty present. Checking non-sales service options."
       },
       "timestamp": "2026-07-13T14:10:00Z"
     },
@@ -157,29 +157,9 @@
         "name": "segment_comparison",
         "is_error": false,
         "result": {
-          "cohort_definition": {
-            "migration_segment": "former_kbc_ulster",
-            "age_band": "30-44",
-            "account_type": "Current + Savings",
-            "num_products": 2
-          },
-          "cohort_size": 167,
-          "retained_count": 106,
-          "churned_count": 61,
-          "churn_rate": 0.3653,
-          "most_common_products_among_retained": [
-            {
-              "product": "current_account",
-              "retained_customers": 106
-            },
-            {
-              "product": "savings_account",
-              "retained_customers": 106
-            }
-          ],
           "target_phase1_prediction": {
             "customer_id": "IRLBANK_03890",
-            "churn_probability": 0.9980600476264954,
+            "churn_probability": 0.9887535572052002,
             "feature_columns": [
               "age",
               "tenure_months",
@@ -225,7 +205,27 @@
             "model_artifact": "xgboost_churn_model.pkl",
             "prediction_method": "model.predict_proba(feature_vector)[0, 1]"
           },
-          "data_note": "Aggregates use the local synthetic Phase 1 dataset only; target risk is a captured local Phase 1 model prediction."
+          "cohort_definition": {
+            "migration_segment": "former_kbc_ulster",
+            "age_band": "30-44",
+            "account_type": "Current + Savings",
+            "num_products": 2
+          },
+          "cohort_size": 179,
+          "retained_count": 117,
+          "churned_count": 62,
+          "churn_rate": 0.3464,
+          "most_common_products_among_retained": [
+            {
+              "product": "current_account",
+              "retained_customers": 117
+            },
+            {
+              "product": "savings_account",
+              "retained_customers": 117
+            }
+          ],
+          "data_note": "Aggregates use the local synthetic Phase 1 dataset only."
         }
       },
       "timestamp": "2026-07-13T14:10:04Z"
@@ -234,7 +234,7 @@
       "step": 6,
       "type": "model_thought",
       "content": {
-        "text": "Cohort churn rate: 36.53%. This customer is substantially higher. Dedicated service review addresses complaint and switching friction without credit or upsell. Submitting to policy gate."
+        "text": "Cohort churn rate: 34.64%. This customer is substantially higher. Dedicated service review addresses complaint and switching friction without credit or upsell. Submitting to policy gate."
       },
       "timestamp": "2026-07-13T14:10:05Z"
     },
@@ -259,7 +259,7 @@
         "checker_verdict": "approved",
         "passed": true,
         "failed_rule_ids": [],
-        "customer_fingerprint": "4ae0b2967a3274cb88230a959bae0aaa8f3064d113d7122c6529242d737e5391",
+        "customer_fingerprint": "f37db8bab1f51d511b5d05531578092f6b777e84cddb2f0da4393c45ea9e4a33",
         "action_fingerprint": "7ded6f2028b3f07c77ca81ee661f3ca2b89cad738c1dd21a0a480fcbd5adfcfd",
         "rule_results": [
           {
@@ -302,7 +302,7 @@
           "checker_verdict": "approved",
           "passed": true,
           "failed_rule_ids": [],
-          "customer_fingerprint": "4ae0b2967a3274cb88230a959bae0aaa8f3064d113d7122c6529242d737e5391",
+          "customer_fingerprint": "f37db8bab1f51d511b5d05531578092f6b777e84cddb2f0da4393c45ea9e4a33",
           "action_fingerprint": "7ded6f2028b3f07c77ca81ee661f3ca2b89cad738c1dd21a0a480fcbd5adfcfd",
           "rule_results": [
             {

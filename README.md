@@ -9,8 +9,8 @@
 [![Groq](https://img.shields.io/badge/Groq-Tool%20Calling-F55036?style=for-the-badge&logo=groq&logoColor=white)](https://console.groq.com/docs/tool-use)
 [![Case Study](https://img.shields.io/badge/Case%20Study-Live%20on%20Vercel-071827?style=for-the-badge&logo=vercel&logoColor=white)](https://payments-analytics-kappa.vercel.app/)
 [![Interactive Lab](https://img.shields.io/badge/Interactive%20Lab-Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://abinashprasana-irish-banking-churn-app-aidovf.streamlit.app/)
-[![ROC--AUC](https://img.shields.io/badge/ROC--AUC-0.959-2ea44f?style=for-the-badge)](.)
-[![Tests](https://img.shields.io/badge/Tests-72%2F72%20passing-2ea44f?style=for-the-badge)](.)
+[![ROC--AUC](https://img.shields.io/badge/ROC--AUC-0.824-2ea44f?style=for-the-badge)](.)
+[![Tests](https://img.shields.io/badge/Tests-73%2F73%20passing-2ea44f?style=for-the-badge)](.)
 
 <br/>
 
@@ -81,7 +81,7 @@ Irish migration context runs through four fields: `was_kbc_ulster_customer`, `mo
 flowchart TD
     A["📁 Data Generation\ngenerate_data.py\n10,000 synthetic records · 19 features\nSelected parameters informed by CBI & CCPC"]
     B["🔧 Preprocessing\nLabelEncoder · Boolean cast to int\nStratified 80/20 train / test split"]
-    C["⚖️ SMOTEENN\nTraining set only\n6,320 neg + 1,680 pos  →  2,724 neg + 3,662 pos\nTest set left at original 79% / 21%"]
+    C["⚖️ SMOTEENN\nTraining set only\n6,320 neg + 1,680 pos  →  2,652 neg + 3,624 pos\nTest set left at original 79% / 21%"]
     D1["Logistic Regression\nBaseline"]
     D2["Random Forest\nEnsemble baseline"]
     D3["⚡ XGBoost\nSelected model\n200 est · depth 6 · lr 0.05"]
@@ -124,23 +124,41 @@ I trained three classifiers and compared them on the original, imbalanced test s
 
 | Model | Accuracy | Precision | Recall | F1 Score | ROC-AUC | Average precision |
 |:---|:---:|:---:|:---:|:---:|:---:|:---:|
-| **XGBoost (Selected)** | **0.8990** | **0.7080** | **0.8833** | **0.7860** | **0.9593** | **0.8420** |
-| Random Forest | 0.8790 | 0.6660 | 0.8500 | 0.7469 | 0.9438 | 0.7708 |
-| Logistic Regression | 0.8385 | 0.5883 | 0.7690 | 0.6667 | 0.9011 | 0.7403 |
+| **XGBoost (Selected)** | **0.8085** | **0.5377** | **0.6286** | **0.5796** | **0.8239** | **0.5329** |
+| Random Forest | 0.7985 | 0.5183 | 0.5738 | 0.5446 | 0.8159 | 0.4862 |
+| Logistic Regression | 0.7525 | 0.4346 | 0.5929 | 0.5015 | 0.7717 | 0.4543 |
 
 </div>
 
-I lean on average precision rather than accuracy because the test set is imbalanced. A model that labels every customer as retained would still hit 79% accuracy while missing every single churner, so accuracy alone would be misleading here. Average precision captures the precision/recall tradeoff instead. XGBoost reaches **0.842**, **0.102 above** Logistic Regression on this holdout sample.
+I lean on average precision rather than accuracy because the test set is imbalanced. A model that labels every customer as retained would still hit 79% accuracy while missing every single churner, so accuracy alone would be misleading here. Average precision captures the precision/recall tradeoff instead. XGBoost reaches **0.533**, **0.079 above** Logistic Regression on this holdout sample.
 
 <div align="center">
 
 | Metric vs. LR Baseline | XGBoost Gain |
 |:---|:---:|
-| F1 Score | **+0.119** |
-| ROC-AUC | **+0.058** |
-| Average precision | **+0.102** |
+| F1 Score | **+0.078** |
+| ROC-AUC | **+0.052** |
+| Average precision | **+0.079** |
 
 </div>
+
+These scores come from a regenerated dataset. An earlier version of the generator scored a ROC-AUC of 0.959, mostly because the label came from a fixed rule with little noise, so XGBoost could recover the rule almost exactly. The generator now keeps tenure within each customer's adult life, keeps the switch date inside the tenure, adds more label noise, swaps 3 percent of labels in equal numbers per class, and softens the mortgage weight. The churn rate stays at 21 percent.
+
+### Real data benchmark
+
+The same training recipe (80/20 stratified split, SMOTEENN on the training set, the same three models and settings) was run on the UCI Bank Marketing dataset ([Moro, Cortez and Rita, 2014](https://archive.ics.uci.edu/dataset/222/bank+marketing), CC BY 4.0), which holds 45,211 real customers of a Portuguese bank. Its target is term deposit subscription, so this checks that the method works on real, imbalanced bank data. It says nothing about churn. The `duration` column was dropped because it is only known after the outcome.
+
+<div align="center">
+
+| Model | Accuracy | Precision | Recall | F1 Score | ROC-AUC | Average precision |
+|:---|:---:|:---:|:---:|:---:|:---:|:---:|
+| XGBoost | 0.7918 | 0.3051 | 0.6106 | 0.4069 | 0.7779 | 0.3829 |
+| Random Forest | 0.8132 | 0.3286 | 0.5718 | 0.4174 | 0.7788 | 0.3651 |
+| Logistic Regression | 0.6435 | 0.1951 | 0.6550 | 0.3007 | 0.7112 | 0.2580 |
+
+</div>
+
+The positive rate is 11.7 percent. XGBoost has the best average precision, and Random Forest is slightly ahead on ROC-AUC and F1. Logistic Regression reached its iteration limit on the unscaled features, which matches the setup in `models/train_model.py`. Reproduce with `python scripts/benchmark_real_data.py` after placing `bank-full.csv` in `data/external/`. The script writes `results/benchmark_uci_bank_marketing.json`.
 
 ---
 
@@ -152,17 +170,17 @@ I computed SHAP values with `TreeExplainer` on the full 2,000-record test set. T
 
 | Rank | Feature | Mean Absolute SHAP | What It Means |
 |:---:|:---|:---:|:---|
-| 1 | `num_products` | **2.841** | Largest mean absolute SHAP effect in the fitted model. |
-| 2 | `months_since_switching` | **1.028** | Second largest model effect in the synthetic holdout sample. |
-| 3 | `has_direct_debits` | **0.883** | The fitted model used this field as an engagement signal. |
-| 4 | `tenure_months` | **0.838** | Tenure contributed materially to the model's predictions. |
-| 5 | `has_savings_goal` | **0.529** | This field also influenced the fitted model's output. |
+| 1 | `num_products` | **1.943** | Largest mean absolute SHAP effect in the fitted model. |
+| 2 | `account_type` | **0.719** | The encoded account type carries product holding information. |
+| 3 | `has_direct_debits` | **0.683** | The fitted model used this field as an engagement signal. |
+| 4 | `months_since_switching` | **0.521** | Recent migration history still moves the model's output. |
+| 5 | `tenure_months` | **0.476** | Tenure contributed to the model's predictions. |
 
 </div>
 
-`num_products` and `months_since_switching` are the two largest average SHAP effects in this fitted model, but that's a fact about the generated data and its label rule, not proof that either field causes churn in the real Irish market.
+`num_products` and `account_type` are the two largest average SHAP effects in this fitted model, but that's a fact about the generated data and its label rule, not proof that either field causes churn in the real Irish market.
 
-One more thing worth being precise about: these are tree SHAP values explaining the model's raw output. A SHAP value of 2.841 is not "2.841 percentage points of churn probability."
+One more thing worth being precise about: these are tree SHAP values explaining the model's raw output. A SHAP value of 1.943 is not "1.943 percentage points of churn probability."
 
 ---
 
@@ -236,7 +254,7 @@ Groq listed the previous runtime for shutdown on 16 August 2026 and pointed to `
 
 | Check | Result |
 |:---|:---:|
-| Tests passing (0 skipped) | **72 / 72** |
+| Tests passing (0 skipped) | **73 / 73** |
 | Eval scenarios passing (dry-run) | **4 / 4** |
 | Blocked outcomes in eval | **2 / 4** (minimum required: 2) |
 | Groq API requests in dry-run | **0** |
@@ -254,15 +272,15 @@ The dry-run eval is worth explaining because it's doing real work, not just repl
 The samples below are recorded, zero request scripted replays. Their Phase 1 probabilities were captured from the local trained model and are rechecked by the dry run evaluation. The reasoning text is an explicit `scripted_fixture`, not output captured from Qwen or any other hosted model, and viewing a sample does not execute the tools or policy gate again.
 
 <details>
-<summary>✅ Local gate passed: fee waiver with advisor review required (IRLBANK_01136, 99.76% churn risk)</summary>
+<summary>✅ Local gate passed: fee waiver with advisor review required (IRLBANK_01136, 95.24% churn risk)</summary>
 
 ```
 Customer: IRLBANK_01136
-Phase 1 churn probability: 99.76%  (live predict_proba output)
-Top churn drivers: months_since_switching=3, num_products=1, has_direct_debits=False
+Phase 1 churn probability: 95.24%  (live predict_proba output)
+Top churn drivers: num_products=1, months_since_switching=3, has_direct_debits=False
 
 Agent reasoning:
-  Step 1  model_thought   "This synthetic customer has a 99.76% churn probability.
+  Step 1  model_thought   "This synthetic customer has a 95.24% churn probability.
                            I will inspect fee-relief options and compare the matching
                            local synthetic segment before proposing an action."
 
@@ -272,10 +290,10 @@ Agent reasoning:
 
   Step 4  tool_call       segment_comparison {}
   Step 5  tool_result     → cohort: former_kbc_ulster · age 30–44 · Current Account · 1 product
-                            cohort_size: 182 · churn_rate: 69.78%
-                            Phase 1 live prediction: 99.76% (matches stored value within 1e-12)
+                            cohort_size: 184 · churn_rate: 62.50%
+                            Phase 1 live prediction: 95.24% (matches stored value within 1e-12)
 
-  Step 6  model_thought   "The matching synthetic cohort has a 69.78% churn rate, and
+  Step 6  model_thought   "The matching synthetic cohort has a 62.50% churn rate, and
                            the catalogue includes a non-credit, non-upsell six-month fee
                            waiver. Because this customer's churn probability exceeds 75%,
                            I will mark advisor review as required and run the deterministic policy gate."
@@ -317,11 +335,11 @@ Final output:
 </details>
 
 <details>
-<summary>🚫 Local gate blocked: ARR-001 stops a credit action when the synthetic arrears flag is set (IRLBANK_01255, 99.97% churn risk)</summary>
+<summary>🚫 Local gate blocked: ARR-001 stops a credit action when the synthetic arrears flag is set (IRLBANK_01255, 99.79% churn risk)</summary>
 
 ```
 Customer: IRLBANK_01255
-Phase 1 churn probability: 99.97%  (live predict_proba output)
+Phase 1 churn probability: 99.79%  (live predict_proba output)
 Governance overlay: in_arrears: true (synthetic scenario metadata, not a Phase 1 feature)
 Top churn drivers: monthly_transaction_count=12, num_products=1, has_direct_debits=False
 
@@ -335,8 +353,8 @@ Agent reasoning:
 
   Step 4  tool_call       segment_comparison {}
   Step 5  tool_result     → cohort: other · age 30–44 · Savings Account · 1 product
-                            cohort_size: 329 · churn_rate: 69.60%
-                            Phase 1 live prediction: 99.97% (matches stored value within 1e-12)
+                            cohort_size: 335 · churn_rate: 53.43%
+                            Phase 1 live prediction: 99.79% (matches stored value within 1e-12)
 
   Step 6  model_thought   "The mortgage review is a credit-related upsell, so it must
                            pass the deterministic gate for this exact synthetic customer
@@ -431,11 +449,13 @@ irish-banking-churn/
 │   └── xgboost_churn_model.pkl       Serialized model bundle (tracked in git)
 │
 ├── 📂 scripts/
+│   ├── benchmark_real_data.py        Same training recipe on UCI Bank Marketing (real bank data)
 │   ├── eval_agent.py                 Recorded dry-run eval (zero requests) and optional live Groq eval
 │   ├── export_case_study.py          Deterministic public evidence export and drift check
-│   └── record_demo_runs.py           Owner-only script to refresh demo traces via live Groq calls
+│   ├── record_demo_runs.py           Owner-only script to refresh demo traces via live Groq calls
+│   └── regenerate_scripted_traces.py Offline refresh of the scripted traces after a retrain
 │
-├── 📂 tests/                         53 test definitions (72 executed cases) · sockets blocked · no API key required
+├── 📂 tests/                         54 test definitions (73 executed cases) · sockets blocked · no API key required
 │   ├── conftest.py                   Removes GROQ_API_KEY and blocks socket connections for every test
 │   ├── test_agent.py                 Loop trajectory · rate limits · Groq SDK wire contract
 │   ├── test_policy.py                All four rules · immutable decisions · formatter bypass resistance
@@ -501,7 +521,7 @@ pnpm lint
 pnpm build
 ```
 
-The baseline I hold this to: 72/72 executed pytest cases (53/53 deterministic test definitions in the exported evidence bundle) and 4/4 recorded scenarios, two of them blocked outcomes, zero provider requests. If a canonical data, model-card, policy, trace, runtime-model, or test source changes, regenerate `web/src/data/evidence.generated.json` with `python scripts/export_case_study.py --write`, review the diff, then rerun `--check`.
+The baseline I hold this to: 73/73 executed pytest cases (54/54 deterministic test definitions in the exported evidence bundle) and 4/4 recorded scenarios, two of them blocked outcomes, zero provider requests. If a canonical data, model-card, policy, trace, runtime-model, or test source changes, regenerate `web/src/data/evidence.generated.json` with `python scripts/export_case_study.py --write`, review the diff, then rerun `--check`.
 
 `.github/workflows/verify.yml` runs the same Python evidence checks plus the web lint, type-check, and static build on every push and pull request.
 

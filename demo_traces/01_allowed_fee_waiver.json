@@ -36,37 +36,37 @@
       "has_mortgage": false,
       "has_savings_goal": true
     },
-    "churn_probability": 0.9976446032524109,
+    "churn_probability": 0.9524294137954712,
     "churn_drivers": [
-      {
-        "feature": "months_since_switching",
-        "value": 3,
-        "shap_value": 2.040278434753418,
-        "direction": "increases_churn"
-      },
       {
         "feature": "num_products",
         "value": 1,
-        "shap_value": 1.564110279083252,
+        "shap_value": 1.4498562812805176,
+        "direction": "increases_churn"
+      },
+      {
+        "feature": "months_since_switching",
+        "value": 3,
+        "shap_value": 1.2224435806274414,
         "direction": "increases_churn"
       },
       {
         "feature": "has_direct_debits",
         "value": false,
-        "shap_value": 1.197852373123169,
+        "shap_value": 0.9069153666496277,
         "direction": "increases_churn"
       },
       {
-        "feature": "uses_digital_bank_secondary",
+        "feature": "has_savings_goal",
         "value": true,
-        "shap_value": 0.7927223443984985,
-        "direction": "increases_churn"
+        "shap_value": -0.7897151708602905,
+        "direction": "decreases_churn"
       },
       {
-        "feature": "monthly_transaction_count",
-        "value": 16,
-        "shap_value": 0.7102899551391602,
-        "direction": "increases_churn"
+        "feature": "tenure_months",
+        "value": 114,
+        "shap_value": -0.7046991586685181,
+        "direction": "decreases_churn"
       }
     ],
     "held_products": [
@@ -83,7 +83,7 @@
       "step": 1,
       "type": "model_thought",
       "content": {
-        "text": "Churn probability: 99.76%. Checking fee-relief options against this customer's cohort."
+        "text": "Churn probability: 95.24%. Checking fee-relief options against this customer's cohort."
       },
       "timestamp": "2026-07-13T09:00:00Z"
     },
@@ -144,25 +144,9 @@
         "name": "segment_comparison",
         "is_error": false,
         "result": {
-          "cohort_definition": {
-            "migration_segment": "former_kbc_ulster",
-            "age_band": "30-44",
-            "account_type": "Current Account",
-            "num_products": 1
-          },
-          "cohort_size": 182,
-          "retained_count": 55,
-          "churned_count": 127,
-          "churn_rate": 0.6978,
-          "most_common_products_among_retained": [
-            {
-              "product": "current_account",
-              "retained_customers": 55
-            }
-          ],
           "target_phase1_prediction": {
             "customer_id": "IRLBANK_01136",
-            "churn_probability": 0.9976446032524109,
+            "churn_probability": 0.9524294137954712,
             "feature_columns": [
               "age",
               "tenure_months",
@@ -208,7 +192,23 @@
             "model_artifact": "xgboost_churn_model.pkl",
             "prediction_method": "model.predict_proba(feature_vector)[0, 1]"
           },
-          "data_note": "Aggregates use the local synthetic Phase 1 dataset only; target risk is a captured local Phase 1 model prediction."
+          "cohort_definition": {
+            "migration_segment": "former_kbc_ulster",
+            "age_band": "30-44",
+            "account_type": "Current Account",
+            "num_products": 1
+          },
+          "cohort_size": 184,
+          "retained_count": 69,
+          "churned_count": 115,
+          "churn_rate": 0.625,
+          "most_common_products_among_retained": [
+            {
+              "product": "current_account",
+              "retained_customers": 69
+            }
+          ],
+          "data_note": "Aggregates use the local synthetic Phase 1 dataset only."
         }
       },
       "timestamp": "2026-07-13T09:00:04Z"
@@ -217,7 +217,7 @@
       "step": 6,
       "type": "model_thought",
       "content": {
-        "text": "Cohort churn rate: 69.78%. Non-credit fee waiver available. Churn probability above 75% threshold; human review flag required. Submitting to policy gate."
+        "text": "Cohort churn rate: 62.50%. Non-credit fee waiver available. Churn probability above 75% threshold; human review flag required. Submitting to policy gate."
       },
       "timestamp": "2026-07-13T09:00:05Z"
     },
@@ -242,7 +242,7 @@
         "checker_verdict": "approved",
         "passed": true,
         "failed_rule_ids": [],
-        "customer_fingerprint": "a6cf1a3910c498d0333564a8f0ad6023f5979f449d31feff4f40c6a57f02e230",
+        "customer_fingerprint": "ad31179dc267ea6f8f493b18babf4012cdf731fd1e92c7e28d747bb7468319a0",
         "action_fingerprint": "41835c1368d649cb6fec082a051d522d744768075025021c6a08da49146afa33",
         "rule_results": [
           {
@@ -285,7 +285,7 @@
           "checker_verdict": "approved",
           "passed": true,
           "failed_rule_ids": [],
-          "customer_fingerprint": "a6cf1a3910c498d0333564a8f0ad6023f5979f449d31feff4f40c6a57f02e230",
+          "customer_fingerprint": "ad31179dc267ea6f8f493b18babf4012cdf731fd1e92c7e28d747bb7468319a0",
           "action_fingerprint": "41835c1368d649cb6fec082a051d522d744768075025021c6a08da49146afa33",
           "rule_results": [
             {

@@ -68,32 +68,32 @@
         {
           "id": "accuracy",
           "label": "Accuracy",
-          "value": 0.899
+          "value": 0.8085
         },
         {
           "id": "precision",
           "label": "Precision",
-          "value": 0.708
+          "value": 0.5377
         },
         {
           "id": "recall",
           "label": "Recall",
-          "value": 0.8833
+          "value": 0.6286
         },
         {
           "id": "f1",
           "label": "F1 score",
-          "value": 0.786
+          "value": 0.5796
         },
         {
           "id": "rocAuc",
           "label": "ROC-AUC",
-          "value": 0.9593
+          "value": 0.8239
         },
         {
           "id": "averagePrecision",
           "label": "Average precision",
-          "value": 0.842
+          "value": 0.5329
         }
       ],
       "benchmarks": [
@@ -104,32 +104,32 @@
             {
               "id": "accuracy",
               "label": "Accuracy",
-              "value": 0.899
+              "value": 0.8085
             },
             {
               "id": "precision",
               "label": "Precision",
-              "value": 0.708
+              "value": 0.5377
             },
             {
               "id": "recall",
               "label": "Recall",
-              "value": 0.8833
+              "value": 0.6286
             },
             {
               "id": "f1",
               "label": "F1 score",
-              "value": 0.786
+              "value": 0.5796
             },
             {
               "id": "rocAuc",
               "label": "ROC-AUC",
-              "value": 0.9593
+              "value": 0.8239
             },
             {
               "id": "averagePrecision",
               "label": "Average precision",
-              "value": 0.842
+              "value": 0.5329
             }
           ]
         },
@@ -140,32 +140,32 @@
             {
               "id": "accuracy",
               "label": "Accuracy",
-              "value": 0.879
+              "value": 0.7985
             },
             {
               "id": "precision",
               "label": "Precision",
-              "value": 0.666
+              "value": 0.5183
             },
             {
               "id": "recall",
               "label": "Recall",
-              "value": 0.85
+              "value": 0.5738
             },
             {
               "id": "f1",
               "label": "F1 score",
-              "value": 0.7469
+              "value": 0.5446
             },
             {
               "id": "rocAuc",
               "label": "ROC-AUC",
-              "value": 0.9438
+              "value": 0.8159
             },
             {
               "id": "averagePrecision",
               "label": "Average precision",
-              "value": 0.7708
+              "value": 0.4862
             }
           ]
         },
@@ -176,32 +176,32 @@
             {
               "id": "accuracy",
               "label": "Accuracy",
-              "value": 0.8385
+              "value": 0.7525
             },
             {
               "id": "precision",
               "label": "Precision",
-              "value": 0.5883
+              "value": 0.4346
             },
             {
               "id": "recall",
               "label": "Recall",
-              "value": 0.769
+              "value": 0.5929
             },
             {
               "id": "f1",
               "label": "F1 score",
-              "value": 0.6667
+              "value": 0.5015
             },
             {
               "id": "rocAuc",
               "label": "ROC-AUC",
-              "value": 0.9011
+              "value": 0.7717
             },
             {
               "id": "averagePrecision",
               "label": "Average precision",
-              "value": 0.7403
+              "value": 0.4543
             }
           ]
         }
@@ -210,27 +210,27 @@
         {
           "rank": 1,
           "name": "num_products",
-          "meanAbsoluteShap": 2.841
+          "meanAbsoluteShap": 1.943
         },
         {
           "rank": 2,
-          "name": "months_since_switching",
-          "meanAbsoluteShap": 1.028
+          "name": "account_type",
+          "meanAbsoluteShap": 0.719
         },
         {
           "rank": 3,
           "name": "has_direct_debits",
-          "meanAbsoluteShap": 0.883
+          "meanAbsoluteShap": 0.683
         },
         {
           "rank": 4,
-          "name": "tenure_months",
-          "meanAbsoluteShap": 0.838
+          "name": "months_since_switching",
+          "meanAbsoluteShap": 0.521
         },
         {
           "rank": 5,
-          "name": "has_savings_goal",
-          "meanAbsoluteShap": 0.529
+          "name": "tenure_months",
+          "meanAbsoluteShap": 0.476
         }
       ],
       "explanationCaveat": "SHAP values explain the fitted model's raw output on synthetic data. They are neither causal effects nor probability-point changes."
@@ -270,8 +270,8 @@
       "claimScope": "These are deterministic prototype controls over synthetic cases, not legal determinations or evidence of bank-policy compliance."
     },
     "verification": {
-      "testsPassed": 53,
-      "testsTotal": 53,
+      "testsPassed": 54,
+      "testsTotal": 54,
       "scenariosPassed": 4,
       "scenariosTotal": 4,
       "blockedOutcomes": 2,
@@ -314,37 +314,37 @@
           "has_mortgage": false,
           "has_savings_goal": true
         },
-        "churnProbability": 0.9976446032524109,
+        "churnProbability": 0.9524294137954712,
         "drivers": [
-          {
-            "feature": "months_since_switching",
-            "value": 3,
-            "shap_value": 2.040278434753418,
-            "direction": "increases_churn"
-          },
           {
             "feature": "num_products",
             "value": 1,
-            "shap_value": 1.564110279083252,
+            "shap_value": 1.4498562812805176,
+            "direction": "increases_churn"
+          },
+          {
+            "feature": "months_since_switching",
+            "value": 3,
+            "shap_value": 1.2224435806274414,
             "direction": "increases_churn"
           },
           {
             "feature": "has_direct_debits",
             "value": false,
-            "shap_value": 1.197852373123169,
+            "shap_value": 0.9069153666496277,
             "direction": "increases_churn"
           },
           {
-            "feature": "uses_digital_bank_secondary",
+            "feature": "has_savings_goal",
             "value": true,
-            "shap_value": 0.7927223443984985,
-            "direction": "increases_churn"
+            "shap_value": -0.7897151708602905,
+            "direction": "decreases_churn"
           },
           {
-            "feature": "monthly_transaction_count",
-            "value": 16,
-            "shap_value": 0.7102899551391602,
-            "direction": "increases_churn"
+            "feature": "tenure_months",
+            "value": 114,
+            "shap_value": -0.7046991586685181,
+            "direction": "decreases_churn"
           }
         ],
         "heldProducts": [
@@ -366,7 +366,7 @@
           "kind": "tool",
           "name": "segment_comparison",
           "status": "complete",
-          "summary": "Compared with a synthetic cohort of 182 customers at a 69.8% churn rate."
+          "summary": "Compared with a synthetic cohort of 184 customers at a 62.5% churn rate."
         },
         {
           "kind": "tool",
@@ -457,36 +457,36 @@
           "has_mortgage": false,
           "has_savings_goal": false
         },
-        "churnProbability": 0.9980600476264954,
+        "churnProbability": 0.9887535572052002,
         "drivers": [
           {
             "feature": "months_since_switching",
             "value": 6,
-            "shap_value": 2.786297082901001,
+            "shap_value": 1.6302982568740845,
             "direction": "increases_churn"
           },
           {
             "feature": "has_complaint_history",
             "value": true,
-            "shap_value": 1.6752890348434448,
-            "direction": "increases_churn"
-          },
-          {
-            "feature": "tenure_months",
-            "value": 13,
-            "shap_value": 1.0539250373840332,
+            "shap_value": 1.5754425525665283,
             "direction": "increases_churn"
           },
           {
             "feature": "num_products",
             "value": 2,
-            "shap_value": -1.0531370639801025,
+            "shap_value": -0.9101480841636658,
             "direction": "decreases_churn"
+          },
+          {
+            "feature": "account_type",
+            "value": "Current + Savings",
+            "shap_value": 0.6387701034545898,
+            "direction": "increases_churn"
           },
           {
             "feature": "experienced_switching_difficulty",
             "value": true,
-            "shap_value": 0.6646860241889954,
+            "shap_value": 0.5768309235572815,
             "direction": "increases_churn"
           }
         ],
@@ -510,7 +510,7 @@
           "kind": "tool",
           "name": "segment_comparison",
           "status": "complete",
-          "summary": "Compared with a synthetic cohort of 167 customers at a 36.5% churn rate."
+          "summary": "Compared with a synthetic cohort of 179 customers at a 34.6% churn rate."
         },
         {
           "kind": "tool",
@@ -601,37 +601,37 @@
           "has_mortgage": false,
           "has_savings_goal": false
         },
-        "churnProbability": 0.9997139573097229,
+        "churnProbability": 0.9978741407394409,
         "drivers": [
           {
             "feature": "monthly_transaction_count",
             "value": 12,
-            "shap_value": 2.614771604537964,
+            "shap_value": 2.633363962173462,
             "direction": "increases_churn"
           },
           {
             "feature": "num_products",
             "value": 1,
-            "shap_value": 1.8990488052368164,
+            "shap_value": 1.3374826908111572,
             "direction": "increases_churn"
           },
           {
             "feature": "has_direct_debits",
             "value": false,
-            "shap_value": 1.3193674087524414,
+            "shap_value": 1.0471773147583008,
             "direction": "increases_churn"
           },
           {
-            "feature": "uses_digital_bank_secondary",
-            "value": true,
-            "shap_value": 0.8460268974304199,
+            "feature": "tenure_months",
+            "value": 60,
+            "shap_value": 0.4303589165210724,
             "direction": "increases_churn"
           },
           {
-            "feature": "monthly_balance_eur",
-            "value": 303.65,
-            "shap_value": 0.7517135143280029,
-            "direction": "increases_churn"
+            "feature": "months_since_switching",
+            "value": 0,
+            "shap_value": -0.28104329109191895,
+            "direction": "decreases_churn"
           }
         ],
         "heldProducts": [
@@ -653,7 +653,7 @@
           "kind": "tool",
           "name": "segment_comparison",
           "status": "complete",
-          "summary": "Compared with a synthetic cohort of 329 customers at a 69.6% churn rate."
+          "summary": "Compared with a synthetic cohort of 335 customers at a 53.4% churn rate."
         },
         {
           "kind": "tool",
@@ -746,37 +746,37 @@
           "has_mortgage": false,
           "has_savings_goal": false
         },
-        "churnProbability": 0.9996590614318848,
+        "churnProbability": 0.9933611154556274,
         "drivers": [
           {
             "feature": "monthly_transaction_count",
             "value": 12,
-            "shap_value": 2.3477673530578613,
+            "shap_value": 2.4788758754730225,
             "direction": "increases_churn"
           },
           {
             "feature": "num_products",
             "value": 1,
-            "shap_value": 1.4196147918701172,
+            "shap_value": 1.3730781078338623,
             "direction": "increases_churn"
           },
           {
             "feature": "has_direct_debits",
             "value": false,
-            "shap_value": 1.395481824874878,
+            "shap_value": 0.8161575794219971,
             "direction": "increases_churn"
           },
           {
             "feature": "has_complaint_history",
             "value": true,
-            "shap_value": 1.3042575120925903,
+            "shap_value": 0.6628158092498779,
             "direction": "increases_churn"
           },
           {
-            "feature": "monthly_balance_eur",
-            "value": 185.17,
-            "shap_value": 0.6779745817184448,
-            "direction": "increases_churn"
+            "feature": "months_since_switching",
+            "value": 0,
+            "shap_value": -0.3557526767253876,
+            "direction": "decreases_churn"
           }
         ],
         "heldProducts": [
@@ -798,7 +798,7 @@
           "kind": "tool",
           "name": "segment_comparison",
           "status": "complete",
-          "summary": "Compared with a synthetic cohort of 329 customers at a 69.6% churn rate."
+          "summary": "Compared with a synthetic cohort of 335 customers at a 53.7% churn rate."
         },
         {
           "kind": "tool",

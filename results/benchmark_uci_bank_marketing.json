@@ -1,0 +1,50 @@
+{
+  "dataset": "UCI Bank Marketing (bank-full.csv)",
+  "citation": "Moro, S., Cortez, P. and Rita, P. (2014). A data-driven approach to predict the success of bank telemarketing. Decision Support Systems 62, 22-31.",
+  "licence": "CC BY 4.0",
+  "source_sha256": "d1513ec63b385506f7cfce9f2c5caa9fe99e7ba4e8c3fa264b3aaf0f849ed32d",
+  "target": "term deposit subscription (y); not churn",
+  "dropped_columns": [
+    "duration"
+  ],
+  "records": 45211,
+  "positive_rate": 0.117,
+  "train_before_resampling": [
+    31937,
+    4231
+  ],
+  "train_after_smoteenn": [
+    18349,
+    27464
+  ],
+  "test_records": 9043,
+  "metrics": [
+    {
+      "model": "Logistic Regression",
+      "accuracy": 0.6435,
+      "precision": 0.1951,
+      "recall": 0.655,
+      "f1": 0.3007,
+      "roc_auc": 0.7112,
+      "average_precision": 0.258
+    },
+    {
+      "model": "Random Forest",
+      "accuracy": 0.8132,
+      "precision": 0.3286,
+      "recall": 0.5718,
+      "f1": 0.4174,
+      "roc_auc": 0.7788,
+      "average_precision": 0.3651
+    },
+    {
+      "model": "XGBoost",
+      "accuracy": 0.7918,
+      "precision": 0.3051,
+      "recall": 0.6106,
+      "f1": 0.4069,
+      "roc_auc": 0.7779,
+      "average_precision": 0.3829
+    }
+  ]
+}

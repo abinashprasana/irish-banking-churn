@@ -17,3 +17,6 @@ venv/
 
 # Exclude markdown files
 *.md
+
+# Downloaded third party datasets (not redistributed)
+data/external/

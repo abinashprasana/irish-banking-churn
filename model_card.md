@@ -17,7 +17,7 @@ This model card details the model type, training characteristics, performance me
 ## Training Data
 - **Source:** A locally generated synthetic dataset containing 10,000 customer records. The generator borrows the [CCPC figure of 60 percent](https://www.ccpc.ie/about-us/advocacy-and-research/research/publication-details/ccpc-switching-research-%28phase-2%29) as the switching difficulty probability for migration flagged synthetic records. The CCPC respondents had an open KBC or Ulster current account, or had closed one within the previous six months. Applying their survey figure to the generated subgroup is a modelling assumption, not a subgroup estimate reported by the CCPC. Central Bank data supplies historical account migration context. The 15 percent migration flag, 21 percent churn target, other distributions, and churn label rule are also constructed assumptions.
 - **Context:** Uses the KBC Bank Ireland and Ulster Bank market exits as its setting. The [Central Bank of Ireland](https://www.centralbank.ie/statistics/data-and-analysis/credit-and-banking-statistics/account-migration-statistics) recorded 1,167,219 current and deposit account closures at the two exiting banks between the start of 2022 and the end of June 2023. The synthetic population explores possible post migration loyalty patterns; it does not measure the current behaviour of those account holders.
-- **Sampling Strategy:** Class imbalance handled via SMOTEENN (SMOTE + Edited Nearest Neighbors) on training data only. The training set changed from `6,320` negative and `1,680` positive samples to a resampled set of `2,724` negative and `3,662` positive samples.
+- **Sampling Strategy:** Class imbalance handled via SMOTEENN (SMOTE + Edited Nearest Neighbors) on training data only. The training set changed from `6,320` negative and `1,680` positive samples to a resampled set of `2,652` negative and `3,624` positive samples.
 
 ## Evaluation Data
 - **Size:** 20% stratified holdout test split (2,000 records: `1,580` retained, `420` churned).
@@ -28,18 +28,21 @@ The model was evaluated against baseline classifiers (Logistic Regression and Ra
 
 | Model | Accuracy | Precision | Recall | F1 Score | ROC-AUC | Average precision |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **XGBoost (Selected)** | **0.8990** | **0.7080** | **0.8833** | **0.7860** | **0.9593** | **0.8420** |
-| Random Forest | 0.8790 | 0.6660 | 0.8500 | 0.7469 | 0.9438 | 0.7708 |
-| Logistic Regression | 0.8385 | 0.5883 | 0.7690 | 0.6667 | 0.9011 | 0.7403 |
+| **XGBoost (Selected)** | **0.8085** | **0.5377** | **0.6286** | **0.5796** | **0.8239** | **0.5329** |
+| Random Forest | 0.7985 | 0.5183 | 0.5738 | 0.5446 | 0.8159 | 0.4862 |
+| Logistic Regression | 0.7525 | 0.4346 | 0.5929 | 0.5015 | 0.7717 | 0.4543 |
 
-*Note: Average precision is reported because the positive churn class is less common. XGBoost scores 0.8420 on the holdout sample.*
+*Note: Average precision is reported because the positive churn class is less common. XGBoost scores 0.5329 on the holdout sample.*
+
+### Real Data Benchmark
+The same recipe run on the UCI Bank Marketing dataset (Moro, Cortez and Rita, 2014, CC BY 4.0; 45,211 real customers, 11.7 percent positive, target is term deposit subscription, `duration` dropped) gave XGBoost a ROC-AUC of 0.7779 and an average precision of 0.3829. This checks the method on real bank data. It is not a churn result. Full results are in `results/benchmark_uci_bank_marketing.json`.
 
 ### Top 5 Most Important Features (by Mean Absolute SHAP Value)
-1. `num_products` (Mean Absolute SHAP: 2.841)
-2. `months_since_switching` (Mean Absolute SHAP: 1.028)
-3. `has_direct_debits` (Mean Absolute SHAP: 0.883)
-4. `tenure_months` (Mean Absolute SHAP: 0.838)
-5. `has_savings_goal` (Mean Absolute SHAP: 0.529)
+1. `num_products` (Mean Absolute SHAP: 1.943)
+2. `account_type` (Mean Absolute SHAP: 0.719)
+3. `has_direct_debits` (Mean Absolute SHAP: 0.683)
+4. `months_since_switching` (Mean Absolute SHAP: 0.521)
+5. `tenure_months` (Mean Absolute SHAP: 0.476)
 
 ## Ethical Considerations
 - **Data Privacy:** The dataset is synthetic and contains no real customer records or personally identifiable information.
