@@ -10,6 +10,7 @@ import json
 import math
 from numbers import Integral, Real
 from pathlib import Path
+import re
 from typing import Any, Literal
 
 import joblib
@@ -580,6 +581,44 @@ def _derived_regulatory_flags(
     return []
 
 
+_CREDIT_TERMS = ("mortgage", "loan", "credit", "overdraft", "borrow")
+_NEGATIONS = frozenset({"not", "no", "never", "without", "cannot", "nor"})
+_NEGATION_WINDOW = 6
+
+
+def _unnegated_term(text: str, term: str) -> bool:
+    """True when the term (or a longer word starting with it) appears without a
+    nearby negation. A hyphen before the term, as in "non-credit", also negates it."""
+
+    for match in re.finditer(rf"(?<![a-z0-9_-]){re.escape(term)}[a-z]*", text):
+        before = re.findall(r"[a-z']+", text[: match.start()])[-_NEGATION_WINDOW:]
+        if not _NEGATIONS.intersection(before) and not any(
+            word.endswith("n't") for word in before
+        ):
+            return True
+    return False
+
+
+def _justification_conflict(
+    justification: str, action: ActionPolicyContext
+) -> str | None:
+    """Explain why an approved justification describes something other than its action."""
+
+    text = justification.lower()
+    for offer in _load_catalogue()["offers"]:
+        if offer["action_id"] == action.action_id:
+            continue
+        if re.search(rf"(?<![a-z0-9_]){re.escape(offer['action_id'])}(?![a-z0-9_])", text) or (
+            offer["name"].lower() in text
+        ):
+            return f"it names a different catalogue offer ({offer['action_id']})"
+    if not (action.is_credit or action.category in {"credit", "mortgage"}):
+        for term in _CREDIT_TERMS:
+            if _unnegated_term(text, term):
+                return f"it uses the credit term {term!r} for a non-credit action"
+    return None
+
+
 def recommendation_formatter(
     candidate: Mapping[str, Any],
     *,
@@ -600,6 +639,11 @@ def recommendation_formatter(
             raise PolicyGateError("approved policy decision is for a different action")
         if recommendation.checker_verdict != "approved":
             raise PolicyGateError("approved action must carry the approved verdict")
+        conflict = _justification_conflict(recommendation.justification, proposed_action)
+        if conflict:
+            raise PolicyGateError(
+                f"approved justification does not match the approved action: {conflict}"
+            )
     else:
         if recommendation.action != "no_recommendation":
             raise PolicyGateError(

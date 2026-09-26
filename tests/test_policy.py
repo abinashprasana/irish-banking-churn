@@ -313,3 +313,52 @@ def test_blocked_decision_emits_refusal_and_cannot_authorize_an_alternative():
             proposed_action=blocked_action,
             policy_decision=decision,
         )
+
+
+@pytest.mark.parametrize(
+    "justification,allowed",
+    [
+        ("Offer the Fixed-rate mortgage suitability review to consolidate borrowing.", False),
+        ("Recommend mortgage_fixed_rate_review instead.", False),
+        ("Fund the waived fees through a short-term overdraft facility.", False),
+        ("Enrol the customer in the six-month savings rate bonus.", False),
+        ("Six months of fee relief is a non-credit option with no loan attached.", True),
+        ("Fee relief addresses service friction without an upsell.", True),
+    ],
+)
+def test_approved_justification_must_describe_the_approved_action(justification, allowed):
+    checked_customer = customer(in_arrears=True)
+    checked_action = canonical_action_context("fee_waiver_6m", True)
+    decision = regulatory_constraint_checker(checked_customer, checked_action)
+    candidate = {
+        "action": "fee_waiver_6m",
+        "justification": justification,
+        "confidence": 0.8,
+        "regulatory_flags": [],
+        "checker_verdict": "approved",
+    }
+    kwargs = dict(customer=checked_customer, proposed_action=checked_action, policy_decision=decision)
+    if allowed:
+        assert recommendation_formatter(candidate, **kwargs)["action"] == "fee_waiver_6m"
+    else:
+        with pytest.raises(PolicyGateError, match="does not match the approved action"):
+            recommendation_formatter(candidate, **kwargs)
+
+
+def test_credit_terms_are_allowed_when_the_approved_action_is_credit():
+    checked_customer = customer(churn_probability=0.3)
+    checked_action = canonical_action_context("mortgage_fixed_rate_review", False)
+    decision = regulatory_constraint_checker(checked_customer, checked_action)
+    output = recommendation_formatter(
+        {
+            "action": "mortgage_fixed_rate_review",
+            "justification": "A human led mortgage review; no rate or credit approval is implied.",
+            "confidence": 0.7,
+            "regulatory_flags": [],
+            "checker_verdict": "approved",
+        },
+        customer=checked_customer,
+        proposed_action=checked_action,
+        policy_decision=decision,
+    )
+    assert output["checker_verdict"] == "approved"
