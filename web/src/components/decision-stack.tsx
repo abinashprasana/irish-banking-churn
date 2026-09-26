@@ -7,9 +7,32 @@ const reveal = {
   visible: { opacity: 1, y: 0 },
 };
 
-export function DecisionStack() {
+const easeOut = [0.16, 1, 0.3, 1] as const;
+
+function asPercent(value: number) {
+  return new Intl.NumberFormat("en-IE", {
+    style: "percent",
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  }).format(value);
+}
+
+export function DecisionStack({ averagePrecision }: { averagePrecision: number }) {
   const reduceMotion = useReducedMotion();
   const initial = reduceMotion ? "visible" : "hidden";
+
+  // Lines and bars draw in after their panel appears. Reduced motion shows the final state.
+  const draw = (delay: number, duration = 0.45) => ({
+    initial: { pathLength: reduceMotion ? 1 : 0 },
+    animate: { pathLength: 1 },
+    transition: { duration, ease: easeOut, delay },
+  });
+  const grow = (delay: number) => ({
+    initial: { scaleX: reduceMotion ? 1 : 0 },
+    animate: { scaleX: 1 },
+    transition: { duration: 0.4, ease: easeOut, delay },
+    style: { transformBox: "fill-box" as const, transformOrigin: "left center" },
+  });
 
   return (
     <div className="decision-stack" aria-labelledby="decision-stack-title">
@@ -61,10 +84,10 @@ export function DecisionStack() {
             SYNTHETIC CUSTOMER SIGNALS
           </text>
           <g className="signal-rows">
-            <line x1="42" y1="95" x2="168" y2="95" />
-            <line x1="42" y1="119" x2="137" y2="119" />
-            <line x1="42" y1="143" x2="186" y2="143" />
-            <line x1="42" y1="167" x2="116" y2="167" />
+            <motion.line x1="42" y1="95" x2="168" y2="95" {...draw(0.05, 0.4)} />
+            <motion.line x1="42" y1="119" x2="137" y2="119" {...draw(0.09, 0.4)} />
+            <motion.line x1="42" y1="143" x2="186" y2="143" {...draw(0.13, 0.4)} />
+            <motion.line x1="42" y1="167" x2="116" y2="167" {...draw(0.17, 0.4)} />
           </g>
           <text className="stack-note" x="42" y="200">
             19 model inputs
@@ -90,12 +113,16 @@ export function DecisionStack() {
             CHURN MODEL
           </text>
           <text className="stack-value" x="270" y="139">
-            84.2%
+            {asPercent(averagePrecision)}
           </text>
           <text className="stack-note" x="270" y="169">
             average precision
           </text>
-          <path className="spark-line" d="M270 188L301 176L328 181L357 153L389 158L412 133" />
+          <motion.path
+            className="spark-line"
+            d="M270 188L301 176L328 181L357 153L389 158L412 133"
+            {...draw(0.28, 0.6)}
+          />
         </motion.g>
 
         <motion.path
@@ -117,9 +144,9 @@ export function DecisionStack() {
             MODEL EVIDENCE
           </text>
           <g className="evidence-bars">
-            <rect x="240" y="303" width="158" height="8" />
-            <rect x="240" y="321" width="93" height="8" />
-            <rect x="240" y="339" width="72" height="8" />
+            <motion.rect x="240" y="303" width="158" height="8" {...grow(0.3)} />
+            <motion.rect x="240" y="321" width="93" height="8" {...grow(0.34)} />
+            <motion.rect x="240" y="339" width="72" height="8" {...grow(0.38)} />
           </g>
           <text className="stack-note" x="414" y="310">
             SHAP
@@ -140,8 +167,9 @@ export function DecisionStack() {
           animate="visible"
           transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}
         >
+          {reduceMotion ? null : <circle className="gate-halo" cx="561" cy="306" r="53" />}
           <circle className="gate-ring" cx="561" cy="306" r="53" />
-          <path className="gate-check" d="M538 307L553 322L584 285" />
+          <motion.path className="gate-check" d="M538 307L553 322L584 285" {...draw(0.62, 0.32)} />
           <text className="stack-kicker gate-label" x="561" y="384">
             POLICY GATE
           </text>

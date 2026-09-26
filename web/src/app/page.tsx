@@ -2,8 +2,11 @@ import type { CSSProperties } from "react";
 
 import { BrandLockup } from "@/components/brand-lockup";
 import { BrandMark } from "@/components/brand-mark";
+import { CountUp } from "@/components/count-up";
 import { DecisionJourney } from "@/components/decision-journey";
 import { DecisionStack } from "@/components/decision-stack";
+import { InView } from "@/components/in-view";
+import { RedTeamPanel } from "@/components/red-team-panel";
 import { ScenarioExplorer } from "@/components/scenario-explorer";
 import { evidenceManifest, uiScenarios } from "@/lib/evidence";
 import { site } from "@/lib/site";
@@ -23,6 +26,18 @@ function metricValue(
   return metrics.find((metric) => metric.id === id)?.value ?? 0;
 }
 
+const featurePhrases: Record<string, string> = {
+  num_products: "product count",
+  account_type: "account type",
+  has_direct_debits: "direct debits",
+  months_since_switching: "months since switching",
+  tenure_months: "tenure",
+};
+
+function featurePhrase(name: string) {
+  return featurePhrases[name] ?? name.replaceAll("_", " ");
+}
+
 function titleCase(value: string) {
   return value
     .replaceAll("_", " ")
@@ -33,6 +48,15 @@ export default function Home() {
   const { evidence } = evidenceManifest;
   const averagePrecision = metricValue(evidence.model.metrics, "averagePrecision");
   const selectedScenario = uiScenarios[0];
+  const selectedBenchmark = evidence.model.benchmarks.find((benchmark) => benchmark.selected);
+  const baselineBenchmark = evidence.model.benchmarks.find((benchmark) => benchmark.model.startsWith("Logistic"));
+  const precisionGap =
+    selectedBenchmark && baselineBenchmark
+      ? metricValue(selectedBenchmark.metrics, "averagePrecision") -
+        metricValue(baselineBenchmark.metrics, "averagePrecision")
+      : 0;
+  const [firstFeature, secondFeature] = evidence.model.topFeatures;
+  const realData = evidence.realDataBenchmark;
 
   return (
     <>
@@ -68,30 +92,30 @@ export default function Home() {
               Research prototype. No real customer data, automated outreach, or compliance claim.
             </p>
           </div>
-          <DecisionStack />
+          <DecisionStack averagePrecision={averagePrecision} />
         </section>
 
         <section className="evidence-strip" aria-label="Verified project evidence">
           <dl className="section-shell">
             <div>
               <dt>Customer profiles</dt>
-              <dd>{evidence.dataset.recordCount.toLocaleString("en-IE")}</dd>
+              <dd><CountUp value={evidence.dataset.recordCount} format="integer" /></dd>
               <small>Fully synthetic</small>
             </div>
             <div>
               <dt>Model inputs</dt>
-              <dd>{evidence.dataset.featureCount}</dd>
+              <dd><CountUp value={evidence.dataset.featureCount} format="integer" /></dd>
               <small>Irish migration context</small>
             </div>
             <div>
               <dt>Average precision</dt>
-              <dd>{averagePrecision.toFixed(3)}</dd>
+              <dd><CountUp value={averagePrecision} format="fixed3" /></dd>
               <small>Original holdout</small>
             </div>
             <div>
               <dt>Deterministic tests</dt>
               <dd>
-                {evidence.verification.testsPassed}/{evidence.verification.testsTotal}
+                <CountUp value={evidence.verification.testsPassed} format="integer" />/{evidence.verification.testsTotal}
               </dd>
               <small>Zero skipped</small>
             </div>
@@ -144,7 +168,7 @@ export default function Home() {
               </p>
             </div>
 
-            <ol className="system-flow">
+            <InView as="ol" className="system-flow reveal-group">
               <li>
                 <span>01</span>
                 <div>
@@ -185,7 +209,7 @@ export default function Home() {
                 </div>
                 <small>Human remains accountable</small>
               </li>
-            </ol>
+            </InView>
           </div>
         </section>
 
@@ -201,16 +225,17 @@ export default function Home() {
           </div>
 
           <div className="benchmark-layout">
-            <div className="benchmark-plot" aria-label="Average precision by model">
+            <InView className="benchmark-plot grow-bars" aria-label="Average precision by model">
               <div className="benchmark-axis">
                 <span>0.0</span>
                 <span>Average precision</span>
                 <span>0.9</span>
               </div>
-              {evidence.model.benchmarks.map((benchmark) => {
+              {evidence.model.benchmarks.map((benchmark, index) => {
                 const value = metricValue(benchmark.metrics, "averagePrecision");
                 const style = {
                   "--benchmark-width": `${(value / 0.9) * 100}%`,
+                  "--i": index,
                 } as CSSProperties;
                 return (
                   <div className="benchmark-row" data-selected={benchmark.selected} key={benchmark.model}>
@@ -224,8 +249,8 @@ export default function Home() {
                   </div>
                 );
               })}
-              <p>XGBoost is 0.102 average-precision points above the logistic-regression baseline on this holdout.</p>
-            </div>
+              <p>XGBoost is {precisionGap.toFixed(3)} average-precision points above the logistic-regression baseline on this holdout.</p>
+            </InView>
 
             <div className="metric-focus">
               <span className="mono-label">SELECTED MODEL / HOLDOUT</span>
@@ -279,14 +304,15 @@ export default function Home() {
               <p className="eyebrow">Global explanation</p>
               <h3>What most shaped this fitted model?</h3>
               <p>
-                Across the 2,000-profile holdout, product count and months since switching have the largest mean absolute SHAP effects. That pattern comes from the generated data and label rule.
+                Across the 2,000-profile holdout, {featurePhrase(firstFeature.name)} and {featurePhrase(secondFeature.name)} have the largest mean absolute SHAP effects. That pattern comes from the generated data and label rule.
               </p>
               <p className="evidence-caveat">{evidence.model.explanationCaveat}</p>
             </div>
-            <ol className="shap-ranking">
-              {evidence.model.topFeatures.map((feature) => {
+            <InView as="ol" className="shap-ranking grow-bars">
+              {evidence.model.topFeatures.map((feature, index) => {
                 const style = {
                   "--shap-width": `${(feature.meanAbsoluteShap / evidence.model.topFeatures[0].meanAbsoluteShap) * 100}%`,
+                  "--i": index,
                 } as CSSProperties;
                 return (
                   <li key={feature.name}>
@@ -301,7 +327,44 @@ export default function Home() {
                   </li>
                 );
               })}
-            </ol>
+            </InView>
+          </div>
+
+          <div className="real-data">
+            <div className="real-data__copy">
+              <p className="eyebrow">Real data check</p>
+              <h3>The same recipe on real bank customers</h3>
+              <p>
+                UCI Bank Marketing holds {realData.records.toLocaleString("en-IE")} customers of a Portuguese bank (Moro, Cortez and Rita, 2014). Its target is whether a customer took a term deposit, so this checks the training method on real, imbalanced data. It says nothing about churn.
+              </p>
+              <p className="evidence-caveat">
+                {asPercent(realData.positiveRate)} positive rate. The <code>{realData.droppedColumns.join(", ")}</code> column was dropped because it is only known after the outcome. <a href={realData.sourceUrl} target="_blank" rel="noreferrer">UCI dataset page <span aria-hidden="true">↗</span></a>
+              </p>
+            </div>
+            <InView className="real-data__plot grow-bars" aria-label="ROC-AUC on UCI Bank Marketing by model">
+              <div className="benchmark-axis">
+                <span>0.0</span>
+                <span>ROC-AUC</span>
+                <span>1.0</span>
+              </div>
+              {[...realData.models].reverse().map((row, index) => {
+                const style = {
+                  "--benchmark-width": `${row.rocAuc * 100}%`,
+                  "--i": index,
+                } as CSSProperties;
+                return (
+                  <div className="benchmark-row" data-selected={row.model === "XGBoost"} key={row.model}>
+                    <div>
+                      <strong>{row.model}</strong>
+                      <span>{row.rocAuc.toFixed(4)} · AP {row.averagePrecision.toFixed(4)}</span>
+                    </div>
+                    <div className="benchmark-track">
+                      <span style={style} />
+                    </div>
+                  </div>
+                );
+              })}
+            </InView>
           </div>
         </section>
 
@@ -343,7 +406,7 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="governance-rules">
+            <InView className="governance-rules reveal-group">
               {evidence.governance.rules.map((rule, index) => (
                 <article key={rule.id}>
                   <span>0{index + 1}</span>
@@ -352,7 +415,7 @@ export default function Home() {
                   <small>Deterministic</small>
                 </article>
               ))}
-            </div>
+            </InView>
 
             <div className="governance-boundary">
               <div>
@@ -378,12 +441,27 @@ export default function Home() {
           </div>
         </section>
 
+        <section className="red-team-section section-space" id="red-team" aria-labelledby="red-team-heading">
+          <div className="section-shell">
+            <div className="section-heading-row">
+              <div>
+                <p className="eyebrow">Red team</p>
+                <h2 id="red-team-heading">Attacking the gate on purpose</h2>
+              </div>
+              <p>
+                {`${evidence.redTeam.attackCount} attacks try to push a blocked offer past the gate: injected instructions, persuasion, tampered tool calls, relabelled offers and outright gaps. Each outcome is judged by an oracle written from a separate harm specification, which never imports the gate's code.`}
+              </p>
+            </div>
+            <RedTeamPanel redTeam={evidence.redTeam} />
+          </div>
+        </section>
+
         <section className="limits section-shell section-space" aria-labelledby="limits-heading">
           <div className="limits-heading">
             <p className="eyebrow">Boundaries</p>
             <h2 id="limits-heading">What the system predicts, and what it deliberately does not decide</h2>
           </div>
-          <div className="limits-columns">
+          <InView className="limits-columns reveal-group">
             <article>
               <span>Predicts</span>
               <h3>A synthetic churn probability</h3>
@@ -399,7 +477,7 @@ export default function Home() {
               <h3>Suitability, eligibility, or contact</h3>
               <p>Local rules demonstrate control flow. A trained advisor and production governance process would still own any real decision.</p>
             </article>
-          </div>
+          </InView>
           <div className="production-needs">
             <h3>Production adoption would additionally require</h3>
             <ul>

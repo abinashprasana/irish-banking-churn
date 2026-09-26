@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { motion, useReducedMotion, useScroll } from "motion/react";
 
 import { BrandLockup } from "@/components/brand-lockup";
 import { site } from "@/lib/site";
@@ -10,7 +11,15 @@ const links = [
   { href: "#evidence", label: "Evidence" },
   { href: "#decision", label: "Decision replay" },
   { href: "#governance", label: "Governance" },
+  { href: "#red-team", label: "Red team" },
 ];
+
+function ReadingProgress() {
+  const { scrollYProgress } = useScroll();
+  const reduceMotion = useReducedMotion();
+  if (reduceMotion) return null;
+  return <motion.div className="reading-progress" style={{ scaleX: scrollYProgress }} aria-hidden="true" />;
+}
 
 export function Navigation() {
   const [open, setOpen] = useState(false);
@@ -64,6 +73,7 @@ export function Navigation() {
           <span />
         </button>
       </div>
+      <ReadingProgress />
 
       <nav
         id="mobile-navigation"
