@@ -37,6 +37,16 @@ LOOP_PATH = PROJECT_ROOT / "agent" / "loop.py"
 TRACE_DIR = PROJECT_ROOT / "demo_traces"
 TEST_DIR = PROJECT_ROOT / "tests"
 OUTPUT_PATH = PROJECT_ROOT / "web" / "src" / "data" / "evidence.generated.json"
+BENCHMARK_PATH = PROJECT_ROOT / "results" / "benchmark_uci_bank_marketing.json"
+RED_TEAM_DIR = PROJECT_ROOT / "redteam" / "results"
+
+HARM_LABELS = {
+    "H06": "Disclosure about another customer",
+    "H07": "Unsupported regulatory or guarantee claim",
+    "H08": "Action and justification disagree",
+    "H11": "Thought text pushes a blocked action",
+    "H12": "Offer does not fit the profile",
+}
 EVIDENCE_DATE = "2026-08-15"
 
 PROJECT = {
@@ -196,6 +206,86 @@ def _model_evidence(recordings: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+def _benchmark_evidence() -> dict[str, Any]:
+    source = _read_json(BENCHMARK_PATH)
+    return {
+        "dataset": source["dataset"],
+        "citation": source["citation"],
+        "sourceUrl": "https://archive.ics.uci.edu/dataset/222/bank+marketing",
+        "licence": source["licence"],
+        "target": source["target"],
+        "records": source["records"],
+        "positiveRate": source["positive_rate"],
+        "droppedColumns": source["dropped_columns"],
+        "models": [
+            {
+                "model": row["model"],
+                "rocAuc": row["roc_auc"],
+                "averagePrecision": row["average_precision"],
+                "f1": row["f1"],
+            }
+            for row in source["metrics"]
+        ],
+    }
+
+
+def _proportion(entry: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "successes": entry["successes"],
+        "total": entry["total"],
+        "interval": entry["wilson_95"],
+    }
+
+
+def _red_team_evidence() -> dict[str, Any]:
+    runs = {gate: _read_json(RED_TEAM_DIR / f"offline_gate_{gate}_all.json") for gate in ("on", "off")}
+    for gate, run in runs.items():
+        if run["mode"] != "offline" or run["provider_requests"] != 0:
+            raise ValueError(f"red team gate {gate} summary must be an offline, zero request run")
+    attacks = [line for line in (PROJECT_ROOT / "redteam" / "attacks" / "attacks.jsonl").read_text(encoding="utf-8").splitlines() if line.strip()]
+    benign = [line for line in (PROJECT_ROOT / "redteam" / "attacks" / "benign.jsonl").read_text(encoding="utf-8").splitlines() if line.strip()]
+    records = [json.loads(line) for line in attacks]
+
+    def gate_view(run: dict[str, Any]) -> dict[str, Any]:
+        summary = run["summary"]
+        return {
+            "headline": _proportion(summary["headline"]["overall"]),
+            "headlineByFamily": {
+                family: _proportion(entry)
+                for family, entry in summary["headline"]["by_family"].items()
+            },
+            "headlineOutcomes": [
+                {"id": outcome["id"], "family": outcome["family"], "unsafe": outcome["success"]}
+                for outcome in run["outcomes"]
+                if outcome.get("headline") and not outcome.get("skipped")
+            ],
+            "operatorSurface": _proportion(summary["operator_surface"]["overall"]),
+            "knownGaps": _proportion(summary["known_gap"]["overall"]),
+            "benignBlocked": _proportion(summary["benign"]["false_block"]),
+            "benignFlagged": _proportion(summary["benign"]["oracle_flagged"]),
+        }
+
+    gap_rows: dict[str, list[str]] = {}
+    for row in runs["on"]["summary"]["known_gap"]["records"]:
+        for harm in row["violates"]:
+            gap_rows.setdefault(harm, []).append(row["id"])
+    return {
+        "attackCount": len(records),
+        "familyCount": len({record["family"] for record in records}),
+        "offlineAttackCount": sum("offline" in record["modes"] for record in records),
+        "benignCount": len(benign),
+        "includesDrafts": runs["on"]["includes_drafts"] or runs["off"]["includes_drafts"],
+        "gateOn": gate_view(runs["on"]),
+        "gateOff": gate_view(runs["off"]),
+        "knownGapRows": [
+            {"harmId": harm, "label": HARM_LABELS.get(harm, harm), "attackIds": ids}
+            for harm, ids in sorted(gap_rows.items())
+        ],
+        "closedBypassIds": sorted(record["id"] for record in records if record["status"] == "closed_bypass"),
+        "live": None,
+    }
+
+
 def _test_function_count() -> int:
     count = 0
     for path in sorted(TEST_DIR.glob("test_*.py")):
@@ -352,6 +442,9 @@ def build_bundle() -> dict[str, Any]:
             "agent/policy_rules.py",
             "demo_traces/*.json",
             "tests/test_*.py",
+            "results/benchmark_uci_bank_marketing.json",
+            "redteam/results/offline_gate_on_all.json",
+            "redteam/results/offline_gate_off_all.json",
         ],
         "evidence": {
             "project": PROJECT,
@@ -375,6 +468,8 @@ def build_bundle() -> dict[str, Any]:
                     "not legal determinations or evidence of bank-policy compliance."
                 ),
             },
+            "realDataBenchmark": _benchmark_evidence(),
+            "redTeam": _red_team_evidence(),
             "verification": {
                 "testsPassed": test_count,
                 "testsTotal": test_count,

@@ -51,3 +51,35 @@ def test_case_study_evidence_schema_is_sanitized_and_complete():
 
 def test_generated_case_study_evidence_has_not_drifted():
     assert EVIDENCE_PATH.read_text(encoding="utf-8") == export_case_study.render_bundle()
+
+
+def test_benchmark_and_red_team_evidence_match_their_source_files():
+    evidence = export_case_study.build_bundle()["evidence"]
+    benchmark = json.loads((PROJECT_ROOT / "results" / "benchmark_uci_bank_marketing.json").read_text(encoding="utf-8"))
+    assert evidence["realDataBenchmark"]["records"] == benchmark["records"]
+    assert "not churn" in evidence["realDataBenchmark"]["target"]
+    assert [row["rocAuc"] for row in evidence["realDataBenchmark"]["models"]] == [
+        row["roc_auc"] for row in benchmark["metrics"]
+    ]
+
+    red_team = evidence["redTeam"]
+    assert red_team["live"] is None
+    for gate in ("on", "off"):
+        source = json.loads(
+            (PROJECT_ROOT / "redteam" / "results" / f"offline_gate_{gate}_all.json").read_text(encoding="utf-8")
+        )
+        view = red_team["gateOn" if gate == "on" else "gateOff"]
+        headline = source["summary"]["headline"]["overall"]
+        assert view["headline"] == {
+            "successes": headline["successes"],
+            "total": headline["total"],
+            "interval": headline["wilson_95"],
+        }
+        assert len(view["headlineOutcomes"]) == headline["total"]
+        assert sum(outcome["unsafe"] for outcome in view["headlineOutcomes"]) == headline["successes"]
+    assert red_team["gateOn"]["headline"]["successes"] == 0
+    assert red_team["closedBypassIds"] == ["a031", "a032", "a035", "a042"]
+
+    serialized = json.dumps(red_team)
+    for excluded_key in ('"justification":', '"trace":', '"findings":', '"customer_id":'):
+        assert excluded_key not in serialized
