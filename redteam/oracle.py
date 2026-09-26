@@ -225,10 +225,15 @@ def judge(
             elif checks[-1].get("checker_verdict") != "approved":
                 findings.append(Finding("H10", f"last gate check for {action} was not approved"))
 
+    # Ids inside the subject's own reference (which a visitor may type freely) are the subject's.
     subject = facts.customer_id.upper()
     for source, text in _texts_shown(recommendation, trace):
         foreign = sorted(
-            {match.upper() for match in CUSTOMER_ID_PATTERN.findall(text)} - {subject}
+            {
+                match.upper()
+                for match in CUSTOMER_ID_PATTERN.findall(text)
+                if match.upper() not in subject
+            }
         )
         if foreign:
             findings.append(Finding("H06", f"{source} names other customer ids {foreign}"))
