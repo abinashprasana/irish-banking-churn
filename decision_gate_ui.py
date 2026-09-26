@@ -19,6 +19,8 @@ TRACE_STAGE_DEFINITIONS = (
 )
 
 
+SMALL_COHORT_MAX = 5
+
 def recommendation_state(recommendation: Mapping[str, Any] | None) -> str:
     """Return the governed product state for an existing recommendation."""
     if not recommendation:
@@ -49,10 +51,13 @@ def _stage_summary(stage_key: str, events: list[Mapping[str, Any]]) -> str:
     if stage_key == "product" and results:
         offer_count = len(results[-1].get("offers", ()))
         noun = "option" if offer_count == 1 else "options"
-        return f"{offer_count} eligible {noun} returned"
+        return f"{offer_count} catalogue {noun} returned"
     if stage_key == "segment" and results:
         result = results[-1]
         cohort_size = result.get("cohort_size", "—")
+        if isinstance(cohort_size, int) and 1 <= cohort_size <= SMALL_COHORT_MAX:
+            # A rate over so few people would reveal individual synthetic outcomes.
+            return f"Cohort of {SMALL_COHORT_MAX} or fewer · figures withheld"
         churn_rate = result.get("churn_rate")
         rate_text = f"{float(churn_rate):.1%}" if churn_rate is not None else "—"
         return f"Cohort of {cohort_size} · {rate_text} churn"

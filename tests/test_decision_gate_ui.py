@@ -58,3 +58,25 @@ def test_blocked_recordings_read_as_governed_states_not_runtime_errors():
         assert stages[3]["status"] == "blocked"
         assert "stopped" in stages[2]["summary"].lower()
         assert "no recommendation" in stages[3]["summary"].lower()
+
+
+def _segment_summary(cohort_size, churn_rate):
+    trace = [
+        {
+            "type": "tool_result",
+            "content": {
+                "name": "segment_comparison",
+                "is_error": False,
+                "result": {"cohort_size": cohort_size, "churn_rate": churn_rate},
+            },
+        }
+    ]
+    stages = {stage["key"]: stage for stage in build_decision_stages(trace)}
+    return stages["segment"]["summary"]
+
+
+def test_small_cohort_figures_are_withheld_from_the_advisor_view():
+    assert _segment_summary(1, 1.0) == "Cohort of 5 or fewer · figures withheld"
+    assert _segment_summary(5, 0.4) == "Cohort of 5 or fewer · figures withheld"
+    assert _segment_summary(6, 0.5) == "Cohort of 6 · 50.0% churn"
+    assert "withheld" not in _segment_summary(184, 0.625)

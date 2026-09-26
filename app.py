@@ -3992,6 +3992,7 @@ def _render_decision_gate_workspace():
             MAX_LOOP_TURNS,
             MAX_TOKENS,
             MODEL_NAME,
+            AgentLoopError,
             create_live_client,
             resolve_groq_api_key,
             run_retention_agent,
@@ -4126,6 +4127,12 @@ def _render_decision_gate_workspace():
                     trace = live_result["trace"]
                 except RateLimitSafetyError as exc:
                     st.error(str(exc))
+                except AgentLoopError:
+                    st.warning(
+                        "No recommendation was issued. The agent did not produce an output "
+                        "that passed the formatter's checks, so nothing reached the advisor. "
+                        "The case is unchanged."
+                    )
                 except Exception as exc:
                     status_code = getattr(exc, "status_code", None)
                     error_text = str(exc).lower()
