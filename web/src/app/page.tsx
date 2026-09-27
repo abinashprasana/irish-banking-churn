@@ -450,11 +450,11 @@ export default function Home() {
                   <dd>{asPercent(evidence.governance.humanReviewThreshold, 0)}</dd>
                 </div>
                 <div>
-                  <dt>Recorded agent requests</dt>
+                  <dt>Provider calls in recorded replays</dt>
                   <dd>{evidence.verification.apiRequests}</dd>
                 </div>
                 <div>
-                  <dt>Blocked eval outcomes</dt>
+                  <dt>Scenarios blocked by design</dt>
                   <dd>{evidence.verification.blockedOutcomes}/{evidence.verification.scenariosTotal}</dd>
                 </div>
               </dl>

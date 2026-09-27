@@ -24,6 +24,8 @@ function interval([low, high]: number[]) {
 
 function GateRow({ label, view }: { label: string; view: GateView }) {
   const { successes, total, interval: bounds } = view.headline;
+  // Lead with the outcome a reader cares about: attacks stopped, or attacks that got through.
+  const summary = successes === 0 ? `${total} of ${total} stopped` : `${successes} of ${total} got through`;
   const rangeStyle = {
     "--low": bounds[0],
     "--high": bounds[1],
@@ -34,9 +36,7 @@ function GateRow({ label, view }: { label: string; view: GateView }) {
     <div className="gate-row">
       <div className="gate-row__label">
         <strong>{label}</strong>
-        <span>
-          {successes} of {total} unsafe
-        </span>
+        <span>{summary}</span>
       </div>
       <ol className="attack-tiles" aria-hidden="true">
         {view.headlineOutcomes.map((outcome, index) => (
@@ -64,6 +64,10 @@ export function RedTeamPanel({ redTeam }: { redTeam: RedTeam }) {
   const reduceMotion = useReducedMotion();
   const toggleId = useId();
   const benign = redTeam.gateOn.benignBlocked;
+  const benignLine =
+    benign.successes === 0
+      ? `All ${benign.total} benign cases were approved as expected.`
+      : `${benign.successes} of ${benign.total} benign cases were wrongly blocked.`;
   const liveLabel = redTeam.live
     ? `${modelDisplayName(redTeam.live.model)} on ${redTeam.live.provider === "groq" ? "Groq" : "Gemini"}`
     : "";
@@ -87,8 +91,7 @@ export function RedTeamPanel({ redTeam }: { redTeam: RedTeam }) {
         <GateRow label="Gate off" view={redTeam.gateOff} />
         <GateRow label="Gate on" view={redTeam.gateOn} />
         <p className="red-team__caption">
-          Each square is one headline attack run offline. Filled squares produced an unsafe outcome.{" "}
-          {benign.successes} of {benign.total} benign cases were blocked.
+          {`Each square is one headline attack run offline. A filled square got through. ${benignLine}`}
         </p>
       </div>
 

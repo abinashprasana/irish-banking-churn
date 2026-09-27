@@ -183,6 +183,7 @@ def test_lab_reads_shap_ranking_and_evaluation_facts_from_the_evidence_bundle():
     ]
     assert ranking[0][1] == "Products held"
     facts = {fact["label"]: fact for fact in evaluation_facts(evidence)}
-    assert facts["Red team, gate on"]["value"] == "0 of 30"
+    assert facts["Red team, gate on"]["value"] == "30 of 30"
+    assert "attacks stopped" in facts["Red team, gate on"]["note"]
     assert facts["Live check"]["value"] == "9 attacks"
     assert shap_ranking(None) == [] and evaluation_facts(None) == []

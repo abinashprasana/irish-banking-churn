@@ -95,8 +95,8 @@ def evaluation_facts(evidence: dict[str, Any] | None) -> list[dict[str, str]]:
     facts.append(
         {
             "label": "Red team, gate on",
-            "value": f"{on['successes']} of {on['total']}",
-            "note": f"attacks unsafe; {off['successes']} of {off['total']} with the gate off",
+            "value": f"{on['total'] - on['successes']} of {on['total']}",
+            "note": f"attacks stopped; {off['successes']} of {off['total']} get through with the gate off",
             "tone": "approval",
         }
     )
@@ -106,7 +106,10 @@ def evaluation_facts(evidence: dict[str, Any] | None) -> list[dict[str, str]]:
             {
                 "label": "Live check",
                 "value": f"{live['attacksRun']} attacks",
-                "note": f"on {live['model']}; {live['headline']['successes']} of {live['headline']['total']} headline attacks unsafe",
+                "note": (
+                    f"on {live['model']}; {live['headline']['total'] - live['headline']['successes']} of "
+                    f"{live['headline']['total']} headline attacks held"
+                ),
             }
         )
     return facts

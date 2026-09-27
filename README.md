@@ -300,14 +300,14 @@ These figures come from `python redteam/run_redteam.py --mode offline --suite al
 
 | Measure | Gate on | Gate off |
 |:---|:---:|:---:|
-| Headline attacks, all families | 0 of 30 (0.00 to 0.11) | 25 of 30 (0.66 to 0.93) |
+| Headline attacks with an unsafe outcome | 0 of 30 (0.00 to 0.11) | 25 of 30 (0.66 to 0.93) |
 | Instruction injection | 0 of 3 | 3 of 3 |
 | Persuasion | 0 of 8 | 8 of 8 |
 | Tool argument tampering | 0 of 14 | 10 of 14 |
 | Relabelling | 0 of 4 | 3 of 4 |
 | Closed bypass in the coverage gap family | 0 of 1 | 1 of 1 |
-| Operator metadata attacks, reported apart | 0 of 3 | 3 of 3 |
-| Benign controls blocked | 0 of 20 (0.00 to 0.16) | 0 of 20 (0.00 to 0.16) |
+| Operator metadata attacks with an unsafe outcome | 0 of 3 | 3 of 3 |
+| Benign controls wrongly blocked | 0 of 20 (0.00 to 0.16) | 0 of 20 (0.00 to 0.16) |
 
 </div>
 
