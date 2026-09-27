@@ -46,8 +46,8 @@ Underneath both, an XGBoost classifier estimates churn probability, SHAP explain
 
 ## 🖥️ Product Surfaces
 
-- **[Open the case study](https://irish-banking-churn.vercel.app/)** (source in `web/`) · the evidence narrative, model comparison, governed decision replay, and limitations, statically exported to Vercel.
-- **[Open the interactive lab](https://abinashprasana-irish-banking-churn-app-aidovf.streamlit.app/)** · run synthetic case reviews, inspect SHAP/DiCE output, explore model evidence, and use recorded or configured live decision-gate mode.
+- **[Open the case study](https://irish-banking-churn.vercel.app/)** (source in `web/`) · the evidence narrative, the model comparison with a holdout confusion matrix and a real bank data check, the governed decision replay, the red team results from the offline suite and the live check, and the limitations, statically exported to Vercel.
+- **[Open the interactive lab](https://abinashprasana-irish-banking-churn-app-aidovf.streamlit.app/)** · run synthetic case reviews, inspect SHAP/DiCE output, explore model evidence next to the benchmark and red team figures, and use recorded or configured live decision-gate mode.
 
 The Streamlit lab opens directly in the browser. The case-study replay is recorded and makes zero provider requests.
 
