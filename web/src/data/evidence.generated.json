@@ -239,7 +239,7 @@
       "explanationCaveat": "SHAP values explain the fitted model's raw output on synthetic data. They are neither causal effects nor probability-point changes."
     },
     "agent": {
-      "modelId": "qwen/qwen3.6-27b",
+      "modelId": "qwen/qwen3.8-27b",
       "tools": [
         "product_lookup",
         "recommendation_formatter",
@@ -836,8 +836,8 @@
       "live": null
     },
     "verification": {
-      "testsPassed": 81,
-      "testsTotal": 81,
+      "testsPassed": 82,
+      "testsTotal": 82,
       "scenariosPassed": 4,
       "scenariosTotal": 4,
       "blockedOutcomes": 2,
@@ -852,7 +852,7 @@
       "mode": "recorded",
       "recording": {
         "apiRequests": 0,
-        "runtimeModelId": "qwen/qwen3.6-27b",
+        "runtimeModelId": "qwen/qwen3.8-27b",
         "modelOutputCaptured": false,
         "reasoningSource": "scripted_fixture",
         "label": "Recorded and verified replay · 0 API requests"
@@ -995,7 +995,7 @@
       "mode": "recorded",
       "recording": {
         "apiRequests": 0,
-        "runtimeModelId": "qwen/qwen3.6-27b",
+        "runtimeModelId": "qwen/qwen3.8-27b",
         "modelOutputCaptured": false,
         "reasoningSource": "scripted_fixture",
         "label": "Recorded and verified replay · 0 API requests"
@@ -1139,7 +1139,7 @@
       "mode": "recorded",
       "recording": {
         "apiRequests": 0,
-        "runtimeModelId": "qwen/qwen3.6-27b",
+        "runtimeModelId": "qwen/qwen3.8-27b",
         "modelOutputCaptured": false,
         "reasoningSource": "scripted_fixture",
         "label": "Recorded and verified replay · 0 API requests"
@@ -1284,7 +1284,7 @@
       "mode": "recorded",
       "recording": {
         "apiRequests": 0,
-        "runtimeModelId": "qwen/qwen3.6-27b",
+        "runtimeModelId": "qwen/qwen3.8-27b",
         "modelOutputCaptured": false,
         "reasoningSource": "scripted_fixture",
         "label": "Recorded and verified replay · 0 API requests"

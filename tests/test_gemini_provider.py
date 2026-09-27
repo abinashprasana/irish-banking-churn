@@ -151,3 +151,12 @@ def test_paced_quota_keeps_a_daily_count_per_model(tmp_path, monkeypatch):
     second.reserve_request()
     assert '"requests": 2' in (tmp_path / ".redteam_quota_gemini_gemini-3.5-flash.json").read_text(encoding="utf-8")
     assert '"requests": 1' in (tmp_path / ".redteam_quota_gemini_gemini-3.1-flash-lite.json").read_text(encoding="utf-8")
+
+
+def test_quota_file_name_is_safe_for_model_ids_with_slashes(tmp_path, monkeypatch):
+    from redteam import live
+
+    monkeypatch.setattr(live, "QUOTA_STATE_PATH", tmp_path / ".redteam_quota.json")
+    quota = live.PacedQuota(1, live.UsageLedger(), provider="groq", scope="qwen/qwen3.6-27b")
+    quota.reserve_request()
+    assert (tmp_path / ".redteam_quota_groq_qwen_qwen3.6-27b.json").is_file()

@@ -6,7 +6,7 @@ Dry run (default or ``--dry-run``):
 
 Live (``--live``):
     Runs selected recorded customer scenarios through Groq's free-tier
-    ``qwen/qwen3.6-27b`` endpoint. It requires ``GROQ_API_KEY`` and is
+    ``qwen/qwen3.8-27b`` endpoint (or Gemini with ``--provider gemini``). It requires ``GROQ_API_KEY`` and is
     protected by the same in-memory daily/request limits as the application.
 """
 
@@ -345,7 +345,8 @@ def live_run(
 
     summary_dir = PROJECT_ROOT / "redteam" / "runs"
     summary_dir.mkdir(parents=True, exist_ok=True)
-    summary_path = summary_dir / f"live_eval_{provider}_{model_name}.json"
+    safe_model = "".join(c if c.isalnum() or c in "._-" else "_" for c in model_name)
+    summary_path = summary_dir / f"live_eval_{provider}_{safe_model}.json"
     summary_path.write_text(
         json.dumps({"provider": provider, "model": model_name, "stopped": stopped, "scenarios": rows}, indent=2) + "\n",
         encoding="utf-8",

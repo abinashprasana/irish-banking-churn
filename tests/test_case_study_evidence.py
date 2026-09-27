@@ -23,7 +23,7 @@ def test_case_study_evidence_schema_is_sanitized_and_complete():
     assert bundle["evidence"]["dataset"]["recordCount"] == 10_000
     assert bundle["evidence"]["dataset"]["featureCount"] == 19
     assert bundle["evidence"]["model"]["artifact"] == "xgboost_churn_model.pkl"
-    assert bundle["evidence"]["agent"]["modelId"] == "qwen/qwen3.6-27b"
+    assert bundle["evidence"]["agent"]["modelId"] == "qwen/qwen3.8-27b"
     assert len(bundle["evidence"]["governance"]["rules"]) == 4
     assert bundle["evidence"]["verification"]["scenariosPassed"] == 4
     assert bundle["evidence"]["verification"]["blockedOutcomes"] == 2

@@ -27,7 +27,7 @@ from agent.tools import (
 from agent.trace import TraceRecorder
 
 
-MODEL_NAME = "qwen/qwen3.6-27b"
+MODEL_NAME = "qwen/qwen3.8-27b"
 MAX_LOOP_TURNS = 6
 MAX_TOKENS = 1024
 MAX_LIVE_API_CALLS = 6

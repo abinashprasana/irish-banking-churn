@@ -29,7 +29,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from agent.loop import ScriptedMockClient, run_retention_agent  # noqa: E402
+from agent.loop import MODEL_NAME, ScriptedMockClient, run_retention_agent  # noqa: E402
 from agent.tools import load_phase1_runtime  # noqa: E402
 
 
@@ -152,6 +152,8 @@ def regenerate(demo: dict[str, Any], runtime: Any) -> dict[str, Any]:
             ordered[key] = refreshed_customer[key]
     return {
         **demo,
+        # The recorded runtime model id follows the configured Groq model.
+        "recording": {**demo["recording"], "model": MODEL_NAME},
         "customer": ordered,
         "trace": result["trace"],
         "recommendation": result["recommendation"],

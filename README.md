@@ -204,7 +204,7 @@ That's the retention agent's job. It takes the Phase 1 output for a flagged cust
 ```mermaid
 flowchart LR
     AGA["⚡ Phase 1 output\nLive predict_proba call\nprofile + churn probability"]
-    AGB["🤖 Tool loop · Groq or Gemini\nQwen 3.6 27B or Gemini 3.6 Flash\nmax 6 turns · 1,024 completion tokens / call"]
+    AGB["🤖 Tool loop · Groq or Gemini\nQwen 3.8 27B or Gemini 3.6 Flash\nmax 6 turns · 1,024 completion tokens / call"]
     AGC["🔧 Four deterministic tools\nproduct_lookup · segment_comparison\nregulatory_constraint_checker\nrecommendation_formatter"]
     AGD["🔒 Policy gate\nARR-001 · HOLD-002 · HUM-003 · VUL-004\nDeterministic Python · no LLM override"]
     AGE["✅ Governed recommendation\naction · justification · agent confidence\nregulatory_flags · checker_verdict"]
@@ -241,11 +241,11 @@ The policy gate itself is plain deterministic Python. It checks all four rules o
 
 The `confidence` field is something the agent fills in to satisfy the output schema. It's not a calibrated probability, not a Phase 1 churn score, and not a regulatory assessment.
 
-The live backend runs on Groq with `qwen/qwen3.6-27b`, chosen for cost safety so a public demo stays within Groq's free plan. Live tool calling only works when the deployment owner supplies a key Groq accepts for that model, and a local format check can't prove the key or model access is actually valid. Without a key, the app falls back to recorded governed traces and makes no provider request at all. Those files preserve the shape of a completed run, but viewing one doesn't rerun the reasoning loop, the tools, or the policy gate. The live path, when it's on, still uses the same four tools and the same deterministic gate.
+The live backend runs on Groq with `qwen/qwen3.8-27b`, chosen for cost safety so a public demo stays within Groq's free plan. Live tool calling only works when the deployment owner supplies a key Groq accepts for that model, and a local format check can't prove the key or model access is actually valid. Without a key, the app falls back to recorded governed traces and makes no provider request at all. Those files preserve the shape of a completed run, but viewing one doesn't rerun the reasoning loop, the tools, or the policy gate. The live path, when it's on, still uses the same four tools and the same deterministic gate.
 
 The live loop follows Groq's [tool-calling guide](https://console.groq.com/docs/tool-use). On top of that, the app adds its own guards: 30 requests per minute, a 950-request daily safety cap, and five live runs per browser session. These are application-side safeguards, not a read on the provider account's actual usage, and they can't see requests from another running instance or protect against token limits. For the real numbers, check Groq's [rate-limit reference](https://console.groq.com/docs/rate-limits), the account Limits page, and the response headers.
 
-Groq listed the previous runtime for shutdown on 16 August 2026 and pointed to `qwen/qwen3.6-27b` as one replacement, so I migrated the configured model ID on 15 August 2026. Request serialization, tool trajectories, retries, and the policy gate are all covered offline, but a live single-scenario smoke test is still on the list before I'd call Qwen's sequencing quality verified. See Groq's [deprecation notice](https://console.groq.com/docs/deprecations).
+Groq listed the previous runtime for shutdown on 16 August 2026 and pointed to `qwen/qwen3.6-27b` as one replacement, so I migrated the configured model ID on 15 August 2026. On 27 September 2026 Groq answered `model_not_found` for `qwen/qwen3.6-27b`, and its model list offered `qwen/qwen3.8-27b` instead, so the configured model moved again. The live smoke test passed on the new model the same day. Request serialization, tool trajectories, retries, and the policy gate are all covered offline, but a live single-scenario smoke test is still on the list before I'd call Qwen's sequencing quality verified. See Groq's [deprecation notice](https://console.groq.com/docs/deprecations).
 
 ### Gemini as a second live provider
 

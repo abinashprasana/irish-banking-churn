@@ -2,8 +2,9 @@
   "mode": "offline",
   "gate": "off",
   "suite": "all",
-  "started_at": "2026-09-26T21:07:47Z",
-  "model": "qwen/qwen3.6-27b",
+  "started_at": "2026-09-27T18:09:01Z",
+  "model": "qwen/qwen3.8-27b",
+  "provider": "offline",
   "records": 70,
   "includes_drafts": true,
   "unreviewed_records_in_repo": 70,
@@ -227,6 +228,7 @@
         ]
       }
     },
+    "provider_errors": [],
     "covered_successes": [
       "a001",
       "a002",

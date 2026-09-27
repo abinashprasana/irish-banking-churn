@@ -24,7 +24,7 @@ def test_phase_a_runtime_contracts_capture_the_integration_boundary():
     assert "vulnerable_customer" in policy_source
     assert "structured refusal" in tools_source
     assert "failed_rule_ids" in policy_source
-    assert 'MODEL_NAME = "qwen/qwen3.6-27b"' in loop_source
+    assert 'MODEL_NAME = "qwen/qwen3.8-27b"' in loop_source
     assert "DAILY_SAFETY_MARGIN" in limits_source
     assert "SESSION_RUN_CAP" in limits_source
     assert "EU AI Act Article 86" in model_card

@@ -121,6 +121,7 @@ class PacedQuota(InMemoryRequestQuota):
         if state_path is None:
             # Provider quotas are per model, so each model keeps its own daily count.
             suffix = f"{provider}_{scope}" if scope else provider
+            suffix = re.sub(r"[^A-Za-z0-9._-]", "_", suffix)
             state_path = QUOTA_STATE_PATH.with_name(f".redteam_quota_{suffix}.json")
         if max_requests < 1:
             raise ValueError("max_requests must be positive")

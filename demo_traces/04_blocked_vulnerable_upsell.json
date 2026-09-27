@@ -5,7 +5,7 @@
   "recording": {
     "mode": "recorded_phase1_runtime_with_scripted_agent_trace",
     "real_api_calls": 0,
-    "model": "qwen/qwen3.6-27b",
+    "model": "qwen/qwen3.8-27b",
     "model_output_captured": false,
     "reasoning_source": "scripted_fixture",
     "phase1_runtime_capture": true,
