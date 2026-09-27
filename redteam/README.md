@@ -1,6 +1,6 @@
 # Red team evaluation: attack surface
 
-Scope: this suite tests the Atlantic Ledger retention agent in this repository only, using synthetic customers, a synthetic offer catalogue and synthetic governance flags. It sends no request to any third party system other than the Groq model endpoint the application already uses, and only in opt in live mode. No real customer data is used.
+Scope: this suite tests the Atlantic Ledger retention agent in this repository only, using synthetic customers, a synthetic offer catalogue and synthetic governance flags. It sends no request to any third party system other than the Groq or Gemini model endpoints the application already uses, and only in opt in live mode. No real customer data is used.
 
 This file lists every place where untrusted or model influenced content enters or leaves the agent, as found in the code on branch `redteam-eval`. The unsafe outcomes are defined in [harm_spec.md](harm_spec.md).
 

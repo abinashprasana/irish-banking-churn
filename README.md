@@ -7,10 +7,11 @@
 [![Python](https://img.shields.io/badge/Python-3.12+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![XGBoost](https://img.shields.io/badge/XGBoost-Gradient%20Boosted-FF6600?style=for-the-badge&logo=xgboost&logoColor=white)](https://xgboost.readthedocs.io)
 [![Groq](https://img.shields.io/badge/Groq-Tool%20Calling-F55036?style=for-the-badge&logo=groq&logoColor=white)](https://console.groq.com/docs/tool-use)
+[![Gemini](https://img.shields.io/badge/Gemini-3.6%20Flash-4285F4?style=for-the-badge&logo=googlegemini&logoColor=white)](https://ai.google.dev/gemini-api/docs)
 [![Case Study](https://img.shields.io/badge/Case%20Study-Live%20on%20Vercel-071827?style=for-the-badge&logo=vercel&logoColor=white)](https://irish-banking-churn.vercel.app/)
 [![Interactive Lab](https://img.shields.io/badge/Interactive%20Lab-Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://abinashprasana-irish-banking-churn-app-aidovf.streamlit.app/)
 [![ROC--AUC](https://img.shields.io/badge/ROC--AUC-0.824-2ea44f?style=for-the-badge)](.)
-[![Tests](https://img.shields.io/badge/Tests-110%2F110%20passing-2ea44f?style=for-the-badge)](.)
+[![Tests](https://img.shields.io/badge/Tests-116%2F116%20passing-2ea44f?style=for-the-badge)](.)
 
 <br/>
 
@@ -203,7 +204,7 @@ That's the retention agent's job. It takes the Phase 1 output for a flagged cust
 ```mermaid
 flowchart LR
     AGA["⚡ Phase 1 output\nLive predict_proba call\nprofile + churn probability"]
-    AGB["🤖 Groq tool loop\nQwen 3.6 27B · max 6 turns\n1,024 completion tokens / call"]
+    AGB["🤖 Tool loop · Groq or Gemini\nQwen 3.6 27B or Gemini 3.6 Flash\nmax 6 turns · 1,024 completion tokens / call"]
     AGC["🔧 Four deterministic tools\nproduct_lookup · segment_comparison\nregulatory_constraint_checker\nrecommendation_formatter"]
     AGD["🔒 Policy gate\nARR-001 · HOLD-002 · HUM-003 · VUL-004\nDeterministic Python · no LLM override"]
     AGE["✅ Governed recommendation\naction · justification · agent confidence\nregulatory_flags · checker_verdict"]
@@ -246,6 +247,16 @@ The live loop follows Groq's [tool-calling guide](https://console.groq.com/docs/
 
 Groq listed the previous runtime for shutdown on 16 August 2026 and pointed to `qwen/qwen3.6-27b` as one replacement, so I migrated the configured model ID on 15 August 2026. Request serialization, tool trajectories, retries, and the policy gate are all covered offline, but a live single-scenario smoke test is still on the list before I'd call Qwen's sequencing quality verified. See Groq's [deprecation notice](https://console.groq.com/docs/deprecations).
 
+### Gemini as a second live provider
+
+Gemini runs beside Groq. Pass `--provider gemini` to `scripts/eval_agent.py`, `scripts/record_demo_runs.py` or `redteam/run_redteam.py`, and `--model` to try a different Gemini model. The default is `gemini-3.6-flash`. The app reaches Gemini through its OpenAI compatible Chat Completions endpoint with a small standard library client, so both providers run the same loop, the same four tools and the same policy gate.
+
+Two Gemini details needed code changes. Gemini returns a thought signature with every tool call and rejects the next turn unless that signature comes back unchanged, so the loop now carries provider fields on tool calls through untouched. Gemini's hidden thinking tokens also count against the 1,024 token completion cap, which ended early runs with `finish_reason: length`, so Gemini requests ask for low reasoning effort.
+
+On 27 September 2026 I ran the four recorded demo scenarios live on the free tier to choose a model. `gemini-3.6-flash` passed the dry run checks on all four, using 4 or 5 requests and between 13,466 and 18,470 tokens per scenario. In both blocked scenarios it never proposed the credit or upsell offer and went straight to a dedicated service review, so the gate had nothing to block. In one run its thought text said "in compliance", which the red team oracle flags as H07. `gemini-3.7-flash` and `gemini-3.5-flash` returned 503 high demand errors on most runs, and `gemini-3.8-flash` passed the one scenario it completed before its daily limit ran out. The Lite models were not compared.
+
+The free tier is small. The API reported limits of 5 requests per minute and 20 requests on the same metric for `gemini-3.8-flash`, and the app's Gemini guard uses those figures. At 4 or 5 requests per scenario that is about four runs per model per day. Google's Gemini API terms allow free tier content to be used to improve Google's products; every prompt this project sends is synthetic.
+
 ---
 
 ## 🧪 Agent Evaluation
@@ -254,10 +265,10 @@ Groq listed the previous runtime for shutdown on 16 August 2026 and pointed to `
 
 | Check | Result |
 |:---|:---:|
-| Tests passing (0 skipped) | **110 / 110** |
+| Tests passing (0 skipped) | **116 / 116** |
 | Eval scenarios passing (dry-run) | **4 / 4** |
 | Blocked outcomes in eval | **2 / 4** (minimum required: 2) |
-| Groq API requests in dry-run | **0** |
+| Provider API requests in dry-run | **0** |
 
 </div>
 
@@ -326,9 +337,9 @@ With the gate on, a customer in arrears could be approved for a fee waiver whose
 
 ### Live runs
 
-TODO: no live run has been made yet. The model id is `qwen/qwen3.6-27b`. Requests used, prompt and completion tokens, and results at 3 repeats per attack will be filled in from the first live run. The model is not deterministic, and live results will describe this model on the date of the run.
+TODO: no live red team run has been made yet. It will use `gemini-3.6-flash`, the model chosen above. Requests used, prompt and completion tokens, and results will be filled in from that run. The model is not deterministic, and live results will describe this model on the date of the run.
 
-The live runner waits at 30 requests per minute, keeps the 950 per day cap across separate runs in a local gitignored file, stops cleanly at `--max-requests` (default 60), and records token usage from the API response fields. It reads `GROQ_API_KEY` from the environment only and refuses to write any output that contains key material.
+The live runner waits at the provider's per minute limit (30 for Groq, 5 for Gemini), keeps a daily count per model across separate runs in a local gitignored file, stops cleanly at `--max-requests` (default 60) or on a quota response, and records token usage from the API response fields. Provider failures such as quota, overload or timeout responses are excluded from the rates and listed apart, so they never count as a blocked benign case. It reads `GROQ_API_KEY` or `GEMINI_API_KEY` from the environment or the gitignored `.env`, and refuses to write any output that contains key material.
 
 ### Limitations
 
@@ -500,10 +511,11 @@ irish-banking-churn/
 │   └── next.config.ts                Static export for Vercel
 │
 ├── 📂 agent/
-│   ├── loop.py                       Groq Chat Completions tool loop · bounded while · mock default
+│   ├── loop.py                       Groq or Gemini tool loop · bounded while · mock default
+│   ├── providers.py                  Gemini client · .env loader · key resolution
 │   ├── tools.py                      Four tools · Phase 1 runtime · strict Pydantic schema
 │   ├── policy_rules.py               Deterministic rules and immutable fingerprinted decisions
-│   ├── rate_limits.py                Process-local 30 RPM / 950-request daily / 5-run session caps
+│   ├── rate_limits.py                Groq 30 RPM / 950 a day · Gemini 5 RPM / 20 a day · 5-run session cap
 │   └── trace.py                      Five-event structured trace recorder
 │
 ├── 📂 data/
@@ -524,15 +536,16 @@ irish-banking-churn/
 │
 ├── 📂 scripts/
 │   ├── benchmark_real_data.py        Same training recipe on UCI Bank Marketing (real bank data)
-│   ├── eval_agent.py                 Recorded dry-run eval (zero requests) and optional live Groq eval
+│   ├── eval_agent.py                 Recorded dry-run eval (zero requests) and optional live Groq or Gemini eval
 │   ├── export_case_study.py          Deterministic public evidence export and drift check
-│   ├── record_demo_runs.py           Owner-only script to refresh demo traces via live Groq calls
+│   ├── record_demo_runs.py           Owner-only live capture of the demo scenarios into demo_traces/live/
 │   └── regenerate_scripted_traces.py Offline refresh of the scripted traces after a retrain
 │
 ├── 📂 redteam/                       Red team harness: harm spec, oracle, attacks, runner, results
-├── 📂 tests/                         75 test definitions (110 executed cases) · sockets blocked · no API key required
-│   ├── conftest.py                   Removes GROQ_API_KEY and blocks socket connections for every test
+├── 📂 tests/                         81 test definitions (116 executed cases) · sockets blocked · no API key required
+│   ├── conftest.py                   Removes GROQ_API_KEY and GEMINI_API_KEY and blocks sockets for every test
 │   ├── test_agent.py                 Loop trajectory · rate limits · Groq SDK wire contract
+│   ├── test_gemini_provider.py       Gemini loop through a fake transport · thought signatures · .env loading
 │   ├── test_policy.py                All four rules · immutable decisions · formatter bypass resistance
 │   ├── test_phase1_integration.py    Live predict_proba · cache · schema mismatch failures
 │   ├── test_case_study_evidence.py   Public schema · sanitization · generated-file drift
@@ -597,7 +610,7 @@ pnpm lint
 pnpm build
 ```
 
-The baseline I hold this to: 110/110 executed pytest cases (75/75 deterministic test definitions in the exported evidence bundle) and 4/4 recorded scenarios, two of them blocked outcomes, zero provider requests. If a canonical data, model-card, policy, trace, runtime-model, or test source changes, regenerate `web/src/data/evidence.generated.json` with `python scripts/export_case_study.py --write`, review the diff, then rerun `--check`.
+The baseline I hold this to: 116/116 executed pytest cases (81/81 deterministic test definitions in the exported evidence bundle) and 4/4 recorded scenarios, two of them blocked outcomes, zero provider requests. If a canonical data, model-card, policy, trace, runtime-model, or test source changes, regenerate `web/src/data/evidence.generated.json` with `python scripts/export_case_study.py --write`, review the diff, then rerun `--check`.
 
 `.github/workflows/verify.yml` runs the same Python evidence checks plus the web lint, type-check, and static build on every push and pull request.
 
@@ -610,13 +623,13 @@ python models/train_model.py
 
 ### Optional live agent mode
 
-The Decision gate works fine without a key. For an owner-controlled live smoke test, set a server-side `GROQ_API_KEY` from [Groq](https://console.groq.com/keys) and run one bounded scenario:
+The Decision gate works fine without a key. For an owner-controlled live smoke test, put `GROQ_API_KEY` (from [Groq](https://console.groq.com/keys)) or `GEMINI_API_KEY` (from [Google AI Studio](https://aistudio.google.com/apikey)) in a `.env` file in the repository root. The file is gitignored. Then run one bounded scenario:
 
 ```bash
-python scripts/eval_agent.py --live --scenario 01_allowed_fee_waiver
+python scripts/eval_agent.py --live --provider gemini --scenario 01_allowed_fee_waiver
 ```
 
-The application checks Streamlit secrets first, then the process environment. Never expose this key through a `NEXT_PUBLIC_*` variable or commit it to the repository.
+The command line scripts load `.env` at start without overriding variables already set, and never print a key. The Streamlit app checks its secrets first, then the process environment. Never paste a key into chat, expose it through a `NEXT_PUBLIC_*` variable, or commit it to the repository.
 
 ## 🚀 Deployment
 
@@ -633,7 +646,7 @@ The application checks Streamlit secrets first, then the process environment. Ne
 
 - Deploy the repository-root `app.py`; dependencies are read from the root `requirements.txt`.
 - The tracked dataset, XGBoost artifact, recorded traces, and SHAP assets run the whole recorded lab without any external services.
-- Add `GROQ_API_KEY = "..."` under **App settings → Secrets** only after the protected live Qwen smoke test passes. Without it, the lab remains in zero-request recorded mode.
+- Add `GROQ_API_KEY = "..."` under **App settings → Secrets** only after the protected live Qwen smoke test passes. Without it, the lab remains in zero-request recorded mode. The lab's live mode uses Groq only for now; Gemini runs from the command line scripts.
 - Keep the case study’s `NEXT_PUBLIC_LAB_URL` aligned with the deployed lab URL.
 
 ---
