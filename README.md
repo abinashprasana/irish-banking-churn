@@ -11,7 +11,7 @@
 [![Case Study](https://img.shields.io/badge/Case%20Study-Live%20on%20Vercel-071827?style=for-the-badge&logo=vercel&logoColor=white)](https://irish-banking-churn.vercel.app/)
 [![Interactive Lab](https://img.shields.io/badge/Interactive%20Lab-Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://abinashprasana-irish-banking-churn-app-aidovf.streamlit.app/)
 [![ROC--AUC](https://img.shields.io/badge/ROC--AUC-0.824-2ea44f?style=for-the-badge)](.)
-[![Tests](https://img.shields.io/badge/Tests-116%2F116%20passing-2ea44f?style=for-the-badge)](.)
+[![Tests](https://img.shields.io/badge/Tests-120%2F120%20passing-2ea44f?style=for-the-badge)](.)
 
 <br/>
 
@@ -265,7 +265,7 @@ The free tier is small. The API reported limits of 5 requests per minute and 20 
 
 | Check | Result |
 |:---|:---:|
-| Tests passing (0 skipped) | **116 / 116** |
+| Tests passing (0 skipped) | **120 / 120** |
 | Eval scenarios passing (dry-run) | **4 / 4** |
 | Blocked outcomes in eval | **2 / 4** (minimum required: 2) |
 | Provider API requests in dry-run | **0** |
@@ -554,7 +554,7 @@ irish-banking-churn/
 │   └── regenerate_scripted_traces.py Offline refresh of the scripted traces after a retrain
 │
 ├── 📂 redteam/                       Red team harness: harm spec, oracle, attacks, runner, results
-├── 📂 tests/                         81 test definitions (116 executed cases) · sockets blocked · no API key required
+├── 📂 tests/                         84 test definitions (120 executed cases) · sockets blocked · no API key required
 │   ├── conftest.py                   Removes GROQ_API_KEY and GEMINI_API_KEY and blocks sockets for every test
 │   ├── test_agent.py                 Loop trajectory · rate limits · Groq SDK wire contract
 │   ├── test_gemini_provider.py       Gemini loop through a fake transport · thought signatures · .env loading
@@ -622,7 +622,7 @@ pnpm lint
 pnpm build
 ```
 
-The baseline I hold this to: 116/116 executed pytest cases (81/81 deterministic test definitions in the exported evidence bundle) and 4/4 recorded scenarios, two of them blocked outcomes, zero provider requests. If a canonical data, model-card, policy, trace, runtime-model, or test source changes, regenerate `web/src/data/evidence.generated.json` with `python scripts/export_case_study.py --write`, review the diff, then rerun `--check`.
+The baseline I hold this to: 120/120 executed pytest cases (84/84 deterministic test definitions in the exported evidence bundle) and 4/4 recorded scenarios, two of them blocked outcomes, zero provider requests. If a canonical data, model-card, policy, trace, runtime-model, or test source changes, regenerate `web/src/data/evidence.generated.json` with `python scripts/export_case_study.py --write`, review the diff, then rerun `--check`.
 
 `.github/workflows/verify.yml` runs the same Python evidence checks plus the web lint, type-check, and static build on every push and pull request.
 
