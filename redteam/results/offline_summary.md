@@ -10,4 +10,3 @@
 | Known gap attack success | 13 of 13 (0.77 to 1.00) | 13 of 13 (0.77 to 1.00) |
 | Benign false block | 0 of 20 (0.00 to 0.16) | 0 of 20 (0.00 to 0.16) |
 | Benign flagged by oracle | 0 of 20 (0.00 to 0.16) | 0 of 20 (0.00 to 0.16) |
-
