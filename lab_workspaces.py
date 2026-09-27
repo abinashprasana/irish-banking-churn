@@ -7,9 +7,11 @@ modules.
 
 from __future__ import annotations
 
+from functools import lru_cache
 from html import escape
+import json
 from pathlib import Path
-from typing import Callable
+from typing import Any, Callable
 
 import pandas as pd
 import plotly.express as px
@@ -37,6 +39,77 @@ def _fact_rail(items: list[dict[str, str]]) -> None:
         + "</section>",
         unsafe_allow_html=True,
     )
+
+
+EVIDENCE_PATH = Path(__file__).resolve().parent / "web" / "src" / "data" / "evidence.generated.json"
+FEATURE_LABELS = {
+    "num_products": "Products held",
+    "account_type": "Account type",
+    "has_direct_debits": "Direct debits",
+    "months_since_switching": "Months since switching",
+    "tenure_months": "Tenure",
+    "has_savings_goal": "Savings goal",
+}
+
+
+@lru_cache(maxsize=1)
+def load_evidence() -> dict[str, Any] | None:
+    """The generated evidence bundle the case study reads, so both surfaces agree."""
+
+    try:
+        return json.loads(EVIDENCE_PATH.read_text(encoding="utf-8"))["evidence"]
+    except (OSError, ValueError, KeyError):
+        return None
+
+
+def shap_ranking(evidence: dict[str, Any] | None) -> list[tuple[str, str, str]]:
+    if not evidence:
+        return []
+    return [
+        (
+            f"{feature['rank']:02d}",
+            FEATURE_LABELS.get(feature["name"], feature["name"].replace("_", " ").capitalize()),
+            f"{feature['meanAbsoluteShap']:.3f}",
+        )
+        for feature in evidence["model"]["topFeatures"]
+    ]
+
+
+def evaluation_facts(evidence: dict[str, Any] | None) -> list[dict[str, str]]:
+    if not evidence:
+        return []
+    facts = []
+    uci = next(
+        (row for row in evidence["realDataBenchmark"]["models"] if row["model"] == "XGBoost"), None
+    )
+    if uci:
+        facts.append(
+            {
+                "label": "Real bank data",
+                "value": f"{uci['rocAuc']:.3f}",
+                "note": "ROC AUC on UCI Bank Marketing (term deposits)",
+            }
+        )
+    red_team = evidence["redTeam"]
+    on, off = red_team["gateOn"]["headline"], red_team["gateOff"]["headline"]
+    facts.append(
+        {
+            "label": "Red team, gate on",
+            "value": f"{on['successes']} of {on['total']}",
+            "note": f"attacks unsafe; {off['successes']} of {off['total']} with the gate off",
+            "tone": "approval",
+        }
+    )
+    live = red_team.get("live")
+    if live:
+        facts.append(
+            {
+                "label": "Live check",
+                "value": f"{live['attacksRun']} attacks",
+                "note": f"on {live['model']}; {live['headline']['successes']} of {live['headline']['total']} headline attacks unsafe",
+            }
+        )
+    return facts
 
 
 def _workspace_intro(eyebrow: str, title: str, description: str) -> None:
@@ -312,6 +385,10 @@ def render_model_evidence(
         ]
     )
 
+    extra_facts = evaluation_facts(load_evidence())
+    if extra_facts:
+        _fact_rail(extra_facts)
+
     st.markdown("### Inspect one performance view")
     chart_view = st.segmented_control(
         "Performance view",
@@ -394,13 +471,7 @@ def render_model_evidence(
     st.caption(
         "Mean absolute SHAP values rank influence in the fitted model. They do not establish a causal effect in the Irish market."
     )
-    ranking = [
-        ("01", "Products held", "2.841"),
-        ("02", "Months since switching", "1.028"),
-        ("03", "Direct debits", "0.883"),
-        ("04", "Tenure", "0.838"),
-        ("05", "Savings goal", "0.529"),
-    ]
+    ranking = shap_ranking(load_evidence())
     ranking_html = "".join(
         '<li><span class="evidence-ranking__rank">' + rank + "</span>"
         '<span class="evidence-ranking__name">' + escape(name) + "</span>"

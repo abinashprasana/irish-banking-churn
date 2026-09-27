@@ -168,3 +168,21 @@ def test_live_runtime_failure_stops_safely_and_retains_the_case(
     ]
     assert app.session_state["phase1_selected_customer"] == customer
     assert "retention_live_result" not in app.session_state
+
+
+def test_lab_reads_shap_ranking_and_evaluation_facts_from_the_evidence_bundle():
+    import json
+
+    from lab_workspaces import EVIDENCE_PATH, evaluation_facts, load_evidence, shap_ranking
+
+    evidence = json.loads(EVIDENCE_PATH.read_text(encoding="utf-8"))["evidence"]
+    assert load_evidence() == evidence
+    ranking = shap_ranking(evidence)
+    assert [value for _, _, value in ranking] == [
+        f"{feature['meanAbsoluteShap']:.3f}" for feature in evidence["model"]["topFeatures"]
+    ]
+    assert ranking[0][1] == "Products held"
+    facts = {fact["label"]: fact for fact in evaluation_facts(evidence)}
+    assert facts["Red team, gate on"]["value"] == "0 of 30"
+    assert facts["Live check"]["value"] == "9 attacks"
+    assert shap_ranking(None) == [] and evaluation_facts(None) == []
