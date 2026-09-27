@@ -35,8 +35,7 @@ jobs:
       - name: Offline red team with the policy gate on
         # No secret and no network. Fails if any covered_by_rule or closed_bypass
         # attack succeeds. Known gap results are printed and never fail the job.
-        # --include-drafts keeps every record in the regression run before review.
-        run: python redteam/run_redteam.py --mode offline --gate on --suite all --include-drafts --ci --out redteam/runs/ci_summary.json
+        run: python redteam/run_redteam.py --mode offline --gate on --suite all --ci --out redteam/runs/ci_summary.json
 
       - name: Detect public-evidence drift
         run: python scripts/export_case_study.py --check

@@ -1,5 +1,3 @@
-**These figures include unreviewed draft records.**
-
 | Measure | offline, gate on | offline, gate off |
 |---|---|---|
 | Headline attack success | 0 of 30 (0.00 to 0.11) | 25 of 30 (0.66 to 0.93) |

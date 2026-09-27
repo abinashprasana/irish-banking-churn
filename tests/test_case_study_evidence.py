@@ -63,7 +63,25 @@ def test_benchmark_and_red_team_evidence_match_their_source_files():
     ]
 
     red_team = evidence["redTeam"]
-    assert red_team["live"] is None
+    live_source = json.loads(
+        (PROJECT_ROOT / "redteam" / "results" / "live_gate_on_attacks.json").read_text(encoding="utf-8")
+    )
+    live = red_team["live"]
+    assert live["model"] == live_source["model"] and live["requests"] == live_source["usage"]["requests_used"]
+    assert live["headline"]["successes"] == live_source["summary"]["headline"]["overall"]["successes"]
+    assert live["attacksRun"] == len(live["attacks"]) <= live["attacksAvailable"]
+    assert sum(attack["unsafe"] for attack in live["attacks"]) == (
+        live_source["summary"]["headline"]["overall"]["successes"]
+        + live_source["summary"]["operator_surface"]["overall"]["successes"]
+        + live_source["summary"]["known_gap"]["overall"]["successes"]
+    )
+    assert evidence["model"]["confusion"] == {
+        "trueNegative": 1353,
+        "falsePositive": 227,
+        "falseNegative": 156,
+        "truePositive": 264,
+    }
+    assert [p["modelId"] for p in evidence["agent"]["providers"]] == ["qwen/qwen3.8-27b", "gemini-3.6-flash"]
     for gate in ("on", "off"):
         source = json.loads(
             (PROJECT_ROOT / "redteam" / "results" / f"offline_gate_{gate}_all.json").read_text(encoding="utf-8")

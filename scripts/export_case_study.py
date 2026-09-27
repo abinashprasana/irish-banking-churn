@@ -34,6 +34,7 @@ from agent.policy_rules import (  # noqa: E402
 DATA_PATH = PROJECT_ROOT / "data" / "irish_banking_churn.csv"
 MODEL_CARD_PATH = PROJECT_ROOT / "model_card.md"
 LOOP_PATH = PROJECT_ROOT / "agent" / "loop.py"
+PROVIDERS_PATH = PROJECT_ROOT / "agent" / "providers.py"
 TRACE_DIR = PROJECT_ROOT / "demo_traces"
 TEST_DIR = PROJECT_ROOT / "tests"
 OUTPUT_PATH = PROJECT_ROOT / "web" / "src" / "data" / "evidence.generated.json"
@@ -94,17 +95,45 @@ def _read_json(path: Path) -> dict[str, Any]:
     return payload
 
 
-def _runtime_model_id() -> str:
-    tree = ast.parse(LOOP_PATH.read_text(encoding="utf-8"), filename=str(LOOP_PATH))
+def _literal_string(path: Path, name: str) -> str:
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
     for node in tree.body:
         if isinstance(node, ast.Assign) and any(
-            isinstance(target, ast.Name) and target.id == "MODEL_NAME"
-            for target in node.targets
+            isinstance(target, ast.Name) and target.id == name for target in node.targets
         ):
             value = ast.literal_eval(node.value)
             if isinstance(value, str) and value:
                 return value
-    raise ValueError("agent/loop.py does not define a literal MODEL_NAME")
+    raise ValueError(f"{path.relative_to(PROJECT_ROOT)} does not define a literal {name}")
+
+
+def _runtime_model_id() -> str:
+    return _literal_string(LOOP_PATH, "MODEL_NAME")
+
+
+def _holdout_confusion() -> dict[str, int]:
+    """Recompute the XGBoost holdout confusion matrix with the training split."""
+
+    import pandas as pd
+    from sklearn.metrics import confusion_matrix
+    from sklearn.model_selection import train_test_split
+
+    from agent.tools import PHASE1_BOOLEAN_FEATURES, PHASE1_FEATURE_SCHEMA, load_phase1_runtime
+
+    runtime = load_phase1_runtime()
+    frame = pd.read_csv(DATA_PATH)
+    features = frame[list(PHASE1_FEATURE_SCHEMA)].copy()
+    for column, encoder in runtime.encoders.items():
+        features[column] = encoder.transform(features[column])
+    for column in PHASE1_BOOLEAN_FEATURES:
+        features[column] = features[column].astype(int)
+    target = frame["churn"]
+    # Same split as models/train_model.py: 20% stratified, random_state 42.
+    _, x_test, _, y_test = train_test_split(
+        features, target, test_size=0.2, stratify=target, random_state=42
+    )
+    (tn, fp), (fn, tp) = confusion_matrix(y_test, runtime.model.predict(x_test)).tolist()
+    return {"trueNegative": tn, "falsePositive": fp, "falseNegative": fn, "truePositive": tp}
 
 
 def _dataset_evidence() -> dict[str, Any]:
@@ -282,7 +311,46 @@ def _red_team_evidence() -> dict[str, Any]:
             for harm, ids in sorted(gap_rows.items())
         ],
         "closedBypassIds": sorted(record["id"] for record in records if record["status"] == "closed_bypass"),
-        "live": None,
+        "live": _live_red_team({record["id"]: record for record in records}),
+    }
+
+
+def _live_red_team(records: dict[str, dict[str, Any]]) -> dict[str, Any] | None:
+    path = RED_TEAM_DIR / "live_gate_on_attacks.json"
+    if not path.is_file():
+        return None
+    run = _read_json(path)
+    summary = run["summary"]
+    completed = [
+        outcome
+        for outcome in run["outcomes"]
+        if not outcome.get("skipped") and not outcome.get("provider_error")
+    ]
+    return {
+        "provider": run["provider"],
+        "model": run["model"],
+        "date": run["started_at"][:10],
+        "gate": run["gate"],
+        "repeats": run["repeats"],
+        "attacksRun": len(completed),
+        "attacksAvailable": sum("live" in record["modes"] for record in records.values()),
+        "requests": run["usage"]["requests_used"],
+        "totalTokens": run["usage"]["total_tokens"],
+        "headline": _proportion(summary["headline"]["overall"]),
+        "operatorSurface": _proportion(summary["operator_surface"]["overall"]),
+        "knownGaps": _proportion(summary["known_gap"]["overall"]),
+        "attacks": [
+            {
+                "id": outcome["id"],
+                "family": outcome["family"],
+                "tried": records[outcome["id"]]["description"],
+                "finalAction": outcome["final_action"],
+                "verdict": outcome["final_verdict"],
+                "unsafe": outcome["success"],
+                "harmIds": sorted({finding["harm_id"] for finding in outcome["findings"]}),
+            }
+            for outcome in completed
+        ],
     }
 
 
@@ -445,13 +513,19 @@ def build_bundle() -> dict[str, Any]:
             "results/benchmark_uci_bank_marketing.json",
             "redteam/results/offline_gate_on_all.json",
             "redteam/results/offline_gate_off_all.json",
+            "redteam/results/live_gate_on_attacks.json",
+            "agent/providers.py",
         ],
         "evidence": {
             "project": PROJECT,
             "dataset": _dataset_evidence(),
-            "model": _model_evidence(recordings),
+            "model": {**_model_evidence(recordings), "confusion": _holdout_confusion()},
             "agent": {
                 "modelId": runtime_model_id,
+                "providers": [
+                    {"name": "Groq", "modelId": runtime_model_id},
+                    {"name": "Gemini", "modelId": _literal_string(PROVIDERS_PATH, "GEMINI_MODEL_NAME")},
+                ],
                 "tools": tools,
                 "recordedMode": "zero_request_scripted_replay",
                 "recordedReasoningSource": "scripted_fixture",
