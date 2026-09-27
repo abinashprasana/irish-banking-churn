@@ -11,5 +11,6 @@ def block_network_and_remove_api_key(monkeypatch):
         raise AssertionError("network access is forbidden in the test suite")
 
     monkeypatch.delenv("GROQ_API_KEY", raising=False)
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
     monkeypatch.setattr(socket, "create_connection", denied)
     monkeypatch.setattr(socket.socket, "connect", denied)

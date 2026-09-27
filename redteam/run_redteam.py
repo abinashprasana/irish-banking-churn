@@ -34,6 +34,7 @@ from agent.loop import (  # noqa: E402
     run_retention_agent,
 )
 from agent.policy_rules import PolicyDecision  # noqa: E402
+from agent.providers import GEMINI_MODEL_NAME  # noqa: E402
 from agent.tools import (  # noqa: E402
     canonical_action_context,
     load_phase1_runtime,
@@ -141,20 +142,24 @@ def run_offline(records: list[Record], gate: str) -> list[dict[str, Any]]:
     return outcomes
 
 
-def run_live(records: list[Record], gate: str, repeats: int, max_requests: int) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+def run_live(
+    records: list[Record], gate: str, repeats: int, max_requests: int, provider: str = "groq"
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     from agent.loop import create_live_client, resolve_groq_api_key
+    from agent.providers import resolve_gemini_api_key
     from redteam.live import BudgetExhausted, PacedQuota, UsageLedger, attach_usage_recorder
 
-    api_key = resolve_groq_api_key()
+    key_name = "GEMINI_API_KEY" if provider == "gemini" else "GROQ_API_KEY"
+    api_key = resolve_gemini_api_key() if provider == "gemini" else resolve_groq_api_key()
     if not api_key:
         raise SystemExit(
-            "GROQ_API_KEY is not set in this shell, or it is not a valid Groq key. "
+            f"{key_name} is not set in this shell or .env, or it is not a valid key. "
             "No request was made. Set it in your own terminal and run again."
         )
     runtime = load_phase1_runtime()
     catalogue = load_catalogue()
     ledger = UsageLedger()
-    quota = PacedQuota(max_requests, ledger)
+    quota = PacedQuota(max_requests, ledger, provider=provider)
     outcomes: list[dict[str, Any]] = []
     stopped = None
     for record in records:
@@ -165,7 +170,7 @@ def run_live(records: list[Record], gate: str, repeats: int, max_requests: int) 
         _, probability = _authoritative(customer, runtime)
         facts = ScenarioFacts.from_customer(customer, probability)
         for repeat in range(repeats):
-            client = attach_usage_recorder(create_live_client(api_key=api_key, quota_guard=quota), ledger)
+            client = attach_usage_recorder(create_live_client(api_key=api_key, quota_guard=quota, provider=provider), ledger)
             recommendation, trace, error = None, [], None
             started = time.monotonic()
             with gate_disabled() if gate == "off" else nullcontext():
@@ -199,6 +204,7 @@ def main() -> int:
     parser.add_argument("--suite", choices=["attacks", "benign", "all"], default="all")
     parser.add_argument("--repeats", type=int, default=3, help="Live only. The model is not deterministic.")
     parser.add_argument("--max-requests", type=int, default=60, help="Live only. Stops cleanly when reached.")
+    parser.add_argument("--provider", choices=["groq", "gemini"], default="groq", help="Live only. Model provider.")
     parser.add_argument("--include-drafts", action="store_true", help="Include records not yet marked reviewed.")
     parser.add_argument("--only", nargs="*", help="Run only these record ids.")
     parser.add_argument("--price-in-per-mtok", type=float, help="Live only. Input price per million tokens.")
@@ -228,7 +234,10 @@ def main() -> int:
     else:
         if args.repeats < 1:
             parser.error("--repeats must be at least 1")
-        outcomes, usage = run_live(records, args.gate, args.repeats, args.max_requests)
+        from agent.providers import load_env_file
+
+        load_env_file()
+        outcomes, usage = run_live(records, args.gate, args.repeats, args.max_requests, args.provider)
 
     includes_drafts = any(not record.reviewed for record in records)
     summary = summarise(outcomes)
@@ -237,7 +246,8 @@ def main() -> int:
         "gate": args.gate,
         "suite": args.suite,
         "started_at": started_at,
-        "model": MODEL_NAME,
+        "model": GEMINI_MODEL_NAME if args.mode == "live" and args.provider == "gemini" else MODEL_NAME,
+        "provider": args.provider if args.mode == "live" else "offline",
         "records": len(records),
         "includes_drafts": includes_drafts,
         "unreviewed_records_in_repo": len(drafts),

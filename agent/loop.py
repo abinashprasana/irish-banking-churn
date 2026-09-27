@@ -10,7 +10,8 @@ import time
 from typing import Any, Mapping
 
 from agent.policy_rules import ActionPolicyContext, CustomerPolicyContext, PolicyDecision
-from agent.rate_limits import GLOBAL_REQUEST_QUOTA, InMemoryRequestQuota
+from agent.providers import GEMINI_MODEL_NAME, GeminiCompatClient, validated_gemini_api_key
+from agent.rate_limits import GEMINI_REQUEST_QUOTA, GLOBAL_REQUEST_QUOTA, InMemoryRequestQuota
 from agent.tools import (
     GROQ_TOOL_DEFINITIONS,
     Phase1ModelRuntime,
@@ -189,6 +190,7 @@ class GroqLiveClient:
     """A Groq SDK client reachable only through create_live_client."""
 
     _retention_agent_client_kind = "groq_live"
+    model_name = MODEL_NAME
 
     def __init__(
         self,
@@ -201,17 +203,37 @@ class GroqLiveClient:
         self.chat = _GuardedChat(client.chat, quota_guard)
 
 
+class GeminiLiveClient(GroqLiveClient):
+    """Gemini through its OpenAI compatible endpoint, with the same request guard."""
+
+    _retention_agent_client_kind = "gemini_live"
+    model_name = GEMINI_MODEL_NAME
+
+
 def create_live_client(
     *,
     api_key: str,
-    quota_guard: InMemoryRequestQuota = GLOBAL_REQUEST_QUOTA,
+    quota_guard: InMemoryRequestQuota | None = None,
+    provider: str = "groq",
 ) -> GroqLiveClient:
-    """Construct the only permitted live Groq client.
+    """Construct the only permitted live client for Groq or Gemini.
 
     The app resolves its server-side key from ``st.secrets`` first and the
     environment second. This factory accepts the resolved value and never logs it.
     """
 
+    if provider == "gemini":
+        gemini_key = validated_gemini_api_key(api_key)
+        if gemini_key is None:
+            raise LiveModeError("GEMINI_API_KEY is missing, malformed, or still a placeholder")
+        return GeminiLiveClient(
+            GeminiCompatClient(gemini_key),
+            _LIVE_GATE_TOKEN,
+            quota_guard or GEMINI_REQUEST_QUOTA,
+        )
+    if provider != "groq":
+        raise LiveModeError(f"unknown live provider: {provider!r}")
+    quota_guard = quota_guard or GLOBAL_REQUEST_QUOTA
     validated_key = _validated_groq_api_key(api_key)
     if validated_key is None:
         raise LiveModeError("GROQ_API_KEY is missing, malformed, or still a placeholder")
@@ -250,11 +272,18 @@ def _serialise_tool_call(tool_call: Any) -> dict[str, Any]:
         arguments = json.dumps(dict(arguments), separators=(",", ":"))
     if not isinstance(arguments, str):
         raise AgentLoopError("tool call arguments must be a JSON string")
-    return {
+    serialised = {
         "id": call_id,
         "type": "function",
         "function": {"name": name, "arguments": arguments},
     }
+    # Provider fields such as Gemini's thought signature must go back exactly as
+    # received on the next turn, or the provider rejects the conversation.
+    extras = tool_call if isinstance(tool_call, Mapping) else getattr(tool_call, "model_extra", None) or {}
+    for key, value in extras.items():
+        if key not in serialised:
+            serialised[key] = copy.deepcopy(value)
+    return serialised
 
 
 def _parse_tool_arguments(arguments: str) -> Mapping[str, Any]:
@@ -308,6 +337,7 @@ class _LoopState:
     latest_decision: PolicyDecision | None = None
     final_output: dict[str, Any] | None = None
     executed_tools: list[str] = field(default_factory=list)
+    model_name: str = MODEL_NAME
 
 
 def _expect_keys(payload: Mapping[str, Any], allowed: set[str]) -> None:
@@ -392,7 +422,7 @@ def _blocked_refusal(state: _LoopState, trace: TraceRecorder) -> dict[str, Any] 
 
 def _safe_client(client: Any | None) -> Any:
     selected = ScriptedMockClient() if client is None else client
-    if type(selected) not in {ScriptedMockClient, GroqLiveClient}:
+    if type(selected) not in {ScriptedMockClient, GroqLiveClient, GeminiLiveClient}:
         raise UnsafeClientError(
             "client must be ScriptedMockClient or created by create_live_client"
         )
@@ -411,7 +441,7 @@ def _completed_result(
         "recommendation": final_output,
         "trace": trace.as_list(),
         "turns": turns,
-        "model": MODEL_NAME,
+        "model": state.model_name,
         "customer": copy.deepcopy(dict(state.customer_record)),
         "phase1_prediction": copy.deepcopy(dict(state.phase1_prediction)),
     }
@@ -430,6 +460,7 @@ def run_retention_agent(
     if not isinstance(max_turns, int) or not 1 <= max_turns <= MAX_LOOP_TURNS:
         raise ValueError(f"max_turns must be between 1 and {MAX_LOOP_TURNS}")
     safe_client = _safe_client(client)
+    model_name = getattr(safe_client, "model_name", MODEL_NAME)
     runtime = phase1_runtime or load_phase1_runtime()
     phase1_prediction = predict_customer_churn_risk(
         customer, phase1_runtime=runtime
@@ -447,6 +478,7 @@ def run_retention_agent(
         customer_policy_context(authoritative_customer),
         runtime,
         phase1_prediction,
+        model_name=model_name,
     )
     messages: list[dict[str, Any]] = [
         {"role": "system", "content": SYSTEM_PROMPT},
@@ -465,7 +497,7 @@ def run_retention_agent(
     while turn < max_turns:
         turn += 1
         response = safe_client.chat.completions.create(
-            model=MODEL_NAME,
+            model=model_name,
             max_completion_tokens=MAX_TOKENS,
             temperature=0,
             messages=messages,

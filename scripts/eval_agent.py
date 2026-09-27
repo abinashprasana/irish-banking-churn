@@ -211,19 +211,20 @@ def dry_run(scenario: str | None = None) -> int:
     return 0
 
 
-def live_run(scenario: str | None = None) -> int:
+def live_run(scenario: str | None = None, provider: str = "groq") -> int:
     from agent.loop import (
         MAX_LIVE_API_CALLS,
         MAX_TOKENS,
-        MODEL_NAME,
         create_live_client,
         resolve_groq_api_key,
         run_retention_agent,
     )
+    from agent.providers import resolve_gemini_api_key
 
-    api_key = resolve_groq_api_key()
+    key_name = "GEMINI_API_KEY" if provider == "gemini" else "GROQ_API_KEY"
+    api_key = resolve_gemini_api_key() if provider == "gemini" else resolve_groq_api_key()
     if not api_key:
-        print("ERROR: GROQ_API_KEY is not set. No Groq request was made.")
+        print(f"ERROR: {key_name} is not set. No {provider} request was made.")
         return 1
 
     paths = _selected_paths(scenario)
@@ -231,8 +232,9 @@ def live_run(scenario: str | None = None) -> int:
         print("ERROR: no matching recorded traces found in demo_traces/.")
         return 1
 
-    print(f"\nLive Groq eval - {len(paths)} scenario(s)")
-    print(f"Model: {MODEL_NAME}")
+    model_name = create_live_client(api_key=api_key, provider=provider).model_name
+    print(f"\nLive {provider} eval - {len(paths)} scenario(s)")
+    print(f"Model: {model_name}")
     print(f"Max completion tokens per request: {MAX_TOKENS}")
     print(f"Model-call cap per run: {MAX_LIVE_API_CALLS}\n")
 
@@ -243,18 +245,36 @@ def live_run(scenario: str | None = None) -> int:
         title = demo.get("title", "")
         print(f"\n  Running {scenario_id}: {title} ...")
         try:
-            client = create_live_client(api_key=api_key)
+            from redteam.live import UsageLedger, attach_usage_recorder
+
+            ledger = UsageLedger()
+            client = attach_usage_recorder(
+                create_live_client(api_key=api_key, provider=provider), ledger
+            )
             result = run_retention_agent(demo["customer"], client=client)
+            totals = ledger.totals()
+            recommendation = result["recommendation"]
+            print(
+                f"       requests {client.chat.completions.request_count} · "
+                f"prompt tokens {totals['prompt_tokens']} · "
+                f"completion tokens {totals['completion_tokens']} · "
+                f"total tokens {totals['total_tokens']}"
+            )
+            print(
+                f"       outcome {recommendation['action']} · "
+                f"{recommendation['checker_verdict']} · "
+                f"flags {recommendation['regulatory_flags']} · turns {result['turns']}"
+            )
             live_demo = {
                 "schema_version": demo.get("schema_version", "1.0"),
                 "demo_id": scenario_id,
                 "title": title,
                 "recording": {
-                    "mode": "eval_live_groq",
+                    "mode": f"eval_live_{provider}",
                     "real_api_calls": client.chat.completions.request_count,
-                    "model": MODEL_NAME,
+                    "model": client.model_name,
                     "model_output_captured": True,
-                    "reasoning_source": "live_groq",
+                    "reasoning_source": f"live_{provider}",
                     "max_tokens_per_call": MAX_TOKENS,
                     "call_cap": MAX_LIVE_API_CALLS,
                     "phase1_runtime_capture": True,
@@ -303,8 +323,18 @@ if __name__ == "__main__":
         help="Run through the Groq free tier and consume shared daily quota.",
     )
     parser.add_argument(
+        "--provider",
+        choices=["groq", "gemini"],
+        default="groq",
+        help="Live model provider. Keys come from the environment or the gitignored .env.",
+    )
+    parser.add_argument(
         "--scenario",
         help="Optional demo_id; omit to evaluate all four recorded scenarios.",
     )
     args = parser.parse_args()
-    sys.exit(live_run(args.scenario) if args.live else dry_run(args.scenario))
+    if args.live:
+        from agent.providers import load_env_file
+
+        load_env_file()
+    sys.exit(live_run(args.scenario, args.provider) if args.live else dry_run(args.scenario))

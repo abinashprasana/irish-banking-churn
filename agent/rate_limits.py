@@ -115,6 +115,16 @@ class InMemoryRequestQuota:
 
 GLOBAL_REQUEST_QUOTA = InMemoryRequestQuota()
 
+# Gemini free tier guard. The per minute figure comes from the API's own 429
+# response for gemini-3.8-flash on 2026-09-27 ("limit: 5"). Google publishes no per
+# model daily figure, so the daily cap is a conservative default; check AI Studio.
+GEMINI_REQUESTS_PER_MINUTE = 5
+GEMINI_DAILY_REQUEST_CAP = 200
+GEMINI_REQUEST_QUOTA = InMemoryRequestQuota(
+    requests_per_minute=GEMINI_REQUESTS_PER_MINUTE,
+    daily_request_cap=GEMINI_DAILY_REQUEST_CAP,
+)
+
 
 def reserve_session_run(
     session_state: MutableMapping[str, object],

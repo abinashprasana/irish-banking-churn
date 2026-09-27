@@ -25,4 +25,4 @@ data/external/
 !redteam/**/*.md
 !redteam/*.md
 redteam/runs/
-.redteam_quota.json
+.redteam_quota*.json

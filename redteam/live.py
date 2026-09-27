@@ -20,6 +20,8 @@ from typing import Any
 from agent.rate_limits import (
     DAILY_LIMIT_MESSAGE,
     DAILY_REQUEST_CAP,
+    GEMINI_DAILY_REQUEST_CAP,
+    GEMINI_REQUESTS_PER_MINUTE,
     PROVIDER_REQUESTS_PER_MINUTE,
     InMemoryRequestQuota,
     RateLimitSafetyError,
@@ -27,6 +29,10 @@ from agent.rate_limits import (
 
 
 QUOTA_STATE_PATH = Path(__file__).resolve().parents[1] / ".redteam_quota.json"
+PROVIDER_LIMITS = {
+    "groq": (PROVIDER_REQUESTS_PER_MINUTE, DAILY_REQUEST_CAP),
+    "gemini": (GEMINI_REQUESTS_PER_MINUTE, GEMINI_DAILY_REQUEST_CAP),
+}
 # Keep this many tokens of headroom in the provider's per minute token window.
 TOKEN_HEADROOM = 3_000
 
@@ -56,13 +62,17 @@ class UsageLedger:
     observed_at: float = 0.0
 
     def record(self, response: Any, latency: float, headers: Any | None) -> None:
-        usage = getattr(response, "usage", None)
+        # Groq returns SDK objects and Gemini returns plain dictionaries.
+        def field(value: Any, name: str) -> Any:
+            return value.get(name) if isinstance(value, dict) else getattr(value, name, None)
+
+        usage = field(response, "usage")
         self.requests.append(
             {
-                "model": getattr(response, "model", None),
-                "prompt_tokens": getattr(usage, "prompt_tokens", None),
-                "completion_tokens": getattr(usage, "completion_tokens", None),
-                "total_tokens": getattr(usage, "total_tokens", None),
+                "model": field(response, "model"),
+                "prompt_tokens": field(usage, "prompt_tokens"),
+                "completion_tokens": field(usage, "completion_tokens"),
+                "total_tokens": field(usage, "total_tokens"),
                 "latency_seconds": round(latency, 3),
             }
         )
@@ -93,21 +103,22 @@ class UsageLedger:
 
 
 class PacedQuota(InMemoryRequestQuota):
-    """Waits at 30 requests per minute instead of failing, keeps the 950 per day cap
-    across runs in a local file, and stops at the run's --max-requests budget."""
+    """Waits at the provider's per minute limit instead of failing, keeps its daily
+    cap across runs in a local file, and stops at the run's --max-requests budget."""
 
     def __init__(
         self,
         max_requests: int,
         ledger: UsageLedger,
         *,
-        state_path: Path = QUOTA_STATE_PATH,
+        state_path: Path | None = None,
         sleep: Any = time.sleep,
+        provider: str = "groq",
     ) -> None:
-        super().__init__(
-            requests_per_minute=PROVIDER_REQUESTS_PER_MINUTE,
-            daily_request_cap=DAILY_REQUEST_CAP,
-        )
+        per_minute, per_day = PROVIDER_LIMITS[provider]
+        super().__init__(requests_per_minute=per_minute, daily_request_cap=per_day)
+        if state_path is None:
+            state_path = QUOTA_STATE_PATH.with_name(f".redteam_quota_{provider}.json")
         if max_requests < 1:
             raise ValueError("max_requests must be positive")
         self.max_requests = max_requests
