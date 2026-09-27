@@ -2,13 +2,15 @@ import type { CSSProperties } from "react";
 
 import { BrandLockup } from "@/components/brand-lockup";
 import { BrandMark } from "@/components/brand-mark";
+import { ConfusionMatrix } from "@/components/confusion-matrix";
 import { CountUp } from "@/components/count-up";
 import { DecisionJourney } from "@/components/decision-journey";
 import { DecisionStack } from "@/components/decision-stack";
+import { FlowRule } from "@/components/flow-rule";
 import { InView } from "@/components/in-view";
 import { RedTeamPanel } from "@/components/red-team-panel";
 import { ScenarioExplorer } from "@/components/scenario-explorer";
-import { evidenceManifest, uiScenarios } from "@/lib/evidence";
+import { evidenceManifest, modelDisplayName, uiScenarios } from "@/lib/evidence";
 import { site } from "@/lib/site";
 
 function asPercent(value: number, digits = 1) {
@@ -125,7 +127,7 @@ export default function Home() {
         <section className="context section-shell section-space" aria-labelledby="context-heading">
           <div className="section-intro">
             <p className="eyebrow">The context</p>
-            <h2 id="context-heading">A banking disruption, treated as context rather than a claim</h2>
+            <h2 id="context-heading">Two bank exits set the scene</h2>
             <p>
               KBC Bank Ireland and Ulster Bank announced their intentions to leave the Irish market in 2021. That account migration gives this study a meaningful setting, but it does not prove that the same customers remain at unusual churn risk today.
             </p>
@@ -161,13 +163,14 @@ export default function Home() {
             <div className="section-heading-row">
               <div>
                 <p className="eyebrow">The system</p>
-                <h2 id="system-heading">Prediction is the opening signal, not the final decision</h2>
+                <h2 id="system-heading">The score opens a case, the rules decide it</h2>
               </div>
               <p>
                 The model&apos;s job ends at a probability. Anything proposed after that has to clear four deterministic rules, and the language model can&apos;t overrule them. That split is the core idea of the project.
               </p>
             </div>
 
+            <FlowRule>
             <InView as="ol" className="system-flow reveal-group">
               <li>
                 <span>01</span>
@@ -197,7 +200,17 @@ export default function Home() {
                 <span>04</span>
                 <div>
                   <strong>Bounded tool path</strong>
-                  <p>Four deterministic tools inspect products, cohorts, policy, and output shape.</p>
+                  <p>
+                    Four deterministic tools inspect products, cohorts, policy, and output shape.
+                    <span className="system-flow__providers">
+                      {`The live model is ${evidence.agent.providers
+                        .map((provider) => {
+                          const name = modelDisplayName(provider.modelId);
+                          return name.startsWith(provider.name) ? name : `${name} on ${provider.name}`;
+                        })
+                        .join(" or ")}.`}
+                    </span>
+                  </p>
                 </div>
                 <small>Phase 2</small>
               </li>
@@ -210,6 +223,7 @@ export default function Home() {
                 <small>Human remains accountable</small>
               </li>
             </InView>
+            </FlowRule>
           </div>
         </section>
 
@@ -217,7 +231,7 @@ export default function Home() {
           <div className="section-heading-row">
             <div>
               <p className="eyebrow">Model evidence</p>
-              <h2 id="model-heading">Selected for the imbalanced problem, not the largest accuracy badge</h2>
+              <h2 id="model-heading">Judged on average precision, since churners are rare</h2>
             </div>
             <p>
               Average precision is the primary comparison because a classifier predicting every customer as retained would still reach 79% accuracy while identifying no churners.
@@ -271,6 +285,8 @@ export default function Home() {
               </dl>
             </div>
           </div>
+
+          <ConfusionMatrix confusion={evidence.model.confusion} />
 
           <div className="comparison-table-wrap">
             <table className="comparison-table">
@@ -408,11 +424,16 @@ export default function Home() {
 
             <InView className="governance-rules reveal-group">
               {evidence.governance.rules.map((rule, index) => (
-                <article key={rule.id}>
+                <article key={rule.id} style={{ "--i": index } as CSSProperties}>
                   <span>0{index + 1}</span>
                   <strong>{rule.id}</strong>
                   <p>{rule.description}</p>
-                  <small>Deterministic</small>
+                  <small>
+                    <svg className="rule-check" viewBox="0 0 16 16" aria-hidden="true">
+                      <path d="M3 8.5L6.5 12L13 4.5" pathLength={1} />
+                    </svg>
+                    Deterministic
+                  </small>
                 </article>
               ))}
             </InView>
@@ -420,7 +441,7 @@ export default function Home() {
             <div className="governance-boundary">
               <div>
                 <BrandMark className="boundary-mark" tone="duotone" decorative />
-                <h3>A safeguard is not a compliance claim</h3>
+                <h3>Safeguards make no compliance claim</h3>
               </div>
               <p>{evidence.governance.claimScope}</p>
               <dl>
@@ -459,7 +480,7 @@ export default function Home() {
         <section className="limits section-shell section-space" aria-labelledby="limits-heading">
           <div className="limits-heading">
             <p className="eyebrow">Boundaries</p>
-            <h2 id="limits-heading">What the system predicts, and what it deliberately does not decide</h2>
+            <h2 id="limits-heading">What the system predicts, and what it leaves to people</h2>
           </div>
           <InView className="limits-columns reveal-group">
             <article>
@@ -469,7 +490,7 @@ export default function Home() {
             </article>
             <article>
               <span>Explains</span>
-              <h3>Model behaviour, not causality</h3>
+              <h3>How the model behaves</h3>
               <p>SHAP and DiCE make the fitted system inspectable. They do not prove why a real person leaves or prescribe how to retain them.</p>
             </article>
             <article>
@@ -493,9 +514,9 @@ export default function Home() {
           <div className="section-shell artifacts-layout">
             <div>
               <p className="eyebrow">Project record</p>
-              <h2 id="artifacts-heading">Built to be inspected, not merely presented</h2>
+              <h2 id="artifacts-heading">Every decision here can be checked</h2>
               <p>
-                Designed and built by {site.author}. The choices that shaped it are written down so they can be checked: average precision over accuracy for an imbalanced problem, policy rules kept outside the language model, and blocked outcomes published next to passing ones.
+                Designed and built by {site.author}. The reasoning behind it is written down: average precision over accuracy for an imbalanced problem, policy rules kept outside the language model, and blocked outcomes published next to passing ones.
               </p>
               <div className="verification-stamp">
                 <span className="mono-label">LAST VERIFIED / {evidenceManifest.generatedAt}</span>
@@ -521,6 +542,11 @@ export default function Home() {
               <a href={`${site.repositoryUrl}/blob/main/scripts/eval_agent.py`} target="_blank" rel="noreferrer">
                 <span>Evaluation harness</span>
                 <small>Zero-request verification path</small>
+                <em aria-hidden="true">↗</em>
+              </a>
+              <a href={`${site.repositoryUrl}/tree/main/redteam`} target="_blank" rel="noreferrer">
+                <span>Red team suite</span>
+                <small>Harm spec, attacks, oracle and results</small>
                 <em aria-hidden="true">↗</em>
               </a>
             </nav>

@@ -4,7 +4,8 @@ import { type CSSProperties, useId, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 
 import { useRevealState } from "@/components/in-view";
-import type { evidenceManifest } from "@/lib/evidence";
+import { LiveCheck } from "@/components/live-check";
+import { modelDisplayName, type evidenceManifest } from "@/lib/evidence";
 
 type RedTeam = (typeof evidenceManifest)["evidence"]["redTeam"];
 type GateView = RedTeam["gateOn"];
@@ -63,13 +64,18 @@ export function RedTeamPanel({ redTeam }: { redTeam: RedTeam }) {
   const reduceMotion = useReducedMotion();
   const toggleId = useId();
   const benign = redTeam.gateOn.benignBlocked;
+  const liveLabel = redTeam.live
+    ? `${modelDisplayName(redTeam.live.model)} on ${redTeam.live.provider === "groq" ? "Groq" : "Gemini"}`
+    : "";
 
   return (
     <div className="red-team">
-      <div className="red-team__status" aria-label="Run status">
-        <span>Offline run · zero provider requests</span>
+      <div className="red-team__status" aria-label="Evaluation scope">
+        <span>{`Offline suite · ${redTeam.offlineAttackCount} attacks · ${redTeam.benignCount} benign controls`}</span>
+        {redTeam.live ? (
+          <span data-tone="live">{`Live check · ${redTeam.live.attacksRun} attacks · ${liveLabel}`}</span>
+        ) : null}
         {redTeam.includesDrafts ? <span data-tone="draft">Includes unreviewed draft records</span> : null}
-        {redTeam.live === null ? <span data-tone="pending">Live run pending</span> : null}
       </div>
 
       <div className="red-team__gates" ref={ref} data-inview={state}>
@@ -85,6 +91,8 @@ export function RedTeamPanel({ redTeam }: { redTeam: RedTeam }) {
           {benign.successes} of {benign.total} benign cases were blocked.
         </p>
       </div>
+
+      {redTeam.live ? <LiveCheck live={redTeam.live} modelLabel={liveLabel} /> : null}
 
       <div className="red-team__lower">
         <div className="known-gaps">

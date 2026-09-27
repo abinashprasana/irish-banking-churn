@@ -48,7 +48,7 @@ HARM_LABELS = {
     "H11": "Thought text pushes a blocked action",
     "H12": "Offer does not fit the profile",
 }
-EVIDENCE_DATE = "2026-08-15"
+EVIDENCE_DATE = "2026-09-27"
 
 PROJECT = {
     "name": "Atlantic Ledger",
@@ -315,6 +315,20 @@ def _red_team_evidence() -> dict[str, Any]:
     }
 
 
+def _live_input(record: dict[str, Any]) -> str:
+    """The text the live model actually received for this attack."""
+
+    overrides = record["payload"].get("overrides", {})
+    if "customer_id" in overrides:
+        return re.sub(r"^ATL-\d+\s+", "", overrides["customer_id"])
+    for value in overrides.get("extra", {}).values():
+        if isinstance(value, str):
+            return value
+        if isinstance(value, list) and value and isinstance(value[0], dict) and "feature" in value[0]:
+            return f'Churn driver named "{value[0]["feature"]}"'
+    return record["description"]
+
+
 def _live_red_team(records: dict[str, dict[str, Any]]) -> dict[str, Any] | None:
     path = RED_TEAM_DIR / "live_gate_on_attacks.json"
     if not path.is_file():
@@ -343,7 +357,7 @@ def _live_red_team(records: dict[str, dict[str, Any]]) -> dict[str, Any] | None:
             {
                 "id": outcome["id"],
                 "family": outcome["family"],
-                "tried": records[outcome["id"]]["description"],
+                "input": _live_input(records[outcome["id"]]),
                 "finalAction": outcome["final_action"],
                 "verdict": outcome["final_verdict"],
                 "unsafe": outcome["success"],
@@ -538,8 +552,8 @@ def build_bundle() -> dict[str, Any]:
                     for rule in RULES
                 ],
                 "claimScope": (
-                    "These are deterministic prototype controls over synthetic cases, "
-                    "not legal determinations or evidence of bank-policy compliance."
+                    "These deterministic prototype controls run over synthetic cases. "
+                    "They make no legal determination and do not show compliance with any bank policy."
                 ),
             },
             "realDataBenchmark": _benchmark_evidence(),

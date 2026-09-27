@@ -13,13 +13,13 @@ const steps = [
   },
   {
     label: "Churn score",
-    title: "Estimate risk, without turning a score into a decision",
-    copy: "XGBoost returns a probability. The score identifies a case for review; it does not authorize an offer or customer contact.",
+    title: "Estimate risk, then hand the case on",
+    copy: "XGBoost returns a probability. That flags a case for review and nothing more; offers and customer contact stay with the advisor.",
   },
   {
     label: "Model evidence",
     title: "Expose what shaped this prediction",
-    copy: "Local SHAP evidence ranks the model inputs that moved its raw output. It is an explanation of the model, not proof of causality.",
+    copy: "Local SHAP evidence ranks the inputs that moved the model's raw output. It explains the model and says nothing about why a real customer leaves.",
   },
   {
     label: "Policy gate",
@@ -28,7 +28,7 @@ const steps = [
   },
   {
     label: "Advisor decision",
-    title: "Return a governed outcome, not an automated instruction",
+    title: "Return a governed outcome for an advisor",
     copy: "Passing actions still require human judgement. Blocked actions become structured refusals with the failed rule IDs preserved.",
   },
 ];

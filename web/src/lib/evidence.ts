@@ -44,6 +44,15 @@ function scenarioProfileFacts(scenario: (typeof manifest.scenarios)[number]) {
 
 export const evidenceManifest = manifest;
 
+const modelNames: Record<string, string> = {
+  "qwen/qwen3.8-27b": "Qwen 3.8 27B",
+  "gemini-3.6-flash": "Gemini 3.6 Flash",
+};
+
+export function modelDisplayName(modelId: string) {
+  return modelNames[modelId] ?? modelId;
+}
+
 export const uiScenarios: UiScenario[] = manifest.scenarios.map((scenario) => ({
   id: scenario.id,
   title: scenario.title,
