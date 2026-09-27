@@ -114,11 +114,14 @@ class PacedQuota(InMemoryRequestQuota):
         state_path: Path | None = None,
         sleep: Any = time.sleep,
         provider: str = "groq",
+        scope: str | None = None,
     ) -> None:
         per_minute, per_day = PROVIDER_LIMITS[provider]
         super().__init__(requests_per_minute=per_minute, daily_request_cap=per_day)
         if state_path is None:
-            state_path = QUOTA_STATE_PATH.with_name(f".redteam_quota_{provider}.json")
+            # Provider quotas are per model, so each model keeps its own daily count.
+            suffix = f"{provider}_{scope}" if scope else provider
+            state_path = QUOTA_STATE_PATH.with_name(f".redteam_quota_{suffix}.json")
         if max_requests < 1:
             raise ValueError("max_requests must be positive")
         self.max_requests = max_requests

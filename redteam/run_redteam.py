@@ -34,7 +34,6 @@ from agent.loop import (  # noqa: E402
     run_retention_agent,
 )
 from agent.policy_rules import PolicyDecision  # noqa: E402
-from agent.providers import GEMINI_MODEL_NAME  # noqa: E402
 from agent.tools import (  # noqa: E402
     canonical_action_context,
     load_phase1_runtime,
@@ -143,10 +142,16 @@ def run_offline(records: list[Record], gate: str) -> list[dict[str, Any]]:
 
 
 def run_live(
-    records: list[Record], gate: str, repeats: int, max_requests: int, provider: str = "groq"
+    records: list[Record],
+    gate: str,
+    repeats: int,
+    max_requests: int,
+    provider: str = "groq",
+    model: str | None = None,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     from agent.loop import create_live_client, resolve_groq_api_key
-    from agent.providers import resolve_gemini_api_key
+    from agent.providers import GeminiAPIError, resolve_gemini_api_key
+    from agent.rate_limits import RateLimitSafetyError
     from redteam.live import BudgetExhausted, PacedQuota, UsageLedger, attach_usage_recorder
 
     key_name = "GEMINI_API_KEY" if provider == "gemini" else "GROQ_API_KEY"
@@ -159,7 +164,8 @@ def run_live(
     runtime = load_phase1_runtime()
     catalogue = load_catalogue()
     ledger = UsageLedger()
-    quota = PacedQuota(max_requests, ledger, provider=provider)
+    model_name = create_live_client(api_key=api_key, provider=provider, model=model).model_name
+    quota = PacedQuota(max_requests, ledger, provider=provider, scope=model_name)
     outcomes: list[dict[str, Any]] = []
     stopped = None
     for record in records:
@@ -170,20 +176,30 @@ def run_live(
         _, probability = _authoritative(customer, runtime)
         facts = ScenarioFacts.from_customer(customer, probability)
         for repeat in range(repeats):
-            client = attach_usage_recorder(create_live_client(api_key=api_key, quota_guard=quota, provider=provider), ledger)
+            client = attach_usage_recorder(create_live_client(api_key=api_key, quota_guard=quota, provider=provider, model=model), ledger)
             recommendation, trace, error = None, [], None
+            provider_error = False
             started = time.monotonic()
             with gate_disabled() if gate == "off" else nullcontext():
                 try:
                     result = run_retention_agent(customer, client=client, phase1_runtime=runtime)
                     recommendation, trace = result["recommendation"], result["trace"]
-                except BudgetExhausted as exc:
+                except (BudgetExhausted, RateLimitSafetyError) as exc:
                     stopped = str(exc)
+                except GeminiAPIError as exc:
+                    if exc.status_code == 429:
+                        stopped = "provider quota reached (HTTP 429)"
+                    else:
+                        error, provider_error = f"{type(exc).__name__}: {exc}", True
+                except TimeoutError as exc:
+                    error, provider_error = f"{type(exc).__name__}: {exc}", True
                 except Exception as exc:
                     error = f"{type(exc).__name__}: {exc}"
             if stopped:
                 break
             outcome = _outcome(record, recommendation, trace, error, facts, catalogue)
+            # A provider failure says nothing about the agent, so it is reported apart.
+            outcome["provider_error"] = provider_error
             outcome.update(
                 repeat=repeat + 1,
                 trace=trace,
@@ -193,7 +209,7 @@ def run_live(
             outcomes.append(outcome)
         if stopped:
             break
-    usage = {"requests_used": quota.used, "stopped_early": stopped, **ledger.totals()}
+    usage = {"requests_used": quota.used, "stopped_early": stopped, "model": model_name, **ledger.totals()}
     return outcomes, usage
 
 
@@ -205,6 +221,7 @@ def main() -> int:
     parser.add_argument("--repeats", type=int, default=3, help="Live only. The model is not deterministic.")
     parser.add_argument("--max-requests", type=int, default=60, help="Live only. Stops cleanly when reached.")
     parser.add_argument("--provider", choices=["groq", "gemini"], default="groq", help="Live only. Model provider.")
+    parser.add_argument("--model", help="Live only. Override the provider's default model.")
     parser.add_argument("--include-drafts", action="store_true", help="Include records not yet marked reviewed.")
     parser.add_argument("--only", nargs="*", help="Run only these record ids.")
     parser.add_argument("--price-in-per-mtok", type=float, help="Live only. Input price per million tokens.")
@@ -237,7 +254,9 @@ def main() -> int:
         from agent.providers import load_env_file
 
         load_env_file()
-        outcomes, usage = run_live(records, args.gate, args.repeats, args.max_requests, args.provider)
+        outcomes, usage = run_live(
+            records, args.gate, args.repeats, args.max_requests, args.provider, args.model
+        )
 
     includes_drafts = any(not record.reviewed for record in records)
     summary = summarise(outcomes)
@@ -246,7 +265,7 @@ def main() -> int:
         "gate": args.gate,
         "suite": args.suite,
         "started_at": started_at,
-        "model": GEMINI_MODEL_NAME if args.mode == "live" and args.provider == "gemini" else MODEL_NAME,
+        "model": usage["model"] if usage else MODEL_NAME,
         "provider": args.provider if args.mode == "live" else "offline",
         "records": len(records),
         "includes_drafts": includes_drafts,

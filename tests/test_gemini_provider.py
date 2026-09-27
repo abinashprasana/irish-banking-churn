@@ -128,3 +128,26 @@ def test_gemini_key_resolution_and_env_file_loading(tmp_path, monkeypatch):
     monkeypatch.setenv("GEMINI_API_KEY", "from-shell")
     assert load_env_file(env) == []
     assert resolve_gemini_api_key() == "from-shell"
+
+
+def test_gemini_model_override_is_validated_and_groq_stays_fixed():
+    client = create_live_client(api_key="k", provider="gemini", model="gemini-3.5-flash-lite")
+    assert client.model_name == "gemini-3.5-flash-lite"
+    assert create_live_client(api_key="k", provider="gemini").model_name == GEMINI_MODEL_NAME
+    with pytest.raises(LiveModeError, match="unsupported Gemini model"):
+        create_live_client(api_key="k", provider="gemini", model="gpt-4o")
+    with pytest.raises(LiveModeError, match="only the configured model"):
+        create_live_client(api_key="gsk_test_only", provider="groq", model="other")
+
+
+def test_paced_quota_keeps_a_daily_count_per_model(tmp_path, monkeypatch):
+    from redteam import live
+
+    monkeypatch.setattr(live, "QUOTA_STATE_PATH", tmp_path / ".redteam_quota.json")
+    first = live.PacedQuota(5, live.UsageLedger(), provider="gemini", scope="gemini-3.5-flash")
+    second = live.PacedQuota(5, live.UsageLedger(), provider="gemini", scope="gemini-3.1-flash-lite")
+    first.reserve_request()
+    first.reserve_request()
+    second.reserve_request()
+    assert '"requests": 2' in (tmp_path / ".redteam_quota_gemini_gemini-3.5-flash.json").read_text(encoding="utf-8")
+    assert '"requests": 1' in (tmp_path / ".redteam_quota_gemini_gemini-3.1-flash-lite.json").read_text(encoding="utf-8")

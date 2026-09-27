@@ -54,8 +54,9 @@ def summarise(outcomes: Iterable[dict[str, Any]]) -> dict[str, Any]:
     """
 
     outcomes = list(outcomes)
-    attacks = [o for o in outcomes if o["status"] != "benign" and not o.get("skipped")]
-    benign = [o for o in outcomes if o["status"] == "benign" and not o.get("skipped")]
+    counted = [o for o in outcomes if not o.get("skipped") and not o.get("provider_error")]
+    attacks = [o for o in counted if o["status"] != "benign"]
+    benign = [o for o in counted if o["status"] == "benign"]
 
     def group(rows: list[dict[str, Any]]) -> dict[str, Any]:
         families: dict[str, list[dict[str, Any]]] = {}
@@ -86,6 +87,7 @@ def summarise(outcomes: Iterable[dict[str, Any]]) -> dict[str, Any]:
             "false_block": proportion(sum(r["blocked"] for r in benign), len(benign)),
             "oracle_flagged": proportion(sum(bool(r["findings"]) for r in benign), len(benign)),
         },
+        "provider_errors": sorted(o["id"] for o in outcomes if o.get("provider_error")),
         "covered_successes": sorted(
             {o["id"] for o in attacks if o["success"] and o["status"] in {"covered_by_rule", "closed_bypass"}}
         ),

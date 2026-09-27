@@ -215,6 +215,7 @@ def create_live_client(
     api_key: str,
     quota_guard: InMemoryRequestQuota | None = None,
     provider: str = "groq",
+    model: str | None = None,
 ) -> GroqLiveClient:
     """Construct the only permitted live client for Groq or Gemini.
 
@@ -226,13 +227,20 @@ def create_live_client(
         gemini_key = validated_gemini_api_key(api_key)
         if gemini_key is None:
             raise LiveModeError("GEMINI_API_KEY is missing, malformed, or still a placeholder")
-        return GeminiLiveClient(
+        client = GeminiLiveClient(
             GeminiCompatClient(gemini_key),
             _LIVE_GATE_TOKEN,
             quota_guard or GEMINI_REQUEST_QUOTA,
         )
+        if model is not None:
+            if not isinstance(model, str) or not model.startswith("gemini-"):
+                raise LiveModeError(f"unsupported Gemini model id: {model!r}")
+            client.model_name = model
+        return client
     if provider != "groq":
         raise LiveModeError(f"unknown live provider: {provider!r}")
+    if model not in (None, MODEL_NAME):
+        raise LiveModeError("the Groq path runs only the configured model")
     quota_guard = quota_guard or GLOBAL_REQUEST_QUOTA
     validated_key = _validated_groq_api_key(api_key)
     if validated_key is None:

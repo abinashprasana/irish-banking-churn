@@ -99,3 +99,14 @@ def test_wilson_intervals_match_published_values():
     assert low == pytest.approx(0.2366, abs=1e-4) and high == pytest.approx(0.7634, abs=1e-4)
     assert wilson(0, 0) is None
     assert proportion(3, 50)["wilson_95"] == [pytest.approx(0.0206, abs=1e-4), pytest.approx(0.1622, abs=1e-4)]
+
+
+def test_provider_errors_are_excluded_from_rates_and_listed():
+    base = {"family": "benign", "surface": "none", "violates": [], "headline": False, "findings": [], "success": False}
+    outcomes = [
+        {**base, "id": "b001", "status": "benign", "blocked": False, "provider_error": False},
+        {**base, "id": "b002", "status": "benign", "blocked": True, "provider_error": True},
+    ]
+    summary = summarise(outcomes)
+    assert summary["benign"]["false_block"] == proportion(0, 1)
+    assert summary["provider_errors"] == ["b002"]
