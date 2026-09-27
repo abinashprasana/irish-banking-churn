@@ -836,8 +836,8 @@
       "live": null
     },
     "verification": {
-      "testsPassed": 82,
-      "testsTotal": 82,
+      "testsPassed": 83,
+      "testsTotal": 83,
       "scenariosPassed": 4,
       "scenariosTotal": 4,
       "blockedOutcomes": 2,

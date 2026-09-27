@@ -110,3 +110,36 @@ def test_provider_errors_are_excluded_from_rates_and_listed():
     summary = summarise(outcomes)
     assert summary["benign"]["false_block"] == proportion(0, 1)
     assert summary["provider_errors"] == ["b002"]
+
+
+class _StatusError(Exception):
+    def __init__(self, status_code):
+        super().__init__(f"status {status_code}")
+        self.status_code = status_code
+
+
+@pytest.mark.parametrize("status,stops", [(429, True), (503, False)])
+def test_live_run_stops_on_quota_and_sets_aside_server_errors(monkeypatch, tmp_path, status, stops):
+    from agent import loop
+    from redteam import live
+
+    monkeypatch.setattr(live, "QUOTA_STATE_PATH", tmp_path / ".redteam_quota.json")
+    monkeypatch.setattr(loop, "resolve_groq_api_key", lambda secrets=None: "gsk_test_only")
+
+    def fake_client(**kwargs):
+        completions = SimpleNamespace(_completions=SimpleNamespace(), request_count=1)
+        return SimpleNamespace(model_name="qwen/test", chat=SimpleNamespace(completions=completions))
+
+    def failing_agent(*args, **kwargs):
+        raise _StatusError(status)
+
+    monkeypatch.setattr(loop, "create_live_client", fake_client)
+    monkeypatch.setattr(run_redteam, "run_retention_agent", failing_agent)
+    records = load_records(BENIGN_PATH)[:2]
+    outcomes, usage = run_redteam.run_live(records, "on", repeats=1, max_requests=5)
+
+    if stops:
+        assert outcomes == [] and "HTTP 429" in usage["stopped_early"]
+    else:
+        assert [o["provider_error"] for o in outcomes] == [True, True]
+        assert summarise(outcomes)["benign"]["false_block"]["total"] == 0

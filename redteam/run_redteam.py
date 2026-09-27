@@ -150,7 +150,7 @@ def run_live(
     model: str | None = None,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     from agent.loop import create_live_client, resolve_groq_api_key
-    from agent.providers import GeminiAPIError, resolve_gemini_api_key
+    from agent.providers import resolve_gemini_api_key
     from agent.rate_limits import RateLimitSafetyError
     from redteam.live import BudgetExhausted, PacedQuota, UsageLedger, attach_usage_recorder
 
@@ -186,15 +186,18 @@ def run_live(
                     recommendation, trace = result["recommendation"], result["trace"]
                 except (BudgetExhausted, RateLimitSafetyError) as exc:
                     stopped = str(exc)
-                except GeminiAPIError as exc:
-                    if exc.status_code == 429:
-                        stopped = "provider quota reached (HTTP 429)"
-                    else:
-                        error, provider_error = f"{type(exc).__name__}: {exc}", True
-                except TimeoutError as exc:
-                    error, provider_error = f"{type(exc).__name__}: {exc}", True
                 except Exception as exc:
-                    error = f"{type(exc).__name__}: {exc}"
+                    # Works for Gemini and the Groq SDK: both carry status_code on HTTP errors.
+                    status = getattr(exc, "status_code", None)
+                    name = type(exc).__name__
+                    if status == 429:
+                        stopped = f"provider quota reached (HTTP 429, {name})"
+                    elif (isinstance(status, int) and status >= 500) or isinstance(exc, TimeoutError) or (
+                        "Timeout" in name or "Connection" in name
+                    ):
+                        error, provider_error = f"{name}: {exc}", True
+                    else:
+                        error = f"{name}: {exc}"
             if stopped:
                 break
             outcome = _outcome(record, recommendation, trace, error, facts, catalogue)
