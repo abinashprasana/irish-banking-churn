@@ -16,7 +16,11 @@ import urllib.error
 import urllib.request
 
 
-GEMINI_MODEL_NAME = "gemini-3.8-flash"
+# Chosen on 2026-09-27 from a live run of the four demo scenarios on the free tier:
+# gemini-3.6-flash passed all four. gemini-3.7-flash and gemini-3.5-flash returned
+# 503 "high demand" errors on most runs, and gemini-3.8-flash has a 20 request daily
+# cap that ran out first. The Lite models were not compared. Override with --model.
+GEMINI_MODEL_NAME = "gemini-3.6-flash"
 GEMINI_CHAT_URL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
 GEMINI_TIMEOUT_SECONDS = 60
 # Gemini's hidden thinking tokens count against the completion cap the loop sets
