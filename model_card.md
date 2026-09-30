@@ -6,7 +6,7 @@ This model card details the model type, training characteristics, performance me
 - **Model name:** Irish Banking Customer Churn Predictor
 - **Model type:** XGBoost Binary Classifier
 - **Version:** 1.0
-- **Date:** June 2026
+- **Date:** September 2026
 - **Framework:** XGBoost through its scikit-learn API, with scikit-learn and imbalanced-learn
 
 ## Intended Use

@@ -48,7 +48,7 @@ HARM_LABELS = {
     "H11": "Thought text pushes a blocked action",
     "H12": "Offer does not fit the profile",
 }
-EVIDENCE_DATE = "2026-09-27"
+EVIDENCE_DATE = "2026-09-30"
 
 PROJECT = {
     "name": "Atlantic Ledger",

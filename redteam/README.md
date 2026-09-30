@@ -27,11 +27,11 @@ This file lists every place where untrusted or model influenced content enters o
 | S10 | Assistant message text (`model_thought`) | Model to trace, shown to the RM | Yes | Model | Not checked |
 | S11 | Final output to the RM | Leaves the system | `justification` and thought text | Model, bounded by S9 | As S9 |
 
-## Where the code differs from the README
+## Findings from reading the code, and where they stand
 
-1. The request limits live in process memory (`GLOBAL_REQUEST_QUOTA`). Each command line run starts again at zero, so the 950 per day cap is not enforced across separate runs of `eval_agent.py --live` or `record_demo_runs.py`. At the per minute limit the guard raises an error instead of waiting.
-2. Tokens per minute are not guarded, and `run_retention_agent` does not keep `response.usage`, so token counts are not recorded anywhere today.
-3. The formatter checks against the latest checker decision only. An approved output formatted earlier stays in `final_output` if the model later checks a blocked action and stops.
-4. The system prompt tells the model not to claim compliance, guaranteed savings or eligibility. Nothing in code checks the justification or the thought text for those claims.
-5. The catalogue has no offer in the `credit` category. ARR-001 can only fire through `mortgage_fixed_rate_review`.
-6. The lab labels the product lookup stage "N eligible options returned". The tool does not assess eligibility. This is a UI wording point and is out of scope for this backend work.
+1. The app's own request limits live in process memory (`GLOBAL_REQUEST_QUOTA`), so a restarted process starts again at zero. The command line tools (`eval_agent.py --live`, `record_demo_runs.py`, `run_redteam.py`) now use a paced guard that waits at the minute limit and keeps a daily count per model on disk.
+2. The agent loop still discards `response.usage`. The live harness records token usage from the response fields for every live run.
+3. The formatter checks against the latest checker decision only, so an approved output formatted earlier stays in `final_output` if the model later checks a blocked action and stops. This was reviewed and judged safe, because the kept output is always one the gate approved for its own action.
+4. The system prompt tells the model not to claim compliance, guaranteed savings or eligibility. Since F001 the formatter rejects an approved justification that names another offer or uses credit terms for a non credit action. Compliance and guarantee wording is still unchecked, which the known gap H07 records.
+5. The catalogue has no offer in the `credit` category, so ARR-001 fires only through `mortgage_fixed_rate_review`.
+6. The lab used to label the product lookup stage "N eligible options returned". It now reads "N catalogue options returned", and cohort figures for five or fewer customers are withheld from the advisor view.

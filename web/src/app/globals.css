@@ -2546,10 +2546,6 @@ code {
   color: #e3b56c;
 }
 
-.red-team__status span[data-tone="pending"] {
-  color: var(--signal-cyan);
-}
-
 .red-team__gates {
   padding: clamp(1.5rem, 4vw, 3rem);
   border: 1px solid rgb(232 238 241 / 0.2);

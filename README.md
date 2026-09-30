@@ -267,6 +267,7 @@ The Gemini guard allows 5 requests per minute and 20 per day, the free tier figu
 | Eval scenarios passing (dry-run) | **4 / 4** |
 | Blocked outcomes in eval | **2 / 4** (minimum required: 2) |
 | Provider API requests in dry-run | **0** |
+| Live captures checked in dry-run | **3** (Gemini) |
 
 </div>
 
@@ -539,7 +540,8 @@ irish-banking-churn/
 │   ├── 01_allowed_fee_waiver.json    Local checks passed: fee relief · HUM-003 advisor review required
 │   ├── 02_allowed_service_review.json Local checks passed: dedicated service review · high-risk customer
 │   ├── 03_blocked_arrears_credit.json Blocked: ARR-001 stops credit action
-│   └── 04_blocked_vulnerable_upsell.json Blocked: VUL-004 stops upsell for vulnerable customer
+│   ├── 04_blocked_vulnerable_upsell.json Blocked: VUL-004 stops upsell for vulnerable customer
+│   └── live/                         Live Gemini captures of three demo scenarios, checked by the dry run
 │
 ├── 📂 models/
 │   ├── train_model.py                Training pipeline: preprocessing, SMOTEENN,
