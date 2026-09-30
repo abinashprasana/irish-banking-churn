@@ -179,6 +179,28 @@ def _selected_paths(scenario: str | None = None) -> list[Path]:
     return selected
 
 
+def _check_live_capture(demo: dict, scenario_id: str) -> list[str]:
+    """Extra markers a live capture must carry on top of the scenario checks."""
+
+    failures = _check_scenario(demo, scenario_id)
+    recording = demo.get("recording", {})
+    if recording.get("live_capture") is not True:
+        failures.append(f"{scenario_id}: live capture marker missing")
+    if not str(recording.get("reasoning_source", "")).startswith("live_"):
+        failures.append(f"{scenario_id}: reasoning source must be a live provider")
+    if "scripted_fixture" in json.dumps(demo):
+        failures.append(f"{scenario_id}: live capture must not carry scripted_fixture")
+    if not isinstance(recording.get("real_api_calls"), int) or recording["real_api_calls"] < 1:
+        failures.append(f"{scenario_id}: live capture must record its provider requests")
+    usage = recording.get("token_usage", {})
+    if not isinstance(usage.get("total_tokens"), int) or usage["total_tokens"] < 1:
+        failures.append(f"{scenario_id}: live capture must record token usage")
+    for field in ("provider", "model", "captured_at"):
+        if not recording.get(field):
+            failures.append(f"{scenario_id}: live capture missing {field}")
+    return failures
+
+
 def dry_run(scenario: str | None = None) -> int:
     paths = _selected_paths(scenario)
     if not paths:
@@ -203,6 +225,16 @@ def dry_run(scenario: str | None = None) -> int:
             all_failures.append(
                 f"too few blocked outcomes: {blocked_count} (need >= 2)"
             )
+
+    live_paths = sorted((DEMO_DIR / "live").glob("*.json")) if scenario is None else []
+    if live_paths:
+        print(f"\n  Live captures: {len(live_paths)}")
+        for path in live_paths:
+            demo = json.loads(path.read_text(encoding="utf-8"))
+            scenario_id = f"live/{demo.get('demo_id', path.name)}"
+            failures = _check_live_capture(demo, scenario_id)
+            all_failures.extend(failures)
+            _print_result(scenario_id, demo.get("title", ""), failures)
 
     if all_failures:
         print(f"\nResult: FAIL - {len(all_failures)} issue(s)\n")

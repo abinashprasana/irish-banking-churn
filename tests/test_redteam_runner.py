@@ -143,3 +143,37 @@ def test_live_run_stops_on_quota_and_sets_aside_server_errors(monkeypatch, tmp_p
     else:
         assert [o["provider_error"] for o in outcomes] == [True, True]
         assert summarise(outcomes)["benign"]["false_block"]["total"] == 0
+
+
+class _RateLimit(Exception):
+    def __init__(self, message, retry_after=None):
+        super().__init__(message)
+        self.status_code = 429
+        self.response = SimpleNamespace(headers={"retry-after": retry_after} if retry_after else {})
+
+
+def test_minute_limit_429_is_waited_out_and_counted_while_daily_limits_stop():
+    from redteam.live import _RecordingCompletions
+
+    usage = SimpleNamespace(prompt_tokens=10, completion_tokens=2, total_tokens=12)
+    response = SimpleNamespace(model="qwen/test", usage=usage)
+    calls, slept, reserved = [], [], []
+
+    class Flaky:
+        def create(self, **kwargs):
+            calls.append(kwargs)
+            if len(calls) < 3:
+                raise _RateLimit("Rate limit reached on tokens per minute (TPM). Please try again in 2.5s.", "3")
+            return response
+
+    guarded = SimpleNamespace(_quota_guard=SimpleNamespace(reserve_request=lambda: reserved.append(1)), request_count=1)
+    recorder = _RecordingCompletions(Flaky(), UsageLedger(), guarded, sleep=slept.append)
+    assert recorder.create(model="x") is response
+    assert len(calls) == 3 and slept == [4.0, 4.0] and len(reserved) == 2 and guarded.request_count == 3
+
+    class Daily:
+        def create(self, **kwargs):
+            raise _RateLimit("Rate limit reached on tokens per day (TPD).")
+
+    with pytest.raises(_RateLimit):
+        _RecordingCompletions(Daily(), UsageLedger(), guarded, sleep=slept.append).create(model="x")

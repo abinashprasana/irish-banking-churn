@@ -1,0 +1,441 @@
+{
+  "schema_version": "1.0",
+  "demo_id": "02_allowed_service_review",
+  "title": "Service review passed local checks",
+  "recording": {
+    "mode": "owner_recorded_live",
+    "live_capture": true,
+    "provider": "gemini",
+    "model": "gemini-3.6-flash",
+    "captured_at": "2026-09-30T19:34:46Z",
+    "real_api_calls": 4,
+    "token_usage": {
+      "prompt_tokens": 12682,
+      "completion_tokens": 656,
+      "total_tokens": 13648
+    },
+    "model_output_captured": true,
+    "reasoning_source": "live_gemini",
+    "max_tokens_per_call": 1024,
+    "call_cap": 6,
+    "phase1_runtime_capture": true,
+    "phase1_model_artifact": "xgboost_churn_model.pkl",
+    "phase1_prediction_method": "model.predict_proba(feature_vector)[0, 1]",
+    "synthetic_data": true,
+    "synthetic_governance": true,
+    "note": "Captured from a live model run on synthetic data. The model is not deterministic, so a new capture can differ. The trace was not edited."
+  },
+  "customer": {
+    "customer_id": "IRLBANK_03890",
+    "profile": {
+      "age": 39,
+      "tenure_months": 13,
+      "account_type": "Current + Savings",
+      "monthly_balance_eur": 5728.99,
+      "num_products": 2,
+      "monthly_transaction_count": 135,
+      "monthly_transaction_amount_eur": 4849.23,
+      "has_direct_debits": true,
+      "direct_debit_count": 6,
+      "uses_digital_bank_secondary": false,
+      "was_kbc_ulster_customer": true,
+      "months_since_switching": 6,
+      "experienced_switching_difficulty": true,
+      "branch_visits_monthly": 0,
+      "customer_service_calls_6months": 3,
+      "has_complaint_history": true,
+      "credit_score_band": "Medium",
+      "has_mortgage": false,
+      "has_savings_goal": false
+    },
+    "churn_probability": 0.9887535572052002,
+    "churn_drivers": [
+      {
+        "feature": "months_since_switching",
+        "value": 6,
+        "shap_value": 1.6302982568740845,
+        "direction": "increases_churn"
+      },
+      {
+        "feature": "has_complaint_history",
+        "value": true,
+        "shap_value": 1.5754425525665283,
+        "direction": "increases_churn"
+      },
+      {
+        "feature": "num_products",
+        "value": 2,
+        "shap_value": -0.9101480841636658,
+        "direction": "decreases_churn"
+      },
+      {
+        "feature": "account_type",
+        "value": "Current + Savings",
+        "shap_value": 0.6387701034545898,
+        "direction": "increases_churn"
+      },
+      {
+        "feature": "experienced_switching_difficulty",
+        "value": true,
+        "shap_value": 0.5768309235572815,
+        "direction": "increases_churn"
+      }
+    ],
+    "held_products": [
+      "current_account",
+      "savings_account"
+    ],
+    "governance": {
+      "in_arrears": false,
+      "vulnerable_customer": false
+    },
+    "governance_note": "The governance overlay is synthetic scenario metadata. These fields do not exist in Phase 1 and were not inferred from the profile, churn probability, or SHAP values."
+  },
+  "trace": [
+    {
+      "step": 1,
+      "type": "tool_call",
+      "content": {
+        "tool_use_id": "call_1092186",
+        "name": "product_lookup",
+        "input": {}
+      },
+      "timestamp": "2026-09-30T19:34:36.980256Z"
+    },
+    {
+      "step": 2,
+      "type": "tool_result",
+      "content": {
+        "tool_use_id": "call_1092186",
+        "name": "product_lookup",
+        "is_error": false,
+        "result": {
+          "catalogue_name": "Synthetic Irish Retail Banking Retention Offers",
+          "synthetic": true,
+          "currency": "EUR",
+          "offers": [
+            {
+              "action_id": "fee_waiver_6m",
+              "name": "Six-month maintenance fee waiver",
+              "description": "Waive eligible current-account maintenance fees for six months while a relationship manager reviews the customer's service experience.",
+              "category": "fee_relief",
+              "is_credit": false,
+              "is_upsell": false,
+              "target_product": null,
+              "eligibility_note": "Synthetic demonstration offer; subject to human review and account terms."
+            },
+            {
+              "action_id": "dedicated_service_review",
+              "name": "Dedicated service and switching-friction review",
+              "description": "Arrange a no-sales service review covering complaints, direct debits, and unresolved switching issues.",
+              "category": "service",
+              "is_credit": false,
+              "is_upsell": false,
+              "target_product": null,
+              "eligibility_note": "Synthetic service action with no product sale."
+            },
+            {
+              "action_id": "mortgage_fixed_rate_review",
+              "name": "Fixed-rate mortgage suitability review",
+              "description": "Offer a human-led review of synthetic fixed-rate mortgage options; no rate, approval, or saving is guaranteed.",
+              "category": "mortgage",
+              "is_credit": true,
+              "is_upsell": true,
+              "target_product": "mortgage",
+              "eligibility_note": "Synthetic credit-related offer; normal affordability, suitability, and approval processes would apply."
+            },
+            {
+              "action_id": "savings_rate_bonus_6m",
+              "name": "Six-month savings rate bonus",
+              "description": "Add a synthetic six-month bonus to an eligible new savings account after human review.",
+              "category": "savings",
+              "is_credit": false,
+              "is_upsell": true,
+              "target_product": "savings_account",
+              "eligibility_note": "Synthetic demonstration offer; no real rate or return is represented."
+            },
+            {
+              "action_id": "no_fee_current_account_tier",
+              "name": "No-fee current-account tier review",
+              "description": "Review eligibility for a synthetic current-account tier with no maintenance fee for twelve months.",
+              "category": "current_account",
+              "is_credit": false,
+              "is_upsell": true,
+              "target_product": "current_account",
+              "eligibility_note": "Synthetic demonstration offer; subject to product eligibility and human review."
+            },
+            {
+              "action_id": "direct_debit_switch_support",
+              "name": "Direct-debit switching support",
+              "description": "Provide a dedicated service appointment to resolve direct-debit migration or setup issues without a product sale.",
+              "category": "service",
+              "is_credit": false,
+              "is_upsell": false,
+              "target_product": null,
+              "eligibility_note": "Synthetic service action with no product sale."
+            }
+          ]
+        }
+      },
+      "timestamp": "2026-09-30T19:34:36.980962Z"
+    },
+    {
+      "step": 3,
+      "type": "tool_call",
+      "content": {
+        "tool_use_id": "call_1092187",
+        "name": "segment_comparison",
+        "input": {}
+      },
+      "timestamp": "2026-09-30T19:34:36.981212Z"
+    },
+    {
+      "step": 4,
+      "type": "tool_result",
+      "content": {
+        "tool_use_id": "call_1092187",
+        "name": "segment_comparison",
+        "is_error": false,
+        "result": {
+          "target_phase1_prediction": {
+            "customer_id": "IRLBANK_03890",
+            "churn_probability": 0.9887535572052002,
+            "feature_columns": [
+              "age",
+              "tenure_months",
+              "account_type",
+              "monthly_balance_eur",
+              "num_products",
+              "monthly_transaction_count",
+              "monthly_transaction_amount_eur",
+              "has_direct_debits",
+              "direct_debit_count",
+              "uses_digital_bank_secondary",
+              "was_kbc_ulster_customer",
+              "months_since_switching",
+              "experienced_switching_difficulty",
+              "branch_visits_monthly",
+              "customer_service_calls_6months",
+              "has_complaint_history",
+              "credit_score_band",
+              "has_mortgage",
+              "has_savings_goal"
+            ],
+            "encoded_feature_vector": {
+              "age": 39.0,
+              "tenure_months": 13.0,
+              "account_type": 1.0,
+              "monthly_balance_eur": 5728.99,
+              "num_products": 2.0,
+              "monthly_transaction_count": 135.0,
+              "monthly_transaction_amount_eur": 4849.23,
+              "has_direct_debits": 1.0,
+              "direct_debit_count": 6.0,
+              "uses_digital_bank_secondary": 0.0,
+              "was_kbc_ulster_customer": 1.0,
+              "months_since_switching": 6.0,
+              "experienced_switching_difficulty": 1.0,
+              "branch_visits_monthly": 0.0,
+              "customer_service_calls_6months": 3.0,
+              "has_complaint_history": 1.0,
+              "credit_score_band": 2.0,
+              "has_mortgage": 0.0,
+              "has_savings_goal": 0.0
+            },
+            "model_artifact": "xgboost_churn_model.pkl",
+            "prediction_method": "model.predict_proba(feature_vector)[0, 1]"
+          },
+          "cohort_definition": {
+            "migration_segment": "former_kbc_ulster",
+            "age_band": "30-44",
+            "account_type": "Current + Savings",
+            "num_products": 2
+          },
+          "cohort_size": 179,
+          "retained_count": 117,
+          "churned_count": 62,
+          "churn_rate": 0.3464,
+          "most_common_products_among_retained": [
+            {
+              "product": "current_account",
+              "retained_customers": 117
+            },
+            {
+              "product": "savings_account",
+              "retained_customers": 117
+            }
+          ],
+          "data_note": "Aggregates use the local synthetic Phase 1 dataset only."
+        }
+      },
+      "timestamp": "2026-09-30T19:34:37.155957Z"
+    },
+    {
+      "step": 5,
+      "type": "tool_call",
+      "content": {
+        "tool_use_id": "call_757991",
+        "name": "regulatory_constraint_checker",
+        "input": {
+          "requires_human_review": true,
+          "action_id": "dedicated_service_review"
+        }
+      },
+      "timestamp": "2026-09-30T19:34:39.195100Z"
+    },
+    {
+      "step": 6,
+      "type": "gate_check",
+      "content": {
+        "action_id": "dedicated_service_review",
+        "checker_verdict": "approved",
+        "passed": true,
+        "failed_rule_ids": [],
+        "customer_fingerprint": "f37db8bab1f51d511b5d05531578092f6b777e84cddb2f0da4393c45ea9e4a33",
+        "action_fingerprint": "7ded6f2028b3f07c77ca81ee661f3ca2b89cad738c1dd21a0a480fcbd5adfcfd",
+        "rule_results": [
+          {
+            "rule_id": "ARR-001",
+            "description": "Prototype policy rule: block credit-related retention offers when the synthetic arrears flag is set.",
+            "passed": true,
+            "reason": "Passed the prototype rule: the proposed action is not blocked by the synthetic arrears flag."
+          },
+          {
+            "rule_id": "HOLD-002",
+            "description": "Prototype policy rule: do not propose a product the synthetic customer already holds.",
+            "passed": true,
+            "reason": "Passed the prototype rule: the action does not duplicate a product listed in the synthetic customer's holdings."
+          },
+          {
+            "rule_id": "HUM-003",
+            "description": "Prototype policy rule: above the configured 75 percent churn threshold, an action cannot pass unless it is marked as requiring advisor review.",
+            "passed": true,
+            "reason": "Passed the prototype rule: the proposed action is marked as requiring advisor review, or the condition was not triggered."
+          },
+          {
+            "rule_id": "VUL-004",
+            "description": "Prototype policy rule: when the synthetic vulnerability flag is set, permit only service or fee-relief actions.",
+            "passed": true,
+            "reason": "Passed the prototype rule: the condition tied to the synthetic vulnerability flag is satisfied or not triggered."
+          }
+        ]
+      },
+      "timestamp": "2026-09-30T19:34:39.196082Z"
+    },
+    {
+      "step": 7,
+      "type": "tool_result",
+      "content": {
+        "tool_use_id": "call_757991",
+        "name": "regulatory_constraint_checker",
+        "is_error": false,
+        "result": {
+          "action_id": "dedicated_service_review",
+          "checker_verdict": "approved",
+          "passed": true,
+          "failed_rule_ids": [],
+          "customer_fingerprint": "f37db8bab1f51d511b5d05531578092f6b777e84cddb2f0da4393c45ea9e4a33",
+          "action_fingerprint": "7ded6f2028b3f07c77ca81ee661f3ca2b89cad738c1dd21a0a480fcbd5adfcfd",
+          "rule_results": [
+            {
+              "rule_id": "ARR-001",
+              "description": "Prototype policy rule: block credit-related retention offers when the synthetic arrears flag is set.",
+              "passed": true,
+              "reason": "Passed the prototype rule: the proposed action is not blocked by the synthetic arrears flag."
+            },
+            {
+              "rule_id": "HOLD-002",
+              "description": "Prototype policy rule: do not propose a product the synthetic customer already holds.",
+              "passed": true,
+              "reason": "Passed the prototype rule: the action does not duplicate a product listed in the synthetic customer's holdings."
+            },
+            {
+              "rule_id": "HUM-003",
+              "description": "Prototype policy rule: above the configured 75 percent churn threshold, an action cannot pass unless it is marked as requiring advisor review.",
+              "passed": true,
+              "reason": "Passed the prototype rule: the proposed action is marked as requiring advisor review, or the condition was not triggered."
+            },
+            {
+              "rule_id": "VUL-004",
+              "description": "Prototype policy rule: when the synthetic vulnerability flag is set, permit only service or fee-relief actions.",
+              "passed": true,
+              "reason": "Passed the prototype rule: the condition tied to the synthetic vulnerability flag is satisfied or not triggered."
+            }
+          ]
+        }
+      },
+      "timestamp": "2026-09-30T19:34:39.196124Z"
+    },
+    {
+      "step": 8,
+      "type": "tool_call",
+      "content": {
+        "tool_use_id": "call_1224143",
+        "name": "recommendation_formatter",
+        "input": {
+          "action": "dedicated_service_review",
+          "confidence": 0.92,
+          "checker_verdict": "approved",
+          "justification": "The customer has a high predicted churn probability of 98.88%, driven primarily by recent switching friction and a complaint history following migration from KBC/Ulster Bank. A dedicated service and switching-friction review directly addresses these service friction points without selling an inappropriate product, and has been approved subject to human advisor review.",
+          "regulatory_flags": [
+            "ARR-001:PASSED",
+            "HOLD-002:PASSED",
+            "HUM-003:PASSED",
+            "VUL-004:PASSED"
+          ]
+        }
+      },
+      "timestamp": "2026-09-30T19:34:41.769405Z"
+    },
+    {
+      "step": 9,
+      "type": "final_output",
+      "content": {
+        "action": "dedicated_service_review",
+        "justification": "The customer has a high predicted churn probability of 98.88%, driven primarily by recent switching friction and a complaint history following migration from KBC/Ulster Bank. A dedicated service and switching-friction review directly addresses these service friction points without selling an inappropriate product, and has been approved subject to human advisor review.",
+        "confidence": 0.92,
+        "regulatory_flags": [
+          "HUM-003:human_review_required"
+        ],
+        "checker_verdict": "approved"
+      },
+      "timestamp": "2026-09-30T19:34:41.770860Z"
+    },
+    {
+      "step": 10,
+      "type": "tool_result",
+      "content": {
+        "tool_use_id": "call_1224143",
+        "name": "recommendation_formatter",
+        "is_error": false,
+        "result": {
+          "action": "dedicated_service_review",
+          "justification": "The customer has a high predicted churn probability of 98.88%, driven primarily by recent switching friction and a complaint history following migration from KBC/Ulster Bank. A dedicated service and switching-friction review directly addresses these service friction points without selling an inappropriate product, and has been approved subject to human advisor review.",
+          "confidence": 0.92,
+          "regulatory_flags": [
+            "HUM-003:human_review_required"
+          ],
+          "checker_verdict": "approved"
+        }
+      },
+      "timestamp": "2026-09-30T19:34:41.770890Z"
+    },
+    {
+      "step": 11,
+      "type": "model_thought",
+      "content": {
+        "text": "### Retention Recommendation Analysis\n\n#### Summary & Churn Context\n* **Customer ID:** IRLBANK_03890\n* **Predicted Churn Probability:** 98.88% (authoritative Phase 1 XGBoost model output)\n* **Cohort Comparison:** In the matching cohort of former KBC/Ulster Bank customers aged 30–44 holding Current + Savings accounts, the baseline churn rate is 34.64%. This customer's risk profile is significantly elevated compared to their peer segment.\n* **Primary Risk Drivers:**\n  1. **Months Since Switching (`shap_value: +1.63`):** Switched 6 months ago.\n  2. **Complaint History (`shap_value: +1.58`):** Recorded complaint history.\n  3. **Switching Difficulty (`shap_value: +0.58`):** Experienced switching friction during migration.\n\n---\n\n### Governed Recommendation\n\n* **Recommended Action:** Dedicated service and switching-friction review (`dedicated_service_review`)\n* **Category:** Service (No product upsell or credit extension)\n* **Status / Verdict:** **Approved** (Subject to human advisor review under rule `HUM-003`)\n* **Confidence Score:** 0.92\n\n#### Justification & Policy Rules\nThe customer's high churn risk is heavily concentrated in post-migration service friction, switching difficulties, and unresolved complaint history. Offering a non-sales, dedicated service review directly targets the underlying churn drivers by providing targeted resolution support for switching friction and direct debit issues.\n\n* **Constraint Verification Flags:**\n  * `ARR-001`: Passed (Not in arrears)\n  * `HOLD-002`: Passed (Does not duplicate held products)\n  * `HUM-003`: Human review required and flagged (Churn probability > 75%)\n  * `VUL-004`: Passed (Service action)\n\n*Disclaimer: This recommendation is generated within a synthetic demonstration environment. It does not constitute a guarantee of product eligibility, financial savings, or regulatory compliance.*"
+      },
+      "timestamp": "2026-09-30T19:34:46.301757Z"
+    }
+  ],
+  "recommendation": {
+    "action": "dedicated_service_review",
+    "justification": "The customer has a high predicted churn probability of 98.88%, driven primarily by recent switching friction and a complaint history following migration from KBC/Ulster Bank. A dedicated service and switching-friction review directly addresses these service friction points without selling an inappropriate product, and has been approved subject to human advisor review.",
+    "confidence": 0.92,
+    "regulatory_flags": [
+      "HUM-003:human_review_required"
+    ],
+    "checker_verdict": "approved"
+  }
+}

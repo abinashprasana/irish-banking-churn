@@ -231,6 +231,11 @@ def main() -> int:
     parser.add_argument("--price-out-per-mtok", type=float, help="Live only. Output price per million tokens.")
     parser.add_argument("--out", type=Path, help="Aggregate summary path. Defaults to redteam/results/.")
     parser.add_argument("--ci", action="store_true", help="Exit 1 if any covered_by_rule or closed_bypass attack succeeds.")
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="Live only. Keep the cases already completed in the summary file and run only the rest.",
+    )
     args = parser.parse_args()
 
     records: list[Record] = []
@@ -248,6 +253,21 @@ def main() -> int:
         return 1
 
     started_at = datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+    out = args.out or RESULTS_DIR / f"{args.mode}_gate_{args.gate}_{args.suite}.json"
+    previous = None
+    if args.resume and args.mode == "live" and out.is_file():
+        previous = json.loads(out.read_text(encoding="utf-8"))
+        done = {
+            o["id"]
+            for o in previous["outcomes"]
+            if not o.get("skipped") and not o.get("provider_error")
+        }
+        records = [record for record in records if record.id not in done]
+        started_at = previous["started_at"]
+        print(f"Resuming: {len(done)} cases already done, {len(records)} to run.")
+        if not records:
+            print("Nothing left to run.")
+            return 0
     usage = None
     if args.mode == "offline":
         outcomes = run_offline(records, args.gate)
@@ -260,6 +280,16 @@ def main() -> int:
         outcomes, usage = run_live(
             records, args.gate, args.repeats, args.max_requests, args.provider, args.model
         )
+        if previous is not None:
+            kept = [
+                o for o in previous["outcomes"]
+                if not o.get("skipped") and not o.get("provider_error")
+            ]
+            # Records were filtered above, so new outcomes never repeat a kept case.
+            outcomes = kept + outcomes
+            old = previous.get("usage", {})
+            for key in ("requests_used", "successful_responses", "prompt_tokens", "completion_tokens", "total_tokens"):
+                usage[key] = usage.get(key, 0) + old.get(key, 0)
 
     includes_drafts = any(not record.reviewed for record in records)
     summary = summarise(outcomes)
@@ -305,7 +335,6 @@ def main() -> int:
     stamp = started_at.replace(":", "").replace("-", "")
     raw_path = RUNS_DIR / f"{stamp}_{args.mode}_gate_{args.gate}_{args.suite}.json"
     raw_path.write_text(raw + "\n", encoding="utf-8")
-    out = args.out or RESULTS_DIR / f"{args.mode}_gate_{args.gate}_{args.suite}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(aggregate + "\n", encoding="utf-8")
 

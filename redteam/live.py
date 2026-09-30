@@ -34,7 +34,12 @@ PROVIDER_LIMITS = {
     "gemini": (GEMINI_REQUESTS_PER_MINUTE, GEMINI_DAILY_REQUEST_CAP),
 }
 # Keep this many tokens of headroom in the provider's per minute token window.
-TOKEN_HEADROOM = 3_000
+# Groq's free tier allows 8,000 tokens per minute and one agent turn resends
+# 3,500 to 4,500 prompt tokens, so wait for the window once fewer than 5,000 remain.
+TOKEN_HEADROOM = 5_000
+# A 429 for a per minute limit is retried after the provider's retry-after wait.
+MINUTE_LIMIT_RETRIES = 4
+MAX_RETRY_WAIT_SECONDS = 90.0
 
 
 class BudgetExhausted(RuntimeError):
@@ -165,14 +170,39 @@ class PacedQuota(InMemoryRequestQuota):
             self._state_path.write_text(json.dumps(state), encoding="utf-8")
 
 
+def _minute_limit_wait(exc: Exception) -> float | None:
+    """Seconds to wait when a 429 is a per minute limit; None for any other error."""
+
+    if getattr(exc, "status_code", None) != 429 or "per minute" not in str(exc):
+        return None
+    response = getattr(exc, "response", None)
+    header = getattr(response, "headers", {}).get("retry-after") if response is not None else None
+    match = re.search(r"try again in ([0-9.]+)s", str(exc))
+    for value in (header, match.group(1) if match else None):
+        try:
+            if value is not None:
+                return min(float(value) + 1.0, MAX_RETRY_WAIT_SECONDS)
+        except ValueError:
+            continue
+    return 10.0
+
+
 class _RecordingCompletions:
     """Stands in for the SDK completions object so usage and rate headers are kept."""
 
-    def __init__(self, completions: Any, ledger: UsageLedger) -> None:
+    def __init__(
+        self,
+        completions: Any,
+        ledger: UsageLedger,
+        guarded: Any | None = None,
+        sleep: Any = time.sleep,
+    ) -> None:
         self._completions = completions
         self._ledger = ledger
+        self._guarded = guarded
+        self._sleep = sleep
 
-    def create(self, **kwargs: Any) -> Any:
+    def _call(self, **kwargs: Any) -> Any:
         started = time.monotonic()
         raw_api = getattr(self._completions, "with_raw_response", None)
         if raw_api is not None:
@@ -183,12 +213,27 @@ class _RecordingCompletions:
         self._ledger.record(response, time.monotonic() - started, headers)
         return response
 
+    def create(self, **kwargs: Any) -> Any:
+        for attempt in range(MINUTE_LIMIT_RETRIES + 1):
+            try:
+                return self._call(**kwargs)
+            except Exception as exc:
+                wait = _minute_limit_wait(exc)
+                if wait is None or attempt == MINUTE_LIMIT_RETRIES:
+                    raise
+                self._sleep(wait)
+                # Each retry is a real request, so it goes through the same budget.
+                if self._guarded is not None:
+                    self._guarded._quota_guard.reserve_request()
+                    self._guarded.request_count += 1
+        raise RuntimeError("unreachable")
+
 
 def attach_usage_recorder(live_client: Any, ledger: UsageLedger) -> Any:
     """Wrap the SDK completions inside a GroqLiveClient without touching agent code."""
 
     guarded = live_client.chat.completions
-    guarded._completions = _RecordingCompletions(guarded._completions, ledger)
+    guarded._completions = _RecordingCompletions(guarded._completions, ledger, guarded)
     return live_client
 
 
